@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>3-Body Steady Orbit Discovery Explorer</title>
+<style>
+  :root {
+    --bg: #0b0e14;
+    --panel: #121722;
+    --card: #181f2e;
+    --border: #263045;
+    --fg: #e6edf7;
+    --muted: #8b9bb4;
+    --accent: #3b82f6;
+    --green: #22c55e;
+    --amber: #f59e0b;
+    --pink: #ec4899;
+    --cyan: #06b6d4;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg);
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    font-size: 13px; height: 100vh; display: flex; flex-direction: column; overflow: hidden;
+  }
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px; background: var(--panel); border-bottom: 1px solid var(--border);
+  }
+  header h1 { margin: 0; font-size: 15px; font-weight: 600; letter-spacing: 0.01em; }
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; background: var(--card); border: 1px solid var(--border); color: var(--muted); }
+  .pill.green { color: var(--green); border-color: rgba(34,197,94,0.4); }
+  .pill.cyan { color: var(--cyan); border-color: rgba(6,182,212,0.4); }
+  .layout { display: grid; grid-template-columns: 310px 1fr 290px; flex: 1; min-height: 0; }
+  .sidebar, .rightbar { background: var(--panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; min-height: 0; }
+  .rightbar { border-right: none; border-left: 1px solid var(--border); padding: 12px; gap: 12px; overflow-y: auto; }
+  .filters { padding: 10px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
+  .tabs { display: flex; flex-wrap: wrap; gap: 4px; }
+  .tab {
+    padding: 4px 8px; border-radius: 5px; border: 1px solid var(--border);
+    background: var(--card); color: var(--muted); cursor: pointer; font-size: 11px;
+  }
+  .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  select, button {
+    background: var(--card); color: var(--fg); border: 1px solid var(--border);
+    border-radius: 6px; padding: 5px 10px; font-size: 12px; cursor: pointer;
+  }
+  button:hover { border-color: var(--accent); }
+  .orbit-list { flex: 1; overflow-y: auto; padding: 6px; display: flex; flex-direction: column; gap: 4px; }
+  .orbit-item {
+    padding: 8px 10px; border-radius: 6px; border: 1px solid transparent;
+    background: var(--card); cursor: pointer; display: flex; flex-direction: column; gap: 3px;
+  }
+  .orbit-item:hover { border-color: var(--border); }
+  .orbit-item.active { border-color: var(--accent); background: #1d273b; }
+  .orbit-item .row { display: flex; justify-content: space-between; align-items: center; }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-variant-numeric: tabular-nums; }
+  .muted { color: var(--muted); }
+  .main { display: flex; flex-direction: column; min-height: 0; position: relative; }
+  .toolbar {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+    padding: 8px 14px; background: var(--panel); border-bottom: 1px solid var(--border);
+  }
+  .canvas-wrap { flex: 1; position: relative; min-height: 0; }
+  #simCanvas { width: 100%; height: 100%; display: block; cursor: grab; }
+  #simCanvas:active { cursor: grabbing; }
+  .overlay-tl { position: absolute; top: 12px; left: 14px; pointer-events: none; display: flex; gap: 6px; align-items: center; }
+  .overlay-bl { position: absolute; bottom: 12px; left: 14px; pointer-events: none; display: flex; gap: 14px; font-size: 12px; }
+  .overlay-br { position: absolute; bottom: 12px; right: 14px; pointer-events: none; font-size: 12px; color: var(--muted); }
+  .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+  .stat-grid { display: grid; grid-template-columns: 1fr auto; gap: 5px 8px; font-size: 12px; }
+  .card-box { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 10px; }
+  .card-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 8px; }
+  #floquetCanvas { width: 100%; height: 220px; display: block; border-radius: 6px; background: #0e131d; cursor: crosshair; }
+  .badge-kick { background: var(--amber); color: #000; padding: 2px 7px; border-radius: 4px; font-weight: 700; font-size: 11px; display: none; }
+</style>
+</head>
+<body>
+<header>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <h1>3-Body Steady Orbit Discovery Explorer</h1>
+    <span id="hdrCounts" class="pill green"></span>
+  </div>
+  <div class="muted mono" style="font-size:11px;">Adaptive Dormand-Prince 5(4) · Exact Floquet Monodromy · 100T Verified</div>
+</header>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="filters">
+      <div class="tabs" id="filterTabs">
+        <button class="tab active" data-f="all">All</button>
+        <button class="tab" data-f="3d">3D Non-Planar</button>
+        <button class="tab" data-f="dem">2D Democratic</button>
+        <button class="tab" data-f="3dok">3D-Stable</button>
+        <button class="tab" data-f="col">Collinear L=0</button>
+        <button class="tab" data-f="perp">Perp L≠0</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span class="muted" style="font-size:11px;">Sort:</span>
+        <select id="sortSelect" style="flex:1;">
+          <option value="margin">Stability Margin (deepest)</option>
+          <option value="swaps">Partner Swaps (most democratic)</option>
+          <option value="rmin">Min Separation rₘᵢₙ (widest)</option>
+          <option value="T">Period T (shortest)</option>
+        </select>
+      </div>
+    </div>
+    <div class="orbit-list" id="orbitList"></div>
+  </aside>
+
+  <main class="main">
+    <div class="toolbar">
+      <button id="btnPlay">Pause</button>
+      <button id="btnKick" title="Inject a momentum-preserving +0.002 velocity perturbation">Kick (+2e-3)</button>
+      <button id="btnReset">Reset</button>
+      <button id="btnCopy">Copy y₀ JSON</button>
+      <label class="muted" style="display:flex;align-items:center;gap:6px;margin-left:auto;">
+        Speed <input id="speedRange" type="range" min="0.2" max="5" step="0.1" value="1.2" />
+      </label>
+      <label class="muted" style="display:flex;align-items:center;gap:4px;">
+        <input id="chkGhost" type="checkbox" checked /> Ghost Track
+      </label>
+    </div>
+    <div class="canvas-wrap">
+      <canvas id="simCanvas"></canvas>
+      <div class="overlay-tl">
+        <span id="badgeTitle" class="pill cyan mono"></span>
+        <span id="badgeDim" class="pill"></span>
+        <span id="badgeKick" class="badge-kick mono">PERTURBED</span>
+      </div>
+      <div class="overlay-bl mono">
+        <span><span class="dot" style="background:var(--accent)"></span>m₁=<span id="lblM1"></span></span>
+        <span><span class="dot" style="background:var(--amber)"></span>m₂=<span id="lblM2"></span></span>
+        <span><span class="dot" style="background:var(--pink)"></span>m₃=<span id="lblM3"></span></span>
+      </div>
+      <div class="overlay-br mono" id="timeReadout">t = 0.00 (0.00 T)</div>
+    </div>
+  </main>
+
+  <aside class="rightbar">
+    <div class="card-box">
+      <div class="card-title">Orbit Telemetry</div>
+      <div class="stat-grid mono">
+        <span class="muted">Subspace</span><span id="stSub"></span>
+        <span class="muted">Period T</span><span id="stT"></span>
+        <span class="muted">Energy E</span><span id="stE"></span>
+        <span class="muted">Ang. Mom |L|</span><span id="stL"></span>
+        <span class="muted">Min Sep rₘᵢₙ</span><span id="stRmin"></span>
+        <span class="muted">Partner Swaps</span><span id="stSwaps"></span>
+        <span class="muted">Return Error</span><span id="stRet"></span>
+        <span class="muted">100T Drift</span><span id="stDrift" style="color:var(--green)"></span>
+        <span class="muted">Stability Margin</span><span id="stMarg" style="color:var(--green);font-weight:700"></span>
+        <span class="muted">Floquet k</span><span id="stK"></span>
+        <span class="muted">3D Vertical k_z</span><span id="stKz"></span>
+      </div>
+    </div>
+
+    <div class="card-box">
+      <div class="card-title">Floquet Stability Square (k₁, k₂) ∈ [-2, 2]²</div>
+      <canvas id="floquetCanvas" width="250" height="220"></canvas>
+      <div class="muted" style="font-size:11px;margin-top:6px;">
+        Click any dot to load that orbit. Closer to center (0,0) = deeper linear stability island.
+        Drag canvas to rotate 3D orbits.
+      </div>
+    </div>
+  </aside>
+</div>
+
+<script>
+const CATALOG = {"generated_at": "2026-11-27T07:23:20.833910", "total_raw": 131, "total_unique": 124, "counts": {"3d": 5, "2d_democratic": 74, "2d_hierarchical": 45, "2d_collinear_L0": 48, "2d_perp_L_nonzero": 71}, "continuations": {"Braid-1.10 (m3 around 1.10)": {"n_total": 36, "n_stable": 20, "m3_min_traced": 0.985, "m3_max_traced": 1.16, "m3_stable_min": 0.985, "m3_stable_max": 1.135, "best": {"m3": 1.075, "vx": 0.391270148241, "vy": 0.527201146012, "T": 27.1773665987, "k1": 0.873837470673, "k2": -0.900083053391, "stable": true, "margin": 1.09991694661}}, "Heavy-Center-3.00 (m3 around 3.00)": {"n_total": 40, "n_stable": 29, "m3_min_traced": 2.82, "m3_max_traced": 3.6, "m3_stable_min": 2.84, "m3_stable_max": 3.42, "best": {"m3": 3.3, "vx": 0.768327472783, "vy": 1.28371557698, "T": 16.7419391341, "k1": -0.382372339233, "k2": -0.392131177401, "stable": true, "margin": 1.6078688226}}, "Heavy-Braid-1.75 (m3 around 1.75)": {"n_total": 5, "n_stable": 3, "m3_min_traced": 1.72, "m3_max_traced": 1.78, "m3_stable_min": 1.72, "m3_stable_max": 1.75, "best": {"m3": 1.735, "vx": 0.165636788499, "vy": 0.915103887246, "T": 13.7998966192, "k1": 0.408699978992, "k2": -0.24738433035, "stable": true, "margin": 1.59130002101}}, "Light-Braid-0.55 (m3 around 0.55)": {"n_total": 5, "n_stable": 4, "m3_min_traced": 0.55, "m3_max_traced": 0.57, "m3_stable_min": 0.55, "m3_stable_max": 0.565, "best": {"m3": 0.56, "vx": 0.309345956375, "vy": 0.255884283519, "T": 30.5568486009, "k1": -1.17044175307, "k2": -1.49101563804, "stable": true, "margin": 0.508984361956}}, "Figure-8 (m3 around 1.00)": {"n_total": 31, "n_stable": 1, "m3_min_traced": 0.985, "m3_max_traced": 1.0, "m3_stable_min": 1.0, "m3_stable_max": 1.0, "best": {"m3": 1.0, "vx": 0.34711688812, "vy": 0.532724945387, "T": 6.32591398294, "k1": 1.99719948989, "k2": -0.59519323827, "stable": true, "margin": 0.00280051010696}}}, "orbits": [{"dim": 3, "subspace": "3d_rpo_rotating", "masses": [1, 1, 0.5], "y0": [-1, 0, 0, 0.9479320264499, 0, 0, 0.1041359471002, 0, 0, 0, 0.2294279990126, 0, 0, -0.4557531444849, 0.6732282680926, 0, 0.4526502909446, -1.346456536185], "T": 18.29287145943, "precess_rad": -3.769216675908, "E": -0.6975163641246, "L": 0.854163051705, "Lvec": [0, -0.5680673731239, -0.6378824174487], "ret_err": 3.670871856931e-11, "k1": 1.991468168936, "k2": -1.490131780803, "k3": -0.03462765973851, "stab_margin": 0.008531831064108, "survived_100T": 100, "drift_100T": 0.003669935497696, "rmin": 0.843796079352, "rmax": 2.318195917715, "thickness_3d": 0.19939291409, "partner_swaps": 14, "democratic": true, "id": "3D-001", "stable_3d": true, "stab_margin_3d": 0.008531831064108}, {"dim": 3, "subspace": "3d_inertial_5fold", "masses": [1, 1, 0.5], "y0": [-1, 0, 0, 0.9479359541975, 0, 0, 0.104128091605, 0, 0, 0, 0.2298078731035, 0, 0, -0.4553004786205, 0.6734752656928, 0, 0.450985211034, -1.346950531386], "T": 91.46417911842, "T_rpo": 18.29283582368, "q_fold": 5, "E": -0.697515, "L": 0.8542, "ret_err": 1.760809718701e-10, "k1": 1.9915, "k2": -1.4901, "k3": -0.0346, "stab_margin": 0.0085, "survived_100T": 100, "drift_100T": 0.00367, "rmin": 0.8438, "rmax": 2.3182, "thickness_3d": 0.1994, "partner_swaps": 70, "democratic": true, "id": "3D-002", "stable_3d": true, "stab_margin_3d": 0.0085}, {"dim": 3, "subspace": "3d_inertial_12fold", "masses": [1, 1, 0.5], "y0": [-1, 0, 0, 0.9489288586447, 0, 0, 0.1021422827106, 0, 0, 0, 0.1770020266891, 0, 0, -0.5362198938625, 0.6164617513438, 0, 0.7184357343468, -1.232923502688], "T": 219.6972229987, "T_rpo": 18.30810191655, "q_fold": 12, "E": -0.6983, "L": 0.832, "ret_err": 1.498869963028e-09, "k1": 1.9968, "k2": -1.918, "k3": 1.52, "stab_margin": 0.0032, "survived_100T": 100, "drift_100T": 0.008, "rmin": 0.8468, "rmax": 2.325, "thickness_3d": 0.1488, "partner_swaps": 168, "democratic": true, "id": "3D-003", "stable_3d": true, "stab_margin_3d": 0.0032}, {"dim": 3, "subspace": "3d_rpo_rotating", "masses": [1, 0.7, 0.4], "y0": [-1, 0, 0, 0.7064131355788, 0, 0, 1.263777012737, 0, 0, 0, -0.5552634916325, 0, 0, 0.06000227547664, 0.3046120962611, 0, 1.283154746997, -0.533071168457], "T": 11.03283347202, "precess_rad": 5.877595306415, "E": -0.5152528023177, "L": 1.239294259532, "Lvec": [0, 0.118845845301, 1.233582557741], "ret_err": 9.169111139504e-10, "k1": 1.997557248744, "k2": -0.7046084577426, "k3": 1.902863502159, "stab_margin": 0.002442751255799, "survived_100T": 100, "drift_100T": 0.09235333143128, "rmin": 0.5573638768399, "rmax": 2.313302773592, "thickness_3d": 0.09534667942425, "partner_swaps": 0, "democratic": false, "id": "3D-004", "stable_3d": true, "stab_margin_3d": 0.002442751255799}, {"dim": 3, "subspace": "3d_inertial_7fold", "masses": [1, 1, 0.5], "y0": [-1, 0, 0, 0.9508143800912, 0, 0, 0.09837123981762, 0, 0, 0, 0.1433602915964, 0, 0, -0.619648949052, 0.5328015373813, 0, 0.9525773149114, -1.065603074763], "T": 128.2674986752, "T_rpo": 18.32392838217, "q_fold": 7, "E": -0.6987, "L": 0.822, "ret_err": 6.047842168616e-10, "k1": 1.999, "k2": -1.945, "k3": 1.82, "stab_margin": 0.001, "survived_100T": 100, "drift_100T": 0.012, "rmin": 0.852, "rmax": 2.33, "thickness_3d": 0.107, "partner_swaps": 98, "democratic": true, "id": "3D-005", "stable_3d": true, "stab_margin_3d": 0.001}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 1, 0.5], "y0": [-1, 0, 0.9941458062522, 0, 0.01170838749561, 0, 0, 0.07446872307688, 0, -0.7818621047497, 0, 1.414786763346], "T": 24.3591072214, "E": -0.6957873036351, "L": -0.8434712197568, "ret_err": 9.591551852182e-11, "k1": -0.118465594121, "k2": -0.1274594769583, "stab_margin": 1.872540523042, "survived_100T": 100, "drift_100T": 0.0001054766683951, "rmin": 0.9824374187566, "rmax": 2.351513369174, "partner_swaps": 14, "syzygies": 14, "democratic": true, "id": "2D-DEM-001", "kz": -1.91602204, "stable_3d": true, "stab_margin_3d": 0.08397795999999991}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 1, 0.6], "y0": [-1, 0, 0.9966642760782, 0, 0.005559539869611, 0, 0, -0.00317809355291, 0, 0.8298856875384, 0, -1.377845989976], "T": 23.03781250071, "E": -0.7890050536668, "L": 0.8256993977218, "ret_err": 1.93683377035e-10, "k1": -0.01233665791158, "k2": -0.3561226138627, "stab_margin": 1.643877386137, "survived_100T": 100, "drift_100T": 9.757543940909e-05, "rmin": 0.9911047362086, "rmax": 2.260433931974, "partner_swaps": 14, "syzygies": 14, "democratic": true, "id": "2D-DEM-002", "kz": -1.680786856, "stable_3d": true, "stab_margin_3d": 0.3192131439999999}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 0.8, 0.6], "y0": [-1, 0, 1.161279282116, 0, 0.1182942905122, 0, 0, 0.06554657293896, 0, 0.837535084279, 0, -1.225957733937], "T": 26.61913649918, "E": -0.6332742025862, "L": 0.6255288599953, "ret_err": 4.475689447236e-10, "k1": 0.09028419337063, "k2": -0.6205123902385, "stab_margin": 1.379487609762, "survived_100T": 100, "drift_100T": 0.0001236674778281, "rmin": 1.04298499159, "rmax": 2.452277066469, "partner_swaps": 14, "syzygies": 14, "democratic": true, "id": "2D-DEM-003", "kz": -0.8176421348, "stable_3d": true, "stab_margin_3d": 1.1823578652}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 1, 0.3], "y0": [-1, 0, 0.9912175493266, 0, 0.02927483557814, 0, 0, 0.2293183816887, 0, -0.6788129064185, 0, 1.498315082433], "T": 27.86921032775, "E": -0.5121123675041, "L": -0.8890107689353, "ret_err": 1.257892105583e-10, "k1": 0.6620623992213, "k2": -0.6401246171741, "stab_margin": 1.337937600779, "survived_100T": 100, "drift_100T": 0.0001293830548703, "rmin": 0.9619427137484, "rmax": 2.594238848451, "partner_swaps": 14, "syzygies": 14, "democratic": true, "id": "2D-DEM-004", "kz": -1.749124961, "stable_3d": true, "stab_margin_3d": 0.2508750390000001}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 1, 3], "y0": [-1, 0, 1.175976609648, 0, -0.0586588698828, 0, 0, 1.17032799953, 0, 1.540866508231, 0, -0.903731502587], "T": 14.60593741633, "E": -2.979308643954, "L": 0.8007305785983, "ret_err": 3.995354258301e-09, "k1": 0.695042801192, "k2": 0.6124417372099, "stab_margin": 1.304957198808, "survived_100T": 100, "drift_100T": 0.0001144991452195, "rmin": 0.8059499274377, "rmax": 2.175976609712, "partner_swaps": 16, "syzygies": 15, "democratic": true, "id": "2D-DEM-005", "kz": 1.505892356, "stable_3d": true, "stab_margin_3d": 0.49410764400000007}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 0.9, 0.8], "y0": [-1, 0, -0.05951905193104, 0, 1.316958933422, 0, 0, 0.7812388652309, 0, -0.1613813787143, 0, -0.7949945304851], "T": 15.49514153178, "E": -1.255618096581, "L": -1.610174244392, "ret_err": 3.877514089812e-09, "k1": 0.7939236542622, "k2": 0.2188983223225, "stab_margin": 1.206076345738, "survived_100T": 100, "drift_100T": 0.0005706312449471, "rmin": 0.1894231463975, "rmax": 2.316958933777, "partner_swaps": 2, "syzygies": 14, "democratic": true, "id": "2D-DEM-006", "kz": -0.256817526, "stable_3d": true, "stab_margin_3d": 1.2060763457378}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 0.6, 0.3], "y0": [-1, 0, -0.2924901591259, 0, 3.918313651585, 0, 0, -0.7862827491696, 0, 1.190621532647, 0, 0.2396994319381], "T": 16.88230020881, "E": -0.2087758969537, "L": 0.8591009671761, "ret_err": 4.050156867044e-09, "k1": 0.8107284691478, "k2": 0.5115285483948, "stab_margin": 1.189271530852, "survived_100T": 100, "drift_100T": 0.0009673691654239, "rmin": 0.6503868535378, "rmax": 5.645520462471, "partner_swaps": 2, "syzygies": 2, "democratic": true, "id": "2D-DEM-007", "kz": 0.6733392197, "stable_3d": true, "stab_margin_3d": 1.1892715308522002}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 1, 1.25], "y0": [-1, 0, -0.08451456731706, 0, 0.8676116538536, 0, 0, 1.115425202704, 0, -1.403523645946, 0, 0.2304787545933], "T": 17.24664815018, "E": -1.434245553771, "L": -0.7468494422345, "ret_err": 9.853659608361e-10, "k1": 0.266788845913, "k2": -0.8747432278737, "stab_margin": 1.125256772126, "survived_100T": 100, "drift_100T": 9.477645656984e-05, "rmin": 0.9154854326829, "rmax": 1.975966244451, "partner_swaps": 14, "syzygies": 14, "democratic": true, "id": "2D-DEM-008", "kz": -0.01247988569, "stable_3d": true, "stab_margin_3d": 1.1252567721263}, {"dim": 2, "subspace": "collinear_L0", "masses": [1, 1, 1.75], "y0": [-1, 0, 1, 0, 0, 0, 0.1644176545216, 0.9211164935806, 0.1644176545216, 0.9211164935806, -0.1879058908819, -1.052704564092], "T": 13.74550946603, "E": -2.123952657433, "L": 0, "ret_err": 1.174911639214e-10, "k1": 0.4437081519285, "k2": -1.122044236842, "stab_margin": 0.8779557631582, "survived_100T": 100, "drift_100T": 0.0002691450540546, "rmin": 0.02920153958173, "rmax": 2.515165093275, "partner_swaps": 13, "syzygies": 13, "democratic": true, "id": "2D-DEM-009", "kz": 2.00000003, "stable_3d": false, "stab_margin_3d": 0.0}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 1, 2], "y0": [-1, 0, 1.088789267775, 0, -0.04439463388762, 0, 0, 0.7657257196313, 0, 1.316046188975, 0, -1.040885954303], "T": 10.59624526645, "E": -2.093998691548, "L": 0.7595907485412, "ret_err": 9.304506181736e-10, "k1": 1.181006320034, "k2": 1.004501048826, "stab_margin": 0.8189936799662, "survived_100T": 100, "drift_100T": 6.214748995554e-05, "rmin": 0.8475909541459, "rmax": 2.088789267776, "partner_swaps": 10, "syzygies": 9, "democratic": true, "id": "2D-DEM-010", "kz": 1.544597982, "stable_3d": true, "stab_margin_3d": 0.455402018}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 0.5, 0.25], "y0": [-1, 0, 2.244481360705, 0, -0.4889627214096, 0, 0, 0.5229814261803, 0, -0.272345158529, 0, -1.547235387663], "T": 11.0046653144, "E": -0.2344988667793, "L": -0.6394831357252, "ret_err": 6.792553414385e-09, "k1": 1.339365761638, "k2": -0.2881455531115, "stab_margin": 0.6606342383618, "survived_100T": 100, "drift_100T": 0.001648956538877, "rmin": 0.5110372785904, "rmax": 4.042706923058, "partner_swaps": 2, "syzygies": 2, "democratic": true, "id": "2D-DEM-011", "kz": 0.9493068434, "stable_3d": true, "stab_margin_3d": 0.6606342383620001}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 1, 2], "y0": [-1, 0, 0.8962088220335, 0, 0.05189558898326, 0, 0, -1.366846983191, 0, -0.8243122233237, 0, 1.095579603257], "T": 23.37597009377, "E": -2.323311262404, "L": 0.7418025941166, "ret_err": 8.282360927108e-09, "k1": -1.331820955685, "k2": -1.373923801655, "stab_margin": 0.6260761983446, "survived_100T": 100, "drift_100T": 0.0001878817178329, "rmin": 0.7969539484294, "rmax": 1.896208822123, "partner_swaps": 26, "syzygies": 25, "democratic": true, "id": "2D-DEM-012", "kz": -0.1482871136, "stable_3d": true, "stab_margin_3d": 0.6260761983450001}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 1, 0.3], "y0": [-1, 0, 0.4757308385986, 0, 1.747563871338, 0, 0, -0.4427636858869, 0, 0.7481098339043, 0, -1.017820493391], "T": 33.17947180427, "E": -0.4894502144097, "L": 0.2650507080067, "ret_err": 1.755885346915e-09, "k1": 1.370273979296, "k2": -1.382820589545, "stab_margin": 0.6171794104547, "survived_100T": 100, "drift_100T": 9.490051600215e-05, "rmin": 1.271833032671, "rmax": 2.747563871373, "partner_swaps": 28, "syzygies": 14, "democratic": true, "id": "2D-DEM-013", "kz": 1.568126914, "stable_3d": true, "stab_margin_3d": 0.43187308599999996}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 0.6, 0.3], "y0": [-1, 0, 1.506783373256, 0, 0.3197665868204, 0, 0, 0.05911765721432, 0, -0.6683118409157, 0, 1.13956482445], "T": 28.67943085975, "E": -0.2877732713313, "L": -0.5539999329271, "ret_err": 1.095056744699e-09, "k1": 1.427951573874, "k2": 0.7699874696425, "stab_margin": 0.5720484261258, "survived_100T": 100, "drift_100T": 0.0002393814553429, "rmin": 1.187016786369, "rmax": 3.264735645269, "partner_swaps": 10, "syzygies": 9, "democratic": true, "id": "2D-DEM-014", "kz": 0.2757288955, "stable_3d": true, "stab_margin_3d": 0.5720484261259999}, {"dim": 2, "subspace": "collinear_L0", "masses": [1, 1, 0.55], "y0": [-1, 0, 1, 0, 0, 0, 0.3009665258277, 0.2527187743142, 0.3009665258277, 0.2527187743142, -1.094423730282, -0.9189773611427], "T": 30.14571574874, "E": -0.8839246312233, "L": 0, "ret_err": 1.011810584072e-10, "k1": -0.9409202648391, "k2": -1.522228685247, "stab_margin": 0.4777713147533, "survived_100T": 100, "drift_100T": 0.0002553279387808, "rmin": 0.1611602002872, "rmax": 2.423773165721, "partner_swaps": 17, "syzygies": 25, "democratic": true, "id": "2D-DEM-015", "kz": 2.000000058, "stable_3d": false, "stab_margin_3d": 0.0}, {"dim": 2, "subspace": "collinear_L0", "masses": [1, 1, 0.6], "y0": [-1, 0, 1, 0, 0, 0, 0.198933087672, 0.09648911003918, 0.198933087672, 0.09648911003918, -0.6631102922401, -0.3216303667973], "T": 24.55588946246, "E": -1.488167072517, "L": 0, "ret_err": 5.988488646526e-10, "k1": 1.532656627079, "k2": 0.09612783351926, "stab_margin": 0.4673433729213, "survived_100T": 100, "drift_100T": 0.001153657924963, "rmin": 0.009180740678243, "rmax": 2.072541962705, "partner_swaps": 31, "syzygies": 41, "democratic": true, "id": "2D-DEM-016", "kz": 2.000000219, "stable_3d": false, "stab_margin_3d": 0.0}, {"dim": 2, "subspace": "collinear_L0", "masses": [1, 1, 0.75], "y0": [-1, 0, 1, 0, 0, 0, 0.190246168878, 0.1147396346484, 0.190246168878, 0.1147396346484, -0.507323117008, -0.3059723590624], "T": 20.48709641813, "E": -1.819017775383, "L": 0, "ret_err": 1.005428835234e-09, "k1": 0.6150274062478, "k2": -1.555322983772, "stab_margin": 0.4446770162278, "survived_100T": 100, "drift_100T": 0.001392460284646, "rmin": 0.007835858603264, "rmax": 2.000000010984, "partner_swaps": 27, "syzygies": 37, "democratic": true, "id": "2D-DEM-017", "kz": 2.000000145, "stable_3d": false, "stab_margin_3d": 0.0}, {"dim": 2, "subspace": "collinear_L0", "masses": [1, 1, 1.1], "y0": [-1, 0, 1, 0, 0, 0, 0.3658879746975, 0.5486388556991, 0.3658879746975, 0.5486388556991, -0.6652508630864, -0.9975251921803], "T": 26.16056926635, "E": -1.47443302506, "L": 0, "ret_err": 1.559184153831e-10, "k1": -0.6251460000389, "k2": -1.6638299047, "stab_margin": 0.3361700952998, "survived_100T": 100, "drift_100T": 0.0003603345481615, "rmin": 0.1866521151386, "rmax": 2.096263096708, "partner_swaps": 25, "syzygies": 19, "democratic": true, "id": "2D-DEM-018", "kz": 2.000000025, "stable_3d": false, "stab_margin_3d": 0.0}, {"dim": 2, "subspace": "collinear_L0", "masses": [1, 1, 0.4], "y0": [-1, 0, 1, 0, 0, 0, 0.2671472533999, 0.04519634758337, 0.2671472533999, 0.04519634758337, -1.335736266999, -0.2259817379168], "T": 28.85400507564, "E": -0.8595378109961, "L": 0, "ret_err": 1.532750694813e-09, "k1": 1.691952941847, "k2": -0.08710945771761, "stab_margin": 0.3080470581529, "survived_100T": 100, "drift_100T": 0.001305142352177, "rmin": 0.02299878026218, "rmax": 2.164225362542, "partner_swaps": 25, "syzygies": 27, "democratic": true, "id": "2D-DEM-019", "kz": 2.000000396, "stable_3d": false, "stab_margin_3d": 0.0}, {"dim": 2, "subspace": "collinear_L0", "masses": [1, 1, 1], "y0": [-1, 0, 1, 0, 0, 0, 0.4391659178758, 0.4529676431928, 0.4391659178758, 0.4529676431928, -0.8783318357516, -0.9059352863856], "T": 28.66927091558, "E": -1.30586083239, "L": 0, "ret_err": 1.304566527141e-10, "k1": 1.696736669104, "k2": 1.554436612458, "stab_margin": 0.3032633308961, "survived_100T": 100, "drift_100T": 0.000853209891671, "rmin": 0.1159369168997, "rmax": 2.25525570943, "partner_swaps": 21, "syzygies": 19, "democratic": true, "id": "2D-DEM-020", "kz": 2.000000045, "stable_3d": false, "stab_margin_3d": 0.0}, {"dim": 2, "subspace": "collinear_L0", "masses": [1, 1, 2], "y0": [-1, 0, 1, 0, 0, 0, 0.6378164243121, 0.3886052516439, 0.6378164243121, 0.3886052516439, -0.6378164243121, -0.3886052516439], "T": 22.63131563796, "E": -3.384352334545, "L": 0, "ret_err": 2.683981588782e-09, "k1": 1.776655520447, "k2": 1.580413287506, "stab_margin": 0.223344479553, "survived_100T": 100, "drift_100T": 0.005081647660886, "rmin": 0.07932345065322, "rmax": 2.006557023132, "partner_swaps": 25, "syzygies": 23, "democratic": true, "id": "2D-DEM-021", "kz": 1.999999908, "stable_3d": false, "stab_margin_3d": 0.0}, {"dim": 2, "subspace": "collinear_L0", "masses": [1, 1, 3], "y0": [-1, 0, 1, 0, 0, 0, 0.7996878010306, 1.140894092109, 0.7996878010306, 1.140894092109, -0.533125200687, -0.7605960614057], "T": 16.89412426168, "E": -3.264766819125, "L": 0, "ret_err": 1.677106920071e-10, "k1": 0.248505366169, "k2": -1.808851942973, "stab_margin": 0.1911480570275, "survived_100T": 100, "drift_100T": 0.0005279729370196, "rmin": 0.07880898872655, "rmax": 2.134363885705, "partner_swaps": 11, "syzygies": 13, "democratic": true, "id": "2D-DEM-022", "kz": 2.000000007, "stable_3d": false, "stab_margin_3d": 0.0}, {"dim": 2, "subspace": "collinear_L0", "masses": [1, 1, 1.05], "y0": [-1, 0, 1, 0, 0, 0, 0.4118980843609, 0.503411850757, 0.4118980843609, 0.503411850757, -0.784567779735, -0.9588797157276], "T": 27.9295410516, "E": -1.371043098745, "L": 0, "ret_err": 1.325772269722e-10, "k1": 1.815877684991, "k2": 0.5650326952436, "stab_margin": 0.1841223150091, "survived_100T": 100, "drift_100T": 0.0004465397963389, "rmin": 0.1169016409224, "rmax": 2.209638886025, "partner_swaps": 25, "syzygies": 19, "democratic": true, "id": "2D-DEM-023", "kz": 2.000000035, "stable_3d": false, "stab_margin_3d": 0.0}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 0.8, 0.6], "y0": [-1, 0, 0.03029133440607, 0, 1.626278220792, 0, 0, 0.6605762934825, 0, -0.2815395265217, 0, -0.7255744537753], "T": 19.05486021379, "E": -0.8978701273537, "L": -1.375390418882, "ret_err": 4.585987612437e-09, "k1": 1.840214948624, "k2": -1.343105889243, "stab_margin": 0.1597850513762, "survived_100T": 100, "drift_100T": 0.0007292037716459, "rmin": 0.1977169097792, "rmax": 2.626278221416, "partner_swaps": 2, "syzygies": 10, "democratic": true, "id": "2D-DEM-024", "kz": 0.1202249755, "stable_3d": true, "stab_margin_3d": 0.15978505137599996}, {"dim": 2, "subspace": "collinear_L0", "masses": [1, 1, 0.65], "y0": [-1, 0, 1, 0, 0, 0, 0.1372211906121, 0.08550587085491, 0.1372211906121, 0.08550587085491, -0.4222190480372, -0.2630949872459], "T": 23.5337445487, "E": -1.693425524424, "L": 0, "ret_err": 7.369219250961e-10, "k1": 1.859601783871, "k2": 0.3077725267653, "stab_margin": 0.1403982161289, "survived_100T": 100, "drift_100T": 0.001062464654022, "rmin": 0.04131437968207, "rmax": 2.000000010181, "partner_swaps": 33, "syzygies": 45, "democratic": true, "id": "2D-DEM-025", "kz": 2.000000386, "stable_3d": false, "stab_margin_3d": 0.0}, {"dim": 2, "subspace": "collinear_L0", "masses": [1, 1, 1.5], "y0": [-1, 0, 1, 0, 0, 0, 0.04482473984528, 0.8108542833121, 0.04482473984528, 0.8108542833121, -0.0597663197937, -1.081139044416], "T": 13.46965652601, "E": -1.961180839175, "L": 0, "ret_err": 1.109385244044e-10, "k1": -0.7734344151292, "k2": -1.880689949372, "stab_margin": 0.1193100506275, "survived_100T": 100, "drift_100T": 0.0001643497512203, "rmin": 0.06866766876387, "rmax": 2.000000001251, "partner_swaps": 13, "syzygies": 9, "democratic": true, "id": "2D-DEM-026", "kz": 2.000000023, "stable_3d": false, "stab_margin_3d": 0.0}, {"dim": 2, "subspace": "collinear_L0", "masses": [1, 1, 1.1], "y0": [-1, 0, 1, 0, 0, 0, 0.2436630237552, 0.3194300023167, 0.2436630237552, 0.3194300023167, -0.4430236795549, -0.5807818223939], "T": 29.57530401462, "E": -2.245125176246, "L": 0, "ret_err": 5.450067282599e-10, "k1": 1.783459977039, "k2": -1.89813841614, "stab_margin": 0.1018615838602, "survived_100T": 100, "drift_100T": 0.001200464118641, "rmin": 0.06821530836218, "rmax": 2.000000006963, "partner_swaps": 35, "syzygies": 53, "democratic": true, "id": "2D-DEM-027", "kz": 2.000000325, "stable_3d": false, "stab_margin_3d": 0.0}, {"dim": 2, "subspace": "collinear_L0", "masses": [1, 1, 1.05], "y0": [-1, 0, 1, 0, 0, 0, 0.2092178449513, 0.2511146785605, 0.2092178449513, 0.2511146785605, -0.3985101808596, -0.4783136734485], "T": 22.77513176071, "E": -2.289682285976, "L": 0, "ret_err": 5.148561435856e-10, "k1": 1.508020997148, "k2": -1.92139072092, "stab_margin": 0.07860927908026, "survived_100T": 100, "drift_100T": 0.0008638821608129, "rmin": 0.1135009156665, "rmax": 2.000000006012, "partner_swaps": 29, "syzygies": 43, "democratic": true, "id": "2D-DEM-028", "kz": 2.000000205, "stable_3d": false, "stab_margin_3d": 0.0}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 1, 0.5], "y0": [-1, 0, 1.10663740753, 0, -0.2132748150598, 0, 0, -0.7674789874541, 0, 0.1202124821061, 0, 1.294533010696], "T": 12.90978024947, "E": -0.7683577024231, "L": 0.7624649727822, "ret_err": 4.535463031684e-10, "k1": 1.926042479862, "k2": -0.9040454252417, "stab_margin": 0.07395752013773, "survived_100T": 100, "drift_100T": 0.0001166172891253, "rmin": 0.6448421108449, "rmax": 2.151523272158, "partner_swaps": 12, "syzygies": 7, "democratic": true, "id": "2D-DEM-029", "kz": -1.679692969, "stable_3d": true, "stab_margin_3d": 0.07395752013800005}, {"dim": 2, "subspace": "collinear_L0", "masses": [1, 1, 1.05], "y0": [-1, 0, 1, 0, 0, 0, 0.3958169924951, 0.257600490372, 0.3958169924951, 0.257600490372, -0.7539371285622, -0.4906676007085], "T": 34.65913753723, "E": -1.952153554502, "L": 0, "ret_err": 1.461794580248e-09, "k1": 1.928689324111, "k2": 1.622173585606, "stab_margin": 0.07131067588928, "survived_100T": 100, "drift_100T": 0.003225767442644, "rmin": 0.04858354108479, "rmax": 2.00000001329, "partner_swaps": 35, "syzygies": 37, "democratic": true, "id": "2D-DEM-030", "kz": 2.000000159, "stable_3d": false, "stab_margin_3d": 0.0}, {"dim": 2, "subspace": "collinear_L0", "masses": [1, 1, 2], "y0": [-1, 0, 1, 0, 0, 0, 0.6649107583309, 0.8324167863796, 0.6649107583309, 0.8324167863796, -0.6649107583309, -0.8324167863796], "T": 12.64890615166, "E": -2.229951954418, "L": 0, "ret_err": 7.149737891503e-11, "k1": -0.8758544670406, "k2": -1.934254966131, "stab_margin": 0.06574503386874, "survived_100T": 100, "drift_100T": 0.0003531751620929, "rmin": 0.1135730186129, "rmax": 2.160096115545, "partner_swaps": 7, "syzygies": 5, "democratic": true, "id": "2D-DEM-031", "kz": 2.000000003, "stable_3d": false, "stab_margin_3d": 0.0}, {"dim": 2, "subspace": "collinear_L0", "masses": [1, 1, 0.9], "y0": [-1, 0, 1, 0, 0, 0, 0.3756175628232, 0.3034599160564, 0.3756175628232, 0.3034599160564, -0.8347056951627, -0.6743553690141], "T": 18.12424539902, "E": -1.548653583281, "L": 0, "ret_err": 2.930073074821e-10, "k1": 1.83398267207, "k2": -1.938584197174, "stab_margin": 0.06141580282552, "survived_100T": 100, "drift_100T": 0.0004600564078123, "rmin": 0.03564762467023, "rmax": 2.000000003819, "partner_swaps": 15, "syzygies": 17, "democratic": true, "id": "2D-DEM-032", "kz": 2.000000049, "stable_3d": false, "stab_margin_3d": 0.0}, {"dim": 2, "subspace": "collinear_L0", "masses": [1, 1, 1.35], "y0": [-1, 0, 1, 0, 0, 0, 0.5553537397592, 0.2911688357094, 0.5553537397592, 0.2911688357094, -0.8227462811247, -0.431361238088], "T": 18.94365001335, "E": -2.224288759287, "L": 0, "ret_err": 6.560379517776e-10, "k1": 1.945117558129, "k2": 0.3452716859384, "stab_margin": 0.05488244187141, "survived_100T": 100, "drift_100T": 0.001342988268352, "rmin": 0.06958514050724, "rmax": 2.136292778847, "partner_swaps": 17, "syzygies": 23, "democratic": true, "id": "2D-DEM-033", "kz": 1.999999992, "stable_3d": false, "stab_margin_3d": 0.0}, {"dim": 2, "subspace": "collinear_L0", "masses": [1, 1, 0.55], "y0": [-1, 0, 1, 0, 0, 0, 0.3044027756973, 0.09516890322031, 0.3044027756973, 0.09516890322031, -1.106919184354, -0.346068738983], "T": 27.39423939089, "E": -1.12839757549, "L": 0, "ret_err": 9.968743493226e-10, "k1": 1.94712642037, "k2": -0.4676527397086, "stab_margin": 0.0528735796299, "survived_100T": 100, "drift_100T": 0.001869052482942, "rmin": 0.06063748713354, "rmax": 2.003067435554, "partner_swaps": 25, "syzygies": 31, "democratic": true, "id": "2D-DEM-034", "kz": 2.000000147, "stable_3d": false, "stab_margin_3d": 0.0}, {"dim": 2, "subspace": "collinear_L0", "masses": [1, 1, 1.1], "y0": [-1, 0, 1, 0, 0, 0, 0.04717401633238, 0.6381515498314, 0.04717401633238, 0.6381515498314, -0.08577093878615, -1.160275545148], "T": 25.5316343627, "E": -1.546059414596, "L": 0, "ret_err": 7.577619231701e-10, "k1": 1.949786691385, "k2": 0.5286428834891, "stab_margin": 0.05021330861518, "survived_100T": 100, "drift_100T": 0.001847805344376, "rmin": 0.01953582338005, "rmax": 2.014178440053, "partner_swaps": 21, "syzygies": 13, "democratic": true, "id": "2D-DEM-035", "kz": 2.000000572, "stable_3d": false, "stab_margin_3d": 0.0}, {"dim": 2, "subspace": "collinear_L0", "masses": [1, 1, 0.85], "y0": [-1, 0, 1, 0, 0, 0, 0.3804252969975, 0.1459144690094, 0.3804252969975, 0.1459144690094, -0.8951183458765, -0.343328162375], "T": 25.55108098972, "E": -1.643363352051, "L": 0, "ret_err": 1.36588759351e-09, "k1": 1.951016557257, "k2": 1.419165309292, "stab_margin": 0.04898344274342, "survived_100T": 100, "drift_100T": 0.002875219471195, "rmin": 0.03512754871777, "rmax": 2.000000019673, "partner_swaps": 25, "syzygies": 35, "democratic": true, "id": "2D-DEM-036", "kz": 1.999999989, "stable_3d": false, "stab_margin_3d": 0.0}, {"dim": 2, "subspace": "collinear_L0", "masses": [1, 1, 2], "y0": [-1, 0, 1, 0, 0, 0, 0.6224288030734, 0.4924871344728, 0.6224288030734, 0.4924871344728, -0.6224288030734, -0.4924871344728], "T": 33.39552349614, "E": -3.240077614967, "L": 0, "ret_err": 6.540857184394e-10, "k1": 1.955667477157, "k2": 1.810575411817, "stab_margin": 0.04433252284337, "survived_100T": 100, "drift_100T": 0.003527861972806, "rmin": 0.07049608479429, "rmax": 2.00103629858, "partner_swaps": 35, "syzygies": 41, "democratic": true, "id": "2D-DEM-037", "kz": 1.999999992, "stable_3d": false, "stab_margin_3d": 0.0}, {"dim": 2, "subspace": "collinear_L0", "masses": [1, 1, 0.45], "y0": [-1, 0, 1, 0, 0, 0, 0.200312477133, 0.05847254405545, 0.200312477133, 0.05847254405545, -0.8902776761467, -0.2598779735798], "T": 11.24400983391, "E": -1.162926420192, "L": 0, "ret_err": 5.274938477798e-10, "k1": 1.743148330189, "k2": -1.957307693906, "stab_margin": 0.04269230609434, "survived_100T": 100, "drift_100T": 0.0003806658118844, "rmin": 0.06760098795333, "rmax": 2.00000000981, "partner_swaps": 13, "syzygies": 19, "democratic": true, "id": "2D-DEM-038", "kz": 2.000000001, "stable_3d": false, "stab_margin_3d": 0.0}, {"dim": 2, "subspace": "collinear_L0", "masses": [1, 1, 1.5], "y0": [-1, 0, 1, 0, 0, 0, 0.596033809832, 0.3768898317398, 0.596033809832, 0.3768898317398, -0.7947117464426, -0.502519775653], "T": 30.70513970706, "E": -2.339628088626, "L": 0, "ret_err": 1.826852813443e-09, "k1": 1.957525976632, "k2": -0.06098700561943, "stab_margin": 0.04247402336819, "survived_100T": 100, "drift_100T": 0.004455987117351, "rmin": 0.03548609787446, "rmax": 2.13514126745, "partner_swaps": 27, "syzygies": 33, "democratic": true, "id": "2D-DEM-039", "kz": 2.000000015, "stable_3d": false, "stab_margin_3d": 0.0}, {"dim": 2, "subspace": "collinear_L0", "masses": [1, 1, 0.9], "y0": [-1, 0, 1, 0, 0, 0, 0.3930618623821, 0.1740627084385, 0.3930618623821, 0.1740627084385, -0.8734708052936, -0.3868060187523], "T": 19.84451480838, "E": -1.704547981142, "L": 0, "ret_err": 9.618162925427e-10, "k1": 1.966625922965, "k2": -1.545367974662, "stab_margin": 0.03337407703542, "survived_100T": 100, "drift_100T": 0.00109568388573, "rmin": 0.0372610349511, "rmax": 2.000000008826, "partner_swaps": 19, "syzygies": 25, "democratic": true, "id": "2D-DEM-040", "kz": 1.999999999, "stable_3d": false, "stab_margin_3d": 0.0}, {"dim": 2, "subspace": "collinear_L0", "masses": [1, 1, 1.75], "y0": [-1, 0, 1, 0, 0, 0, 0.6726191734203, 0.5863391732575, 0.6726191734203, 0.5863391732575, -0.768707626766, -0.6701019122942], "T": 23.97899358691, "E": -2.293835331681, "L": 0, "ret_err": 5.67012712951e-10, "k1": 1.967022985957, "k2": -0.9820064504179, "stab_margin": 0.03297701404347, "survived_100T": 100, "drift_100T": 0.001882990027522, "rmin": 0.1778321951356, "rmax": 2.194593602171, "partner_swaps": 17, "syzygies": 15, "democratic": true, "id": "2D-DEM-041", "kz": 2.000000056, "stable_3d": false, "stab_margin_3d": 0.0}, {"dim": 2, "subspace": "collinear_L0", "masses": [1, 1, 0.85], "y0": [-1, 0, 1, 0, 0, 0, 0.3779510883017, 0.1249725546878, 0.3779510883017, 0.1249725546878, -0.8892966783568, -0.2940530698536], "T": 19.21658616162, "E": -1.668675624665, "L": 0, "ret_err": 1.033248977004e-09, "k1": 1.926810142629, "k2": -1.969659389751, "stab_margin": 0.03034061024941, "survived_100T": 100, "drift_100T": 0.001768375140622, "rmin": 0.02874269826178, "rmax": 2.000000014852, "partner_swaps": 19, "syzygies": 25, "democratic": true, "id": "2D-DEM-042", "kz": 1.999999987, "stable_3d": false, "stab_margin_3d": 0.0}, {"dim": 2, "subspace": "collinear_L0", "masses": [1, 1, 0.65], "y0": [-1, 0, 1, 0, 0, 0, 0.3102238538936, 0.1249725411769, 0.3102238538936, 0.1249725411769, -0.9545349350572, -0.384530895929], "T": 9.791270071851, "E": -1.343967714972, "L": 0, "ret_err": 4.173136483002e-10, "k1": 1.96968385615, "k2": 1.773308627729, "stab_margin": 0.03031614385043, "survived_100T": 100, "drift_100T": 0.0002650887860892, "rmin": 0.05386448368389, "rmax": 2.000000005236, "partner_swaps": 9, "syzygies": 7, "democratic": true, "id": "2D-DEM-043", "kz": 2.000000005, "stable_3d": false, "stab_margin_3d": 0.0}, {"dim": 2, "subspace": "collinear_L0", "masses": [1, 1, 0.6], "y0": [-1, 0, 1, 0, 0, 0, 0.3062955521265, 0.07686797954701, 0.3062955521265, 0.07686797954701, -1.020985173755, -0.25622659849], "T": 9.773719991627, "E": -1.267855510028, "L": 0, "ret_err": 4.005731220176e-10, "k1": 1.974052378577, "k2": 1.850372592956, "stab_margin": 0.0259476214235, "survived_100T": 100, "drift_100T": 0.000210761718527, "rmin": 0.0495004761048, "rmax": 2.000000005023, "partner_swaps": 9, "syzygies": 15, "democratic": true, "id": "2D-DEM-044", "kz": 2.000000001, "stable_3d": false, "stab_margin_3d": 0.0}, {"dim": 2, "subspace": "collinear_L0", "masses": [1, 1, 3], "y0": [-1, 0, 1, 0, 0, 0, 0.8354332316371, 0.9002685558194, 0.8354332316371, 0.9002685558194, -0.5569554877581, -0.6001790372129], "T": 31.71094768838, "E": -3.985946404799, "L": 0, "ret_err": 1.430020158592e-09, "k1": 1.974434595146, "k2": -1.657861912471, "stab_margin": 0.02556540485356, "survived_100T": 100, "drift_100T": 0.006580625330945, "rmin": 0.1192453546422, "rmax": 2.034764894136, "partner_swaps": 29, "syzygies": 39, "democratic": true, "id": "2D-DEM-045", "kz": 2.000000074, "stable_3d": false, "stab_margin_3d": 0.0}, {"dim": 2, "subspace": "collinear_L0", "masses": [1, 1, 0.65], "y0": [-1, 0, 1, 0, 0, 0, 0.3635622992885, 0.1687721734632, 0.3635622992885, 0.1687721734632, -1.11865322858, -0.5192989952714], "T": 32.15908023988, "E": -1.144995048002, "L": 0, "ret_err": 3.95760441858e-10, "k1": 1.979753739474, "k2": 1.347985471009, "stab_margin": 0.02024626052589, "survived_100T": 100, "drift_100T": 0.00089149005932, "rmin": 0.06645755219055, "rmax": 2.031193361597, "partner_swaps": 25, "syzygies": 31, "democratic": true, "id": "2D-DEM-046", "kz": 2.000000129, "stable_3d": false, "stab_margin_3d": 0.0}, {"dim": 2, "subspace": "collinear_L0", "masses": [1, 1, 2], "y0": [-1, 0, 1, 0, 0, 0, 0.6656250224318, 0.4965289013623, 0.6656250224318, 0.4965289013623, -0.6656250224318, -0.4965289013623], "T": 11.77606014906, "E": -3.120804759249, "L": 0, "ret_err": 2.224906588218e-10, "k1": 1.979824165548, "k2": -1.082698451648, "stab_margin": 0.02017583445157, "survived_100T": 100, "drift_100T": 0.0003930618085748, "rmin": 0.1055563632371, "rmax": 2.029488391757, "partner_swaps": 11, "syzygies": 13, "democratic": true, "id": "2D-DEM-047", "kz": 1.999999999, "stable_3d": false, "stab_margin_3d": 0.0}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 0.5, 0.25], "y0": [-1, 0, 0.8250931388475, 0, 2.349813722305, 0, 0, -0.3912863597543, 0, 0.7783603235347, 0, 0.008424791947857], "T": 16.43693135154, "E": -0.2025492929224, "L": 0.7173454139358, "ret_err": 9.173739912362e-09, "k1": 1.979979299254, "k2": 0.757102875451, "stab_margin": 0.02002070074626, "survived_100T": 100, "drift_100T": 0.0005018692953675, "rmin": 1.39068389662, "rmax": 3.349813722305, "partner_swaps": 4, "syzygies": 3, "democratic": true, "id": "2D-DEM-048", "kz": -0.6238204033, "stable_3d": true, "stab_margin_3d": 0.020020700746000042}, {"dim": 2, "subspace": "collinear_L0", "masses": [1, 1, 2.5], "y0": [-1, 0, 1, 0, 0, 0, 0.7601919290005, 0.4522198926885, 0.7601919290005, 0.4522198926885, -0.6081535432004, -0.3617759141508], "T": 13.40006592627, "E": -4.091689719531, "L": 0, "ret_err": 4.7486734996e-10, "k1": 1.980073230258, "k2": 1.368082903539, "stab_margin": 0.0199267697417, "survived_100T": 100, "drift_100T": 0.001262294988036, "rmin": 0.08672433290961, "rmax": 2.010704155625, "partner_swaps": 15, "syzygies": 21, "democratic": true, "id": "2D-DEM-049", "kz": 1.999999988, "stable_3d": false, "stab_margin_3d": 0.0}, {"dim": 2, "subspace": "collinear_L0", "masses": [1, 1, 0.95], "y0": [-1, 0, 1, 0, 0, 0, 0.4132214458497, 0.3163717292144, 0.4132214458497, 0.3163717292144, -0.8699398859994, -0.6660457457144], "T": 33.40885360176, "E": -1.558961103841, "L": 0, "ret_err": 4.420692573059e-10, "k1": 1.980091920521, "k2": -1.73395571514, "stab_margin": 0.01990807947861, "survived_100T": 100, "drift_100T": 0.001394813796128, "rmin": 0.04039142429489, "rmax": 2.00000000598, "partner_swaps": 27, "syzygies": 37, "democratic": true, "id": "2D-DEM-050", "kz": 2.000000192, "stable_3d": false, "stab_margin_3d": 0.0}, {"dim": 2, "subspace": "collinear_L0", "masses": [1, 1, 1.1], "y0": [-1, 0, 1, 0, 0, 0, 0.3975592029491, 0.3445981895417, 0.3975592029491, 0.3445981895417, -0.722834914453, -0.626542162803], "T": 20.6946395117, "E": -1.919923800488, "L": 0, "ret_err": 2.788638216798e-10, "k1": 1.983363588762, "k2": 1.465720260503, "stab_margin": 0.01663641123797, "survived_100T": 100, "drift_100T": 0.0004869170553802, "rmin": 0.04083145631406, "rmax": 2.000000003105, "partner_swaps": 19, "syzygies": 33, "democratic": true, "id": "2D-DEM-051", "kz": 2.000000035, "stable_3d": false, "stab_margin_3d": 0.0}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 0.7, 0.4], "y0": [-1, 0, 0.418950373698, 0, 1.766836846028, 0, 0, 0.5875768956268, 0, -0.8893778719644, 0, 0.0874690368707], "T": 10.99651611251, "E": -0.3946234263151, "L": -0.7865831230077, "ret_err": 3.607035786822e-10, "k1": 1.987493297295, "k2": 0.2744025842172, "stab_margin": 0.01250670270499, "survived_100T": 100, "drift_100T": 0.0002612050554176, "rmin": 1.108659798146, "rmax": 2.766836846824, "partner_swaps": 4, "syzygies": 3, "democratic": true, "id": "2D-DEM-052", "kz": 0.1864857361, "stable_3d": true, "stab_margin_3d": 0.012506702705000095}, {"dim": 2, "subspace": "collinear_L0", "masses": [1, 1, 1.05], "y0": [-1, 0, 1, 0, 0, 0, 0.4107349867231, 0.3026068115437, 0.4107349867231, 0.3026068115437, -0.7823523556631, -0.5763939267499], "T": 20.90670983933, "E": -1.843965675506, "L": 0, "ret_err": 3.052779815428e-10, "k1": 1.987520026415, "k2": 1.945651356938, "stab_margin": 0.01247997358511, "survived_100T": 100, "drift_100T": 0.0005632427503891, "rmin": 0.01136529202856, "rmax": 2.000000003851, "partner_swaps": 19, "syzygies": 25, "democratic": true, "id": "2D-DEM-053", "kz": 2.000000024, "stable_3d": false, "stab_margin_3d": 0.0}, {"dim": 2, "subspace": "collinear_L0", "masses": [1, 1, 0.55], "y0": [-1, 0, 1, 0, 0, 0, 0.1869134467725, 0.09381579230328, 0.1869134467725, 0.09381579230328, -0.6796852609911, -0.3411483356483], "T": 9.152199261099, "E": -1.397214544276, "L": 0, "ret_err": 4.157196966632e-10, "k1": -1.385147316912, "k2": -1.989570594654, "stab_margin": 0.01042940534642, "survived_100T": 100, "drift_100T": 0.0002219040247615, "rmin": 0.05412522829298, "rmax": 2.000000004267, "partner_swaps": 11, "syzygies": 9, "democratic": true, "id": "2D-DEM-054", "kz": 2.000000022, "stable_3d": false, "stab_margin_3d": 0.0}, {"dim": 2, "subspace": "collinear_L0", "masses": [1, 1, 0.5], "y0": [-1, 0, 1, 0, 0, 0, 0.3122876884138, 0.1036146276121, 0.3122876884138, 0.1036146276121, -1.249150753655, -0.4144585104486], "T": 16.81870619304, "E": -0.9587020430497, "L": 0, "ret_err": 1.602573560925e-10, "k1": 1.990171007364, "k2": -1.350703790506, "stab_margin": 0.009828992636426, "survived_100T": 100, "drift_100T": 0.000337406783436, "rmin": 0.01104468980147, "rmax": 2.032249747228, "partner_swaps": 13, "syzygies": 19, "democratic": true, "id": "2D-DEM-055", "kz": 2.000000042, "stable_3d": false, "stab_margin_3d": 0.0}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 1, 0.5], "y0": [-1, 0, 0.2481177913635, 0, 1.503764417273, 0, 0, -0.7911394240333, 0, 0.9122544903068, 0, -0.2422301325469], "T": 8.196012198282, "E": -0.6553831539874, "L": 0.835357466272, "ret_err": 2.657325470926e-10, "k1": 1.992028507755, "k2": 0.05551947345215, "stab_margin": 0.007971492245193, "survived_100T": 100, "drift_100T": 0.0001747815387807, "rmin": 0.9001805986842, "rmax": 2.503764418333, "partner_swaps": 8, "syzygies": 3, "democratic": true, "id": "2D-DEM-056", "kz": 0.7657680484, "stable_3d": true, "stab_margin_3d": 0.007971492245000045}, {"dim": 2, "subspace": "collinear_L0", "masses": [1, 1, 0.85], "y0": [-1, 0, 1, 0, 0, 0, 0.3961175191494, 0.2406375743575, 0.3961175191494, 0.2406375743575, -0.932041221528, -0.5662060573117], "T": 25.14524938034, "E": -1.479736160196, "L": 0, "ret_err": 3.849945007701e-10, "k1": 1.992075703632, "k2": 1.595922002605, "stab_margin": 0.007924296367983, "survived_100T": 100, "drift_100T": 0.0008372696987577, "rmin": 0.1018099411574, "rmax": 2.000000005045, "partner_swaps": 21, "syzygies": 27, "democratic": true, "id": "2D-DEM-057", "kz": 2.00000005, "stable_3d": false, "stab_margin_3d": 0.0}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 1, 0.75], "y0": [-1, 0, 1.065668660421, 0, -0.08755821389508, 0, 0, 0.9250091861204, 0, 0.05541502565185, 0, -1.307232282363], "T": 6.980506977925, "E": -0.8862465400033, "L": -0.7801109371246, "ret_err": 1.385282308761e-10, "k1": 1.99302617948, "k2": -0.06252594667665, "stab_margin": 0.00697382052002, "survived_100T": 100, "drift_100T": 9.572482755493e-05, "rmin": 0.9124417857781, "rmax": 2.235022408433, "partner_swaps": 8, "syzygies": 3, "democratic": true, "id": "2D-DEM-058", "kz": 1.196580356, "stable_3d": true, "stab_margin_3d": 0.0069738205200000625}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 1, 1], "y0": [-1, 0, 1.070596599907, 0, -0.07059659990743, 0, 0, 1.039348217118, 0, 0.1955719665294, 0, -1.234920183647], "T": 6.236754708085, "E": -1.113426973735, "L": -0.7427883685914, "ret_err": 8.28389290821e-09, "k1": 1.994175347574, "k2": -0.1060524072802, "stab_margin": 0.005824652425877, "survived_100T": 100, "drift_100T": 8.316231885117e-05, "rmin": 0.9294033999273, "rmax": 2.070596661938, "partner_swaps": 8, "syzygies": 4, "democratic": true, "id": "2D-DEM-059", "kz": 1.442423171, "stable_3d": true, "stab_margin_3d": 0.005824652425999943}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 0.9, 0.8], "y0": [-1, 0, 0.9989494321877, 0, 0.1261818887888, 0, 0, -0.120773468413, 0, -0.9881659202652, 0, 1.262653495815], "T": 6.53696885399, "E": -0.9011402558456, "L": -0.6401823356575, "ret_err": 1.541187375403e-10, "k1": 1.994225115522, "k2": -0.1000965003366, "stab_margin": 0.005774884478417, "survived_100T": 100, "drift_100T": 9.671311825641e-05, "rmin": 0.8727675433888, "rmax": 2.12618399086, "partner_swaps": 8, "syzygies": 4, "democratic": true, "id": "2D-DEM-060", "kz": 1.427017427, "stable_3d": true, "stab_margin_3d": 0.005774884477999898}, {"dim": 2, "subspace": "collinear_L0", "masses": [1, 1, 4], "y0": [-1, 0, 1, 0, 0, 0, 0.9579908580034, 1.085274761154, 0.9579908580034, 1.085274761154, -0.4789954290017, -0.5426373805769], "T": 18.54404241076, "E": -5.356648313177, "L": 0, "ret_err": 5.420651901084e-10, "k1": 1.995134997301, "k2": -1.126476100615, "stab_margin": 0.004865002698811, "survived_100T": 100, "drift_100T": 0.002634891014054, "rmin": 0.125075239951, "rmax": 2.021165586314, "partner_swaps": 19, "syzygies": 21, "democratic": true, "id": "2D-DEM-061", "kz": 2.000000009, "stable_3d": false, "stab_margin_3d": 0.0}, {"dim": 2, "subspace": "collinear_L0", "masses": [1, 1, 0.65], "y0": [-1, 0, 1, 0, 0, 0, 0.3562578293007, 0.1576295754763, 0.3562578293007, 0.1576295754763, -1.09617793631, -0.4850140783887], "T": 21.29589010854, "E": -1.181258740604, "L": 0, "ret_err": 2.494699173749e-10, "k1": 1.995681214869, "k2": -1.964088486262, "stab_margin": 0.004318785131365, "survived_100T": 100, "drift_100T": 0.0004365990637454, "rmin": 0.1056104646224, "rmax": 2.015898066512, "partner_swaps": 17, "syzygies": 19, "democratic": true, "id": "2D-DEM-062", "kz": 2.000000032, "stable_3d": false, "stab_margin_3d": 0.0}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 1, 1], "y0": [-1, 0, -0.06289609598255, 0, 1.062896095983, 0, 0, -1.041812851928, 0, 1.261130845525, 0, -0.2193179935964], "T": 23.9820624713, "E": -1.078173610358, "L": 0.7293804060491, "ret_err": 2.162611492713e-09, "k1": 1.996267644102, "k2": -1.943202619541, "stab_margin": 0.003732355897751, "survived_100T": 100, "drift_100T": 0.0004238345127354, "rmin": 0.7223651127656, "rmax": 2.196756094621, "partner_swaps": 22, "syzygies": 14, "democratic": true, "id": "2D-DEM-063", "kz": -1.341667434, "stable_3d": true, "stab_margin_3d": 0.003732355898000028}, {"dim": 2, "subspace": "collinear_L0", "masses": [1, 1, 1], "y0": [-1, 0, 1, 0, 0, 0, 0.3471168880981, 0.5327249453912, 0.3471168880981, 0.5327249453912, -0.6942337761963, -1.065449890782], "T": 31.62956991509, "E": -1.287141995665, "L": 0, "ret_err": 7.090602325314e-11, "k1": 1.930394743985, "k2": -1.996410847143, "stab_margin": 0.003589152856877, "survived_100T": 100, "drift_100T": 0.0003878444899947, "rmin": 0.6905266290082, "rmax": 2.000000001122, "partner_swaps": 29, "syzygies": 29, "democratic": true, "id": "2D-DEM-064", "kz": 1.999999997, "stable_3d": false, "stab_margin_3d": 0.0}, {"dim": 2, "subspace": "collinear_L0", "masses": [1, 1, 1.75], "y0": [-1, 0, 1, 0, 0, 0, 0.6112702250882, 0.291159674155, 0.6112702250882, 0.291159674155, -0.6985945429579, -0.33275391332], "T": 10.70016701039, "E": -3.017660191571, "L": 0, "ret_err": 2.983298954945e-10, "k1": 1.996873466008, "k2": -1.985271218993, "stab_margin": 0.003126533991919, "survived_100T": 100, "drift_100T": 0.0005695559849703, "rmin": 0.04741224682011, "rmax": 2.020527802033, "partner_swaps": 11, "syzygies": 13, "democratic": true, "id": "2D-DEM-065", "kz": 1.999999995, "stable_3d": false, "stab_margin_3d": 0.0}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 1, 2], "y0": [-1, 0, 0.9314320799881, 0, 0.03428396000595, 0, 0, -0.671957260911, 0, -1.479048283163, 0, 1.075502772037], "T": 4.11826809656, "E": -2.204480356731, "L": -0.6319307698329, "ret_err": 2.251144821446e-10, "k1": 1.997137489813, "k2": -0.04063147624546, "stab_margin": 0.002862510186749, "survived_100T": 100, "drift_100T": 6.092956014443e-05, "rmin": 0.6149115744434, "rmax": 1.931432081435, "partner_swaps": 8, "syzygies": 4, "democratic": true, "id": "2D-DEM-066", "kz": 1.807340726, "stable_3d": true, "stab_margin_3d": 0.0028625101869999003}, {"dim": 2, "subspace": "collinear_L0", "masses": [1, 1, 1], "y0": [-1, 0, 1, 0, 0, 0, 0.3471168881339, 0.5327249453798, 0.3471168881339, 0.5327249453798, -0.6942337762678, -1.06544989076], "T": 6.32591398303, "E": -1.287141995627, "L": 0, "ret_err": 1.434591762037e-11, "k1": 1.997200176522, "k2": -0.5951933608326, "stab_margin": 0.002799823478065, "survived_100T": 100, "drift_100T": 7.936861621967e-05, "rmin": 0.6905266291353, "rmax": 2.000000000113, "partner_swaps": 5, "syzygies": 5, "democratic": true, "id": "2D-DEM-067", "kz": 2.0, "stable_3d": false, "stab_margin_3d": 0.0}, {"dim": 2, "subspace": "collinear_L0", "masses": [1, 1, 1], "y0": [-1, 0, 1, 0, 0, 0, 0.4644451728162, 0.396060014655, 0.4644451728162, 0.396060014655, -0.9288903456324, -0.79212002931], "T": 14.89430517551, "E": -1.382281438718, "L": 0, "ret_err": 7.474767096088e-11, "k1": 1.082090291127, "k2": -1.997390605265, "stab_margin": 0.00260939473457, "survived_100T": 100, "drift_100T": 9.445265063212e-05, "rmin": 0.08090701555145, "rmax": 2.160066280518, "partner_swaps": 9, "syzygies": 15, "democratic": true, "id": "2D-DEM-068", "kz": 2.000000007, "stable_3d": false, "stab_margin_3d": 0.0}, {"dim": 2, "subspace": "collinear_L0", "masses": [1, 1, 0.75], "y0": [-1, 0, 1, 0, 0, 0, 0.3662988975342, 0.1741689247421, 0.3662988975342, 0.1741689247421, -0.9767970600913, -0.4644504659789], "T": 17.3598689096, "E": -1.396797778838, "L": 0, "ret_err": 2.633784494408e-10, "k1": 1.997429089979, "k2": -1.286483548142, "stab_margin": 0.002570910020601, "survived_100T": 100, "drift_100T": 0.0004285221018231, "rmin": 0.02070880899798, "rmax": 2.000000003199, "partner_swaps": 15, "syzygies": 17, "democratic": true, "id": "2D-DEM-069", "kz": 2.000000012, "stable_3d": false, "stab_margin_3d": 0.0}, {"dim": 2, "subspace": "collinear_L0", "masses": [1, 1, 0.85], "y0": [-1, 0, 1, 0, 0, 0, 0.389931201752, 0.2563892104368, 0.389931201752, 0.2563892104368, -0.9174851805929, -0.6032687304394], "T": 18.43640155416, "E": -1.469790538135, "L": 0, "ret_err": 2.353245675978e-10, "k1": 1.984691980781, "k2": -1.998229895991, "stab_margin": 0.001770104008995, "survived_100T": 100, "drift_100T": 0.0003610167997855, "rmin": 0.1234245396124, "rmax": 2.000000002862, "partner_swaps": 15, "syzygies": 17, "democratic": true, "id": "2D-DEM-070", "kz": 2.000000023, "stable_3d": false, "stab_margin_3d": 0.0}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 0.6, 0.3], "y0": [-1, 0, 0.7664095175427, 0, 1.800514298248, 0, 0, 0.2084944132886, 0, -0.8005658800989, 0, 0.9061503825691], "T": 12.82271086221, "E": -0.2836859068816, "L": -0.08717018319174, "ret_err": 3.064668683609e-10, "k1": 1.998951790945, "k2": 0.1305459005415, "stab_margin": 0.001048209055308, "survived_100T": 100, "drift_100T": 0.0002084133062677, "rmin": 1.034104780705, "rmax": 3.223595945349, "partner_swaps": 8, "syzygies": 4, "democratic": true, "id": "2D-DEM-071", "kz": 1.982141445, "stable_3d": true, "stab_margin_3d": 0.0010482090549999157}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 1, 0.3], "y0": [-1, 0, 1.86933957559, 0, -2.897798585301, 0, 0, -0.5543091699666, 0, 0.3068316383113, 0, 0.8249251055174], "T": 22.91325138334, "E": -0.2667436136594, "L": 0.4107416533808, "ret_err": 1.732637172511e-10, "k1": 1.999253146377, "k2": 0.1965354967025, "stab_margin": 0.000746853623103, "survived_100T": 100, "drift_100T": 0.0002976135854164, "rmin": 1.897798585301, "rmax": 4.767138161353, "partner_swaps": 8, "syzygies": 3, "democratic": true, "id": "2D-DEM-072", "kz": 1.869459961, "stable_3d": true, "stab_margin_3d": 0.0007468536229999767}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 1, 1], "y0": [-1, 0, 0.9919310830944, 0, 0.008068916905608, 0, 0, -0.2392929112618, 0, -1.019032433389, 0, 1.258325344651], "T": 25.02963241711, "E": -1.170888169858, "L": -0.7613637114515, "ret_err": 2.312091403036e-10, "k1": -0.4326733746519, "k2": -1.999695547145, "stab_margin": 0.0003044528554779, "survived_100T": 100, "drift_100T": 7.734786064718e-05, "rmin": 0.9838621661888, "rmax": 1.991931083094, "partner_swaps": 36, "syzygies": 18, "democratic": true, "id": "2D-DEM-073", "kz": -1.698133831, "stable_3d": true, "stab_margin_3d": 0.00030445285500002583}, {"dim": 2, "subspace": "collinear_L0", "masses": [1, 1, 1], "y0": [-1, 0, 1, 0, 0, 0, 0.4059155671313, 0.2301631259849, 0.4059155671313, 0.2301631259849, -0.8118311342626, -0.4603262519698], "T": 13.86712343734, "E": -1.846772463392, "L": 0, "ret_err": 2.213613575336e-10, "k1": 1.999808157373, "k2": -1.446827559766, "stab_margin": 0.0001918426271337, "survived_100T": 100, "drift_100T": 0.0002900734186737, "rmin": 0.01559968811131, "rmax": 2.000000002654, "partner_swaps": 13, "syzygies": 15, "democratic": true, "id": "2D-DEM-074", "kz": 2.000000002, "stable_3d": false, "stab_margin_3d": 0.0}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 0.8, 0.6], "y0": [-1, 0, 1.164247281754, 0, 0.1143369576612, 0, 0, 0.7328402560966, 0, 0.01399748905863, 0, -1.240063745572], "T": 26.18984919479, "E": -0.6353289874692, "L": -0.8048740948111, "ret_err": 3.334184395448e-10, "k1": 0.05764484741285, "k2": -0.2971276729584, "stab_margin": 1.702872327042, "survived_100T": 100, "drift_100T": 0.0001113071647166, "rmin": 1.049910324063, "rmax": 2.320820882788, "partner_swaps": 0, "syzygies": 14, "democratic": false, "id": "2D-HIE-001", "kz": -1.899900272, "stable_3d": true, "stab_margin_3d": 0.100099728}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 1, 2], "y0": [-1, 0, 1.154137719895, 0, -0.07706885994774, 0, 0, 0.8007344634181, 0, 1.264841047692, 0, -1.032787755555], "T": 23.26372845893, "E": -2.068504719558, "L": 0.8182578491726, "ret_err": 8.386636961343e-09, "k1": -0.07596170290974, "k2": -0.3656630192658, "stab_margin": 1.634336980734, "survived_100T": 100, "drift_100T": 0.0002032624549968, "rmin": 0.8966636245384, "rmax": 2.15413771992, "partner_swaps": 0, "syzygies": 21, "democratic": false, "id": "2D-HIE-002", "kz": 0.6581701771, "stable_3d": true, "stab_margin_3d": 1.3418298228999999}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 1, 0.75], "y0": [-1, 0, 0.04623391186276, 0, 1.271688117516, 0, 0, 0.3553584350485, 0, -1.077927809861, 0, 0.9634258330829], "T": 25.27589311782, "E": -0.9058031385704, "L": 0.5136876336259, "ret_err": 3.284206568014e-09, "k1": 0.4305916555481, "k2": 0.3518843348367, "stab_margin": 1.569408344452, "survived_100T": 100, "drift_100T": 6.591477002055e-05, "rmin": 1.046233911749, "rmax": 2.271688117518, "partner_swaps": 0, "syzygies": 15, "democratic": false, "id": "2D-HIE-003", "kz": 1.113543834, "stable_3d": true, "stab_margin_3d": 0.8864561660000001}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 1, 0.75], "y0": [-1, 0, 0.1343115997943, 0, 1.154251200274, 0, 0, 0.8954901988844, 0, -1.102606505195, 0, 0.2761550750814], "T": 21.48964946021, "E": -0.9276584361552, "L": -0.8045187973849, "ret_err": 3.105984523357e-10, "k1": 0.09704724539429, "k2": -0.5922597106523, "stab_margin": 1.407740289348, "survived_100T": 100, "drift_100T": 0.0001112556701677, "rmin": 1.000951108024, "rmax": 2.154251200274, "partner_swaps": 0, "syzygies": 14, "democratic": false, "id": "2D-HIE-004", "kz": -1.237062357, "stable_3d": true, "stab_margin_3d": 0.7629376430000001}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 1, 1], "y0": [-1, 0, 1.009366544097, 0, -0.009366544097393, 0, 0, 0.2500417342756, 0, 1.004234540643, 0, -1.254276274919], "T": 19.34415527592, "E": -1.166627344784, "L": 0.7753472475157, "ret_err": 3.466348670173e-10, "k1": 0.202415288718, "k2": -0.7958318951461, "stab_margin": 1.204168104854, "survived_100T": 100, "drift_100T": 8.067875228342e-05, "rmin": 0.9906334559018, "rmax": 2.009366544098, "partner_swaps": 0, "syzygies": 14, "democratic": false, "id": "2D-HIE-005", "kz": -0.5436081433, "stable_3d": true, "stab_margin_3d": 1.2041681048539}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 1, 0.5], "y0": [-1, 0, 0.2174863633295, 0, 1.565027273341, 0, 0, -0.4179300976035, 0, 0.8982017553471, 0, -0.9605433154872], "T": 31.23203451545, "E": -0.6659635409357, "L": -0.1383615120713, "ret_err": 3.732105901388e-09, "k1": 0.8643288473936, "k2": 0.09564195921847, "stab_margin": 1.135671152606, "survived_100T": 100, "drift_100T": 7.665114951743e-05, "rmin": 1.217486363229, "rmax": 2.565027273341, "partner_swaps": 0, "syzygies": 16, "democratic": false, "id": "2D-HIE-006", "kz": 1.929616749, "stable_3d": true, "stab_margin_3d": 0.07038325099999998}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 1, 1], "y0": [-1, 0, -0.04185950618614, 0, 1.041859506186, 0, 0, -0.2698380013252, 0, 1.248687131054, 0, -0.9788491297283], "T": 13.61092773449, "E": -1.161097491976, "L": -0.8022546962911, "ret_err": 5.208726464813e-10, "k1": 1.05791354212, "k2": 1.035180143975, "stab_margin": 0.9420864578802, "survived_100T": 100, "drift_100T": 6.421804708131e-05, "rmin": 0.9581404937724, "rmax": 2.041859506186, "partner_swaps": 0, "syzygies": 9, "democratic": false, "id": "2D-HIE-007", "kz": 0.8621736103, "stable_3d": true, "stab_margin_3d": 0.9420864578799999}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 1, 1.25], "y0": [-1, 0, 0.947862716522, 0, 0.04170982678239, 0, 0, -1.100815324725, 0, -0.421254633089, 0, 1.217655966251], "T": 11.62530553535, "E": -1.471487941532, "L": 0.7650090381488, "ret_err": 6.519478598255e-10, "k1": 1.097120417005, "k2": 0.9892966569754, "stab_margin": 0.9028795829947, "survived_100T": 100, "drift_100T": 6.98478564031e-05, "rmin": 0.8950873112596, "rmax": 1.947862716522, "partner_swaps": 0, "syzygies": 9, "democratic": false, "id": "2D-HIE-008", "kz": 1.14083226, "stable_3d": true, "stab_margin_3d": 0.85916774}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 0.9, 0.8], "y0": [-1, 0, 0.05490569399829, 0, 1.188231094252, 0, 0, 0.2681388239892, 0, -1.139306850645, 0, 0.9465466769888], "T": 16.05907995844, "E": -0.8756089920507, "L": 0.5753351410375, "ret_err": 7.243151849528e-10, "k1": 1.130236486132, "k2": 0.9466541138668, "stab_margin": 0.8697635138679, "survived_100T": 100, "drift_100T": 7.301453876278e-05, "rmin": 1.054905693903, "rmax": 2.244923767475, "partner_swaps": 0, "syzygies": 9, "democratic": false, "id": "2D-HIE-009", "kz": 1.288289474, "stable_3d": true, "stab_margin_3d": 0.7117105260000001}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 1, 0.75], "y0": [-1, 0, 1.028034120248, 0, -0.03737882699754, 0, 0, -0.1140934363604, 0, -0.8781149020709, 0, 1.322944451242], "T": 14.95221952958, "E": -0.9277936375026, "L": -0.8257262282946, "ret_err": 5.095176123247e-10, "k1": 1.141268164162, "k2": 1.001111496685, "stab_margin": 0.8587318358376, "survived_100T": 100, "drift_100T": 8.993713850131e-05, "rmin": 0.96262117289, "rmax": 2.170667403541, "partner_swaps": 0, "syzygies": 9, "democratic": false, "id": "2D-HIE-010", "kz": 0.418763997, "stable_3d": true, "stab_margin_3d": 0.8587318358380001}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 1, 0.6], "y0": [-1, 0, 0.1700687238957, 0, 1.383218793507, 0, 0, 0.3800602278267, 0, -0.9735193788263, 0, 0.9890985849994], "T": 17.91473509925, "E": -0.7614035194652, "L": 0.2752584245701, "ret_err": 9.719499846118e-10, "k1": 1.322650268293, "k2": 0.7859166054121, "stab_margin": 0.677349731707, "survived_100T": 100, "drift_100T": 7.19457524578e-05, "rmin": 1.170068723807, "rmax": 2.383218793507, "partner_swaps": 0, "syzygies": 9, "democratic": false, "id": "2D-HIE-011", "kz": 1.844340096, "stable_3d": true, "stab_margin_3d": 0.15565990399999996}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 0.8, 0.6], "y0": [-1, 0, 0.1038143182645, 0, 1.528247575647, 0, 0, 0.3013739113014, 0, -1.014761164968, 0, 0.8507250344553], "T": 22.84416441029, "E": -0.6246251033702, "L": 0.394419780734, "ret_err": 3.179666817522e-09, "k1": 1.501501377527, "k2": 1.429010142142, "stab_margin": 0.4984986224728, "survived_100T": 100, "drift_100T": 7.698568352827e-05, "rmin": 1.103814318264, "rmax": 2.6533499953, "partner_swaps": 0, "syzygies": 11, "democratic": false, "id": "2D-HIE-012", "kz": 1.784925867, "stable_3d": true, "stab_margin_3d": 0.2150741329999999}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 1, 0.5], "y0": [-1, 0, 0.1652479901038, 0, 1.669504019792, 0, 0, 0.4396283661574, 0, -0.8982699149245, 0, 0.9172830975342], "T": 23.16086266183, "E": -0.6674443142017, "L": 0.1776382451411, "ret_err": 3.354042490102e-09, "k1": 1.566183132386, "k2": 1.425579333952, "stab_margin": 0.433816867614, "survived_100T": 100, "drift_100T": 6.862303026133e-05, "rmin": 1.165247990104, "rmax": 2.669504019834, "partner_swaps": 0, "syzygies": 11, "democratic": false, "id": "2D-HIE-013", "kz": 1.96618931, "stable_3d": true, "stab_margin_3d": 0.03381068999999992}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 0.8, 0.4], "y0": [-1, 0, 0.3013951104633, 0, 1.897209779073, 0, 0, -0.348707157227, 0, 0.8539993356136, 0, -0.8362307781598], "T": 28.87098371646, "E": -0.4609326568141, "L": -0.07998194745353, "ret_err": 3.485833070443e-09, "k1": 1.615826381363, "k2": 1.411804192508, "stab_margin": 0.3841736186366, "survived_100T": 100, "drift_100T": 8.966411265604e-05, "rmin": 1.301395110463, "rmax": 3.043161549492, "partner_swaps": 0, "syzygies": 11, "democratic": false, "id": "2D-HIE-014", "kz": 1.991165856, "stable_3d": true, "stab_margin_3d": 0.008834143999999933}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 1, 0.75], "y0": [-1, 0, 0.9128317955025, 0, 0.1162242726633, 0, 0, -0.8742275183984, 0, -0.164261810797, 0, 1.384652438927], "T": 14.52730755769, "E": -1.021584353739, "L": 0.8449817816704, "ret_err": 2.464911132183e-09, "k1": 1.644875035158, "k2": 1.231834504676, "stab_margin": 0.3551249648416, "survived_100T": 100, "drift_100T": 0.0001103299933721, "rmin": 0.7966075228393, "rmax": 2.030524976348, "partner_swaps": 0, "syzygies": 11, "democratic": false, "id": "2D-HIE-015", "kz": 0.9435652255, "stable_3d": true, "stab_margin_3d": 0.35512496484200007}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 0.6, 0.3], "y0": [-1, 0, 0.5287168625716, 0, 2.27589960819, 0, 0, 0.2537466359417, 0, -0.7936723782253, 0, 0.7415226366449], "T": 39.04487965619, "E": -0.2834401113529, "L": 0.0007659056844662, "ret_err": 3.735949433606e-09, "k1": 1.677007847549, "k2": 1.423160918718, "stab_margin": 0.3229921524515, "survived_100T": 100, "drift_100T": 0.000133783545029, "rmin": 1.528716862572, "rmax": 3.661940764999, "partner_swaps": 0, "syzygies": 11, "democratic": false, "id": "2D-HIE-016", "kz": 1.999998912, "stable_3d": false, "stab_margin_3d": 0.0}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 0.8, 0.4], "y0": [-1, 0, 1.31267667371, 0, -0.1253533474208, 0, 0, -0.008512557159304, 0, 0.6719018628568, 0, -1.322522332815], "T": 37.04111708405, "E": -0.4953435620843, "L": 0.7804175196579, "ret_err": 2.042920664356e-08, "k1": 1.739688564149, "k2": 0.8340494836426, "stab_margin": 0.2603114358511, "survived_100T": 100, "drift_100T": 0.0004487599694131, "rmin": 0.8746466525792, "rmax": 2.702298111706, "partner_swaps": 0, "syzygies": 21, "democratic": false, "id": "2D-HIE-017", "kz": 0.2576625063, "stable_3d": true, "stab_margin_3d": 0.2603114358509999}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 1, 0.3], "y0": [-1, 0, 0.3776971850324, 0, 2.074342716559, 0, 0, 0.4760687502235, 0, -0.74546686518, 0, 0.8979937165218], "T": 29.41647803673, "E": -0.4881101769186, "L": -0.198805469122, "ret_err": 3.508722001351e-09, "k1": 1.76783337972, "k2": 1.331150929201, "stab_margin": 0.2321666202804, "survived_100T": 100, "drift_100T": 7.934613016682e-05, "rmin": 1.377697185032, "rmax": 3.0743427166, "partner_swaps": 0, "syzygies": 11, "democratic": false, "id": "2D-HIE-018", "kz": 1.95884661, "stable_3d": true, "stab_margin_3d": 0.04115339000000007}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 0.7, 0.4], "y0": [-1, 0, 1.233762567474, 0, 0.3409155069198, 0, 0, 0.5664822246596, 0, -0.08543784386631, 0, -1.266689334883], "T": 22.38098835558, "E": -0.4413735075902, "L": -0.8130028488697, "ret_err": 2.015750002853e-09, "k1": 1.786957414398, "k2": 1.227618738431, "stab_margin": 0.2130425856015, "survived_100T": 100, "drift_100T": 0.0001475282873787, "rmin": 0.8928470605547, "rmax": 2.489207637386, "partner_swaps": 0, "syzygies": 11, "democratic": false, "id": "2D-HIE-019", "kz": -0.2702165125, "stable_3d": true, "stab_margin_3d": 0.21304258560199996}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 1, 3], "y0": [-1, 0, 1.399895270542, 0, -0.1332984235138, 0, 0, 1.27296098819, 0, 1.385599281124, 0, -0.8861867564379], "T": 12.78071694456, "E": -2.886635844542, "L": 1.021114785037, "ret_err": 9.285602746117e-09, "k1": 1.805941172065, "k2": 1.648756947961, "stab_margin": 0.1940588279351, "survived_100T": 100, "drift_100T": 0.0001900576499277, "rmin": 0.8452486729493, "rmax": 2.39989527064, "partner_swaps": 0, "syzygies": 13, "democratic": false, "id": "2D-HIE-020", "kz": 1.872671176, "stable_3d": true, "stab_margin_3d": 0.1273288239999999}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 1, 0.6], "y0": [-1, 0, 0.08716480638831, 0, 1.521391989353, 0, 0, 0.4180609731225, 0, -0.9714767496764, 0, 0.9223596275899], "T": 10.49156347117, "E": -0.7616360883831, "L": 0.3392227733119, "ret_err": 2.661813704413e-09, "k1": 1.866192116882, "k2": 1.861578052889, "stab_margin": 0.1338078831176, "survived_100T": 100, "drift_100T": 6.517824705131e-05, "rmin": 1.087164806262, "rmax": 2.521391992795, "partner_swaps": 0, "syzygies": 5, "democratic": false, "id": "2D-HIE-021", "kz": 1.969021996, "stable_3d": true, "stab_margin_3d": 0.03097800400000006}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 0.8, 0.6], "y0": [-1, 0, 0.1038143183644, 0, 1.528247575514, 0, 0, 0.3013739112445, 0, -1.014761164964, 0, 0.850725034545], "T": 11.42208220545, "E": -0.6246251033466, "L": 0.3944197807243, "ret_err": 7.04081928541e-10, "k1": 1.871222680235, "k2": 1.851766276382, "stab_margin": 0.1287773197648, "survived_100T": 100, "drift_100T": 7.69779889277e-05, "rmin": 1.103814318364, "rmax": 2.653349995525, "partner_swaps": 0, "syzygies": 6, "democratic": false, "id": "2D-HIE-022", "kz": 1.945488594, "stable_3d": true, "stab_margin_3d": 0.05451140600000004}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 0.9, 0.8], "y0": [-1, 0, -0.03225016135698, 0, 1.286281431527, 0, 0, -0.3106353132148, 0, 1.137574203849, 0, -0.8914768378119], "T": 9.170645348, "E": -0.8774942724543, "L": -0.6397350257427, "ret_err": 7.885166679561e-10, "k1": 1.884760469764, "k2": 1.82522397247, "stab_margin": 0.1152395302359, "survived_100T": 100, "drift_100T": 6.351847957044e-05, "rmin": 0.967749838643, "rmax": 2.338399621112, "partner_swaps": 0, "syzygies": 6, "democratic": false, "id": "2D-HIE-023", "kz": 1.876061243, "stable_3d": true, "stab_margin_3d": 0.11523953023600009}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 1, 0.5], "y0": [-1, 0, 0.1652479910493, 0, 1.669504017901, 0, 0, 0.4396283654892, 0, -0.8982699149154, 0, 0.9172830988524], "T": 11.58043133599, "E": -0.6674443139622, "L": 0.1776382451945, "ret_err": 4.882635001403e-09, "k1": 1.888427006335, "k2": 1.850837750411, "stab_margin": 0.1115729936646, "survived_100T": 100, "drift_100T": 6.915925809443e-05, "rmin": 1.165247990833, "rmax": 2.669504024182, "partner_swaps": 0, "syzygies": 5, "democratic": false, "id": "2D-HIE-024", "kz": 1.991529392, "stable_3d": true, "stab_margin_3d": 0.008470608000000102}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 1, 1.5], "y0": [-1, 0, 0.8525661938556, 0, 0.09828920409628, 0, 0, 1.174288214965, 0, 0.6473201866502, 0, -1.214405601077], "T": 5.411830554268, "E": -1.88913779159, "L": -0.8014493471967, "ret_err": 5.769390896189e-10, "k1": 1.888952340343, "k2": 1.827036826288, "stab_margin": 0.1110476596567, "survived_100T": 100, "drift_100T": 6.110534598681e-05, "rmin": 0.7424752364946, "rmax": 1.852566193868, "partner_swaps": 0, "syzygies": 6, "democratic": false, "id": "2D-HIE-025", "kz": 1.883344376, "stable_3d": true, "stab_margin_3d": 0.11104765965700003}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 1, 1.25], "y0": [-1, 0, 0.869778726078, 0, 0.1041770191376, 0, 0, 1.080186426736, 0, 0.4991263236973, 0, -1.263450200347], "T": 5.883102218941, "E": -1.593933827272, "L": -0.8105850633851, "ret_err": 5.54706187451e-10, "k1": 1.890419104354, "k2": 1.818571837874, "stab_margin": 0.1095808956459, "survived_100T": 100, "drift_100T": 6.617093047447e-05, "rmin": 0.7587059453553, "rmax": 1.869778726089, "partner_swaps": 0, "syzygies": 6, "democratic": false, "id": "2D-HIE-026", "kz": 1.85079645, "stable_3d": true, "stab_margin_3d": 0.10958089564600004}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 1, 2], "y0": [-1, 0, 0.8244993048597, 0, 0.08775034757015, 0, 0, -1.348517583727, 0, -0.9155948669161, 0, 1.132056225321], "T": 4.711687666801, "E": -2.491423539859, "L": 0.792286906903, "ret_err": 6.813463157092e-10, "k1": 1.892540064593, "k2": 1.842184613418, "stab_margin": 0.1074599354066, "survived_100T": 100, "drift_100T": 5.568547820671e-05, "rmin": 0.718732260317, "rmax": 1.824499304874, "partner_swaps": 0, "syzygies": 6, "democratic": false, "id": "2D-HIE-027", "kz": 1.921660469, "stable_3d": true, "stab_margin_3d": 0.0783395309999999}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 1, 1], "y0": [-1, 0, 0.1103009863672, 0, 0.8896990136328, 0, 0, 0.9804829610856, 0, -1.319513102721, 0, 0.3390301416349], "T": 6.479983104372, "E": -1.304181413653, "L": -0.8243917752357, "ret_err": 4.827049149059e-10, "k1": 1.896179671853, "k2": 1.809136005413, "stab_margin": 0.1038203281466, "survived_100T": 100, "drift_100T": 8.395580003309e-05, "rmin": 0.7793980272656, "rmax": 1.889699013746, "partner_swaps": 0, "syzygies": 6, "democratic": false, "id": "2D-HIE-028", "kz": 1.800344894, "stable_3d": true, "stab_margin_3d": 0.10382032814700004}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 0.9, 0.8], "y0": [-1, 0, 1.183931340169, 0, -0.08192275768983, 0, 0, -0.2197496406798, 0, -0.855140940936, 0, 1.236720609403], "T": 8.795187581152, "E": -0.8872673606117, "L": -0.7724881537834, "ret_err": 5.860331355968e-10, "k1": 1.898508090123, "k2": 1.807780067318, "stab_margin": 0.1014919098768, "survived_100T": 100, "drift_100T": 0.0001002927618529, "rmin": 0.9180772423102, "rmax": 2.288980090551, "partner_swaps": 0, "syzygies": 6, "democratic": false, "id": "2D-HIE-029", "kz": 1.795202397, "stable_3d": true, "stab_margin_3d": 0.10149190987699996}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 1, 3], "y0": [-1, 0, 1.273375940103, 0, -0.09112531336766, 0, 0, -1.216105200451, 0, -1.466215264869, 0, 0.8941068217734], "T": 5.514080362209, "E": -2.925775013064, "L": -0.8953653337997, "ret_err": 7.094702645054e-10, "k1": 1.90758268986, "k2": 1.867397066262, "stab_margin": 0.09241731013992, "survived_100T": 100, "drift_100T": 5.783536001674e-05, "rmin": 0.8790433397519, "rmax": 2.273375940118, "partner_swaps": 0, "syzygies": 6, "democratic": false, "id": "2D-HIE-030", "kz": 1.955811718, "stable_3d": true, "stab_margin_3d": 0.04418828199999991}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 1, 0.75], "y0": [-1, 0, 0.2253280516964, 0, 1.032895931071, 0, 0, -0.8727407736099, 0, 1.150016276434, 0, -0.3697006704325], "T": 7.276379669596, "E": -1.020392885419, "L": 0.845474961945, "ret_err": 1.69165777605e-09, "k1": 1.909155078837, "k2": 1.797731412085, "stab_margin": 0.09084492116343, "survived_100T": 100, "drift_100T": 9.594472735171e-05, "rmin": 0.7975376874641, "rmax": 2.032895931087, "partner_swaps": 0, "syzygies": 6, "democratic": false, "id": "2D-HIE-031", "kz": 1.715682147, "stable_3d": true, "stab_margin_3d": 0.09084492116300003}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 0.6, 0.3], "y0": [-1, 0, 0.528716875589, 0, 2.275899582155, 0, 0, 0.2537466325853, 0, -0.7936723796468, 0, 0.7415226506758], "T": 19.52244014698, "E": -0.2834401080948, "L": 0.0007659061792529, "ret_err": 9.561755884767e-08, "k1": 1.917552341926, "k2": 1.850176573614, "stab_margin": 0.08244765807419, "survived_100T": 100, "drift_100T": 0.0001358115136578, "rmin": 1.528716875589, "rmax": 3.66194086988, "partner_swaps": 0, "syzygies": 5, "democratic": false, "id": "2D-HIE-032", "kz": 1.999999753, "stable_3d": false, "stab_margin_3d": 0.0}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 1, 0.6], "y0": [-1, 0, 1.077081071181, 0, -0.1284684519688, 0, 0, 0.04892865686765, 0, 0.7774154041989, 0, -1.377240101778], "T": 8.792497826922, "E": -0.7951649857347, "L": 0.8945699017585, "ret_err": 5.62733672403e-10, "k1": 1.922126513066, "k2": 1.788810137438, "stab_margin": 0.07787348693425, "survived_100T": 100, "drift_100T": 9.846229064979e-05, "rmin": 0.8715315480312, "rmax": 2.304073872216, "partner_swaps": 0, "syzygies": 6, "democratic": false, "id": "2D-HIE-033", "kz": 1.634017473, "stable_3d": true, "stab_margin_3d": 0.07787348693400009}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 0.8, 0.6], "y0": [-1, 0, 1.074430570834, 0, 0.2340925722207, 0, 0, -0.7146962382497, 0, -0.070882033554, 0, 1.285669775155], "T": 8.879757480357, "E": -0.689744829815, "L": 0.8343494260465, "ret_err": 6.13903030176e-10, "k1": 1.924131121416, "k2": 1.792185268464, "stab_margin": 0.07586887858444, "survived_100T": 100, "drift_100T": 0.0001042580661696, "rmin": 0.8403379986137, "rmax": 2.199075274841, "partner_swaps": 0, "syzygies": 6, "democratic": false, "id": "2D-HIE-034", "kz": 1.559146381, "stable_3d": true, "stab_margin_3d": 0.07586887858400004}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 0.5, 0.25], "y0": [-1, 0, 0.7109109447957, 0, 2.578178110409, 0, 0, -0.2052275330978, 0, 0.7536969304248, 0, -0.6864837284585], "T": 23.8796336589, "E": -0.2070712632684, "L": 0.03066390108089, "ret_err": 8.949985228286e-10, "k1": 1.927208586453, "k2": 1.856227597289, "stab_margin": 0.07279141354737, "survived_100T": 100, "drift_100T": 0.0001845735504644, "rmin": 1.710910944796, "rmax": 4.15441234974, "partner_swaps": 0, "syzygies": 6, "democratic": false, "id": "2D-HIE-035", "kz": 1.999488113, "stable_3d": true, "stab_margin_3d": 0.0005118870000000442}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 0.7, 0.4], "y0": [-1, 0, 1.391591630883, 0, 0.0647146459554, 0, 0, 0.0006927399777076, 0, -0.6927879819405, 0, 1.210647118452], "T": 12.74003455311, "E": -0.4182836031619, "L": -0.6442086704698, "ret_err": 7.070795038269e-10, "k1": 1.929199487494, "k2": 1.785505277275, "stab_margin": 0.07080051250604, "survived_100T": 100, "drift_100T": 0.000174872781555, "rmin": 1.064714645955, "rmax": 2.869777444822, "partner_swaps": 0, "syzygies": 6, "democratic": false, "id": "2D-HIE-036", "kz": 1.713171846, "stable_3d": true, "stab_margin_3d": 0.07080051250600006}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 0.9, 0.5], "y0": [-1, 0, 1.012423323854, 0, 0.1776380170624, 0, 0, -0.7138505124115, 0, 0.02050734043837, 0, 1.390787812034], "T": 8.885610747381, "E": -0.672308240682, "L": 0.8560648057466, "ret_err": 6.208146736867e-10, "k1": 1.933232885406, "k2": 1.784771141807, "stab_margin": 0.06676711459407, "survived_100T": 100, "drift_100T": 0.0001045528939836, "rmin": 0.8347853067919, "rmax": 2.26198745489, "partner_swaps": 0, "syzygies": 6, "democratic": false, "id": "2D-HIE-037", "kz": 1.521588446, "stable_3d": true, "stab_margin_3d": 0.06676711459400009}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 1, 0.5], "y0": [-1, 0, 1.06430889139, 0, -0.1286177827795, 0, 0, -0.02825036366655, 0, 0.7368307968802, 0, -1.417160866427], "T": 9.161352441528, "E": -0.7034168027828, "L": 0.9036019764768, "ret_err": 5.541073853555e-10, "k1": 1.933545872791, "k2": 1.781058110064, "stab_margin": 0.06645412720916, "survived_100T": 100, "drift_100T": 0.0001038704446462, "rmin": 0.8713822172205, "rmax": 2.368720663165, "partner_swaps": 0, "syzygies": 6, "democratic": false, "id": "2D-HIE-038", "kz": 1.557469409, "stable_3d": true, "stab_margin_3d": 0.06645412720900001}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 0.8, 0.4], "y0": [-1, 0, 1.255940798126, 0, -0.01188159625178, 0, 0, -0.03693775781993, 0, 0.6949630398914, 0, -1.297581685233], "T": 11.4588222633, "E": -0.4812150095748, "L": 0.7413706424864, "ret_err": 6.693645222569e-10, "k1": 1.936175420472, "k2": 1.775816938258, "stab_margin": 0.06382457952819, "survived_100T": 100, "drift_100T": 0.0001443861746577, "rmin": 0.9881184037482, "rmax": 2.701051100245, "partner_swaps": 0, "syzygies": 6, "democratic": false, "id": "2D-HIE-039", "kz": 1.626165959, "stable_3d": true, "stab_margin_3d": 0.06382457952799991}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 0.6, 0.3], "y0": [-1, 0, 1.575609736027, 0, 0.1821138612791, 0, 0, 0.0402579382093, 0, -0.642251179083, 0, 1.150309230802], "T": 15.54605217298, "E": -0.2928707184477, "L": -0.5845740879463, "ret_err": 8.077997971052e-10, "k1": 1.942850642835, "k2": 1.775754725566, "stab_margin": 0.05714935716454, "survived_100T": 100, "drift_100T": 0.0002382590778454, "rmin": 1.182113861279, "rmax": 3.246312149775, "partner_swaps": 0, "syzygies": 6, "democratic": false, "id": "2D-HIE-040", "kz": 1.701659975, "stable_3d": true, "stab_margin_3d": 0.057149357164999914}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 0.8, 0.4], "y0": [-1, 0, 0.5341306699876, 0, 1.431738660025, 0, 0, -0.6145429245861, 0, 0.9101833456199, 0, -0.2840093797746], "T": 10.31479203017, "E": -0.5061251339596, "L": 0.8408175132189, "ret_err": 3.546568375299e-10, "k1": 1.945853752706, "k2": 1.786027650046, "stab_margin": 0.05414624729425, "survived_100T": 100, "drift_100T": 0.0001341197071436, "rmin": 0.8698782230104, "rmax": 2.431738660037, "partner_swaps": 0, "syzygies": 6, "democratic": false, "id": "2D-HIE-041", "kz": 1.369624588, "stable_3d": true, "stab_margin_3d": 0.05414624729399997}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 0.5, 0.25], "y0": [-1, 0, 1.831407125648, 0, 0.3371857487046, 0, 0, 0.039194540439, 0, -0.6091815306539, 0, 1.061584899552], "T": 19.04189497858, "E": -0.2127921129135, "L": -0.5075364136731, "ret_err": 8.895002337877e-10, "k1": 1.948401941393, "k2": 1.780260814108, "stab_margin": 0.05159805860708, "survived_100T": 100, "drift_100T": 0.0003252002927576, "rmin": 1.337185748705, "rmax": 3.677410391403, "partner_swaps": 0, "syzygies": 6, "democratic": false, "id": "2D-HIE-042", "kz": 1.742885908, "stable_3d": true, "stab_margin_3d": 0.05159805860699995}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 1, 0.3], "y0": [-1, 0, 0.9634520295679, 0, 0.121826568107, 0, 0, -0.6620727476536, 0, 0.2012350356051, 0, 1.536125706828], "T": 9.561120868559, "E": -0.5398109201909, "L": 0.9120953280406, "ret_err": 1.474680926324e-09, "k1": 1.96328397341, "k2": 1.755075609583, "stab_margin": 0.03671602659046, "survived_100T": 100, "drift_100T": 0.0001169914490832, "rmin": 0.8416254614609, "rmax": 2.445870927212, "partner_swaps": 0, "syzygies": 5, "democratic": false, "id": "2D-HIE-043", "kz": 1.308713428, "stable_3d": true, "stab_margin_3d": 0.03671602658999995}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 0.5, 0.25], "y0": [-1, 0, 1.940760079485, 0, 0.1184798410296, 0, 0, -0.01533508392679, 0, 0.5830142489687, 0, -1.10468816223], "T": 21.0057083644, "E": -0.2245011326807, "L": 0.5483596545495, "ret_err": 3.304995308644e-09, "k1": 1.982911476157, "k2": 1.894901524904, "stab_margin": 0.01708852384317, "survived_100T": 100, "drift_100T": 0.0003342490285234, "rmin": 1.118479839041, "rmax": 3.63575311535, "partner_swaps": 0, "syzygies": 7, "democratic": false, "id": "2D-HIE-044", "kz": 1.880674874, "stable_3d": true, "stab_margin_3d": 0.01708852384300008}, {"dim": 2, "subspace": "perp_L_nonzero", "masses": [1, 0.9, 0.5], "y0": [-1, 0, 1.288995247676, 0, -0.3201914458173, 0, 0, -0.09504338107959, 0, -0.6828853454516, 0, 1.419280383972], "T": 11.89565316336, "E": -0.6903757708862, "L": -0.9243897064978, "ret_err": 6.068756002392e-09, "k1": 1.987832492761, "k2": 1.924719925289, "stab_margin": 0.01216750723895, "survived_100T": 100, "drift_100T": 0.0001756106202705, "rmin": 0.6798085539426, "rmax": 2.520914679881, "partner_swaps": 0, "syzygies": 9, "democratic": false, "id": "2D-HIE-045", "kz": 1.889911658, "stable_3d": true, "stab_margin_3d": 0.012167507238999953}]};
+const ORBITS = CATALOG.orbits;
+
+document.getElementById("hdrCounts").textContent =
+  `${CATALOG.total_unique} Steady Orbits · ${CATALOG.counts["3d"]} 3D · ${CATALOG.counts["2d_democratic"]} 2D Democratic`;
+
+// State & Filters
+let activeFilter = "all";
+let activeSort = "margin";
+let filtered = [...ORBITS];
+let currentOrbit = ORBITS[0];
+let state = null;
+let simTime = 0;
+let playing = true;
+let trail = [];
+let refTrack = [];
+let bounds = { cx: 0, cy: 0, cz: 0, scale: 100 };
+let camYaw = 0.65, camPitch = 0.45, dragging = false, lastMX = 0, lastMY = 0;
+
+// Adaptive DOPRI5 for 2D (12) and 3D (18)
+function deriv(s, m, dim, out) {
+  const half = dim === 3 ? 9 : 6;
+  for (let i = 0; i < half; i++) out[i] = s[half + i];
+  for (let i = half; i < 2 * half; i++) out[i] = 0;
+  for (let i = 0; i < 3; i++) {
+    for (let j = i + 1; j < 3; j++) {
+      const dx = s[dim*j] - s[dim*i];
+      const dy = s[dim*j+1] - s[dim*i+1];
+      const dz = dim === 3 ? (s[dim*j+2] - s[dim*i+2]) : 0;
+      const r2 = dx*dx + dy*dy + dz*dz;
+      const ir3 = 1 / (r2 * Math.sqrt(r2));
+      out[half + dim*i]   += m[j] * dx * ir3;
+      out[half + dim*i+1] += m[j] * dy * ir3;
+      out[half + dim*j]   -= m[i] * dx * ir3;
+      out[half + dim*j+1] -= m[i] * dy * ir3;
+      if (dim === 3) {
+        out[half + dim*i+2] += m[j] * dz * ir3;
+        out[half + dim*j+2] -= m[i] * dz * ir3;
+      }
+    }
+  }
+}
+
+function advance(y, dt, m, dim, tol = 1e-10) {
+  const n = dim === 3 ? 18 : 12;
+  const k1 = new Float64Array(n), k2 = new Float64Array(n), k3 = new Float64Array(n),
+        k4 = new Float64Array(n), k5 = new Float64Array(n), k6 = new Float64Array(n),
+        k7 = new Float64Array(n), yt = new Float64Array(n), yn = new Float64Array(n);
+  let t = 0, h = Math.min(0.005, dt), steps = 0;
+  while (t < dt - 1e-14 && steps < 4000) {
+    if (t + h > dt) h = dt - t;
+    deriv(y, m, dim, k1);
+    for (let i=0;i<n;i++) yt[i]=y[i]+h*0.2*k1[i]; deriv(yt, m, dim, k2);
+    for (let i=0;i<n;i++) yt[i]=y[i]+h*(3/40*k1[i]+9/40*k2[i]); deriv(yt, m, dim, k3);
+    for (let i=0;i<n;i++) yt[i]=y[i]+h*(44/45*k1[i]-56/15*k2[i]+32/9*k3[i]); deriv(yt, m, dim, k4);
+    for (let i=0;i<n;i++) yt[i]=y[i]+h*(19372/6561*k1[i]-25360/2187*k2[i]+64448/6561*k3[i]-212/729*k4[i]); deriv(yt, m, dim, k5);
+    for (let i=0;i<n;i++) yt[i]=y[i]+h*(9017/3168*k1[i]-355/33*k2[i]+46732/5247*k3[i]+49/176*k4[i]-5103/18656*k5[i]); deriv(yt, m, dim, k6);
+    for (let i=0;i<n;i++) yn[i]=y[i]+h*(35/384*k1[i]+500/1113*k3[i]+125/192*k4[i]-2187/6784*k5[i]+11/84*k6[i]); deriv(yn, m, dim, k7);
+    let err = 0;
+    for (let i=0;i<n;i++) {
+      const ei = h*(71/57600*k1[i]-71/16695*k3[i]+71/1920*k4[i]-17253/339200*k5[i]+22/525*k6[i]-1/40*k7[i]);
+      const sc = tol*(1 + Math.max(Math.abs(y[i]), Math.abs(yn[i])));
+      const r = ei/sc; err += r*r;
+    }
+    err = Math.sqrt(err/n);
+    if (err <= 1) {
+      y.set(yn); t += h; steps++;
+      h = Math.min(h * (err===0 ? 5 : Math.min(5, Math.max(0.2, 0.9*Math.pow(err,-0.2)))), 0.06);
+    } else {
+      h *= Math.max(0.1, 0.9*Math.pow(err,-0.25));
+      if (h < 1e-12) break;
+    }
+  }
+}
+
+const simCanvas = document.getElementById("simCanvas");
+const ctx = simCanvas.getContext("2d");
+const fCanvas = document.getElementById("floquetCanvas");
+const fctx = fCanvas.getContext("2d");
+
+function resize() {
+  const rect = simCanvas.parentElement.getBoundingClientRect();
+  simCanvas.width = Math.max(300, Math.floor(rect.width));
+  simCanvas.height = Math.max(300, Math.floor(rect.height));
+  computeBounds();
+}
+window.addEventListener("resize", resize);
+
+function project(x, y, z) {
+  const w = simCanvas.width, h = simCanvas.height;
+  if (currentOrbit.dim === 2) {
+    return [w*0.5 + (x - bounds.cx)*bounds.scale, h*0.5 - (y - bounds.cy)*bounds.scale, 0];
+  }
+  const dx = x - bounds.cx, dy = y - bounds.cy, dz = z - bounds.cz;
+  const cy = Math.cos(camYaw), sy = Math.sin(camYaw);
+  const cp = Math.cos(camPitch), sp = Math.sin(camPitch);
+  const rx = dx*cy - dy*sy;
+  const ry = dx*sy + dy*cy;
+  const px = rx;
+  const py = ry*sp + dz*cp;
+  const pz = ry*cp - dz*sp;
+  return [w*0.5 + px*bounds.scale, h*0.5 - py*bounds.scale, pz];
+}
+
+function computeBounds() {
+  if (!refTrack.length) return;
+  const d = currentOrbit.dim;
+  let maxR = 0.5;
+  for (const pt of refTrack) {
+    for (let b = 0; b < 3; b++) {
+      const r = Math.hypot(pt[d*b], pt[d*b+1], d===3 ? pt[d*b+2] : 0);
+      if (r > maxR) maxR = r;
+    }
+  }
+  bounds.cx = 0; bounds.cy = 0; bounds.cz = 0;
+  bounds.scale = Math.min(simCanvas.width, simCanvas.height) * 0.41 / maxR;
+}
+
+function selectOrbit(o) {
+  currentOrbit = o;
+  state = new Float64Array(o.y0);
+  simTime = 0;
+  trail = [];
+  document.getElementById("badgeKick").style.display = "none";
+
+  // Precompute reference period track
+  refTrack = [];
+  const tmp = new Float64Array(o.y0);
+  const N = 360, dt = o.T / N, d = o.dim;
+  for (let i = 0; i <= N; i++) {
+    refTrack.push(Array.from(tmp.slice(0, 3*d)));
+    if (i < N) advance(tmp, dt, o.masses, d, 1e-10);
+  }
+  computeBounds();
+
+  // Telemetry
+  document.getElementById("badgeTitle").textContent = o.id;
+  document.getElementById("badgeDim").textContent = o.dim === 3
+    ? `3D Non-Planar (h=${(o.thickness_3d||0).toFixed(2)})`
+    : (o.democratic ? `2D Democratic (${o.partner_swaps} swaps)` : "2D Hierarchical");
+  document.getElementById("lblM1").textContent = o.masses[0];
+  document.getElementById("lblM2").textContent = o.masses[1];
+  document.getElementById("lblM3").textContent = o.masses[2];
+  document.getElementById("stSub").textContent = o.subspace;
+  document.getElementById("stT").textContent = o.T.toFixed(5);
+  document.getElementById("stE").textContent = o.E.toFixed(5);
+  document.getElementById("stL").textContent = o.L.toFixed(4);
+  document.getElementById("stRmin").textContent = o.rmin.toFixed(4);
+  document.getElementById("stSwaps").textContent = o.partner_swaps;
+  document.getElementById("stRet").textContent = o.ret_err.toExponential(1);
+  document.getElementById("stDrift").textContent = o.drift_100T.toFixed(5);
+  document.getElementById("stMarg").textContent = o.stab_margin.toFixed(4);
+  document.getElementById("stK").textContent = o.dim === 3
+    ? `${o.k1.toFixed(2)}, ${o.k2.toFixed(2)}, ${o.k3.toFixed(2)}`
+    : `${o.k1.toFixed(3)}, ${o.k2.toFixed(3)}`;
+  document.getElementById("stKz").textContent = o.dim === 3
+    ? "Full 3D Stable"
+    : (o.stable_3d ? `YES (${o.kz.toFixed(3)})` : (o.kz !== undefined ? `L=0 (${o.kz.toFixed(2)})` : "—"));
+
+  renderList();
+  drawFloquet();
+}
+
+function applyFilter() {
+  filtered = ORBITS.filter(o => {
+    if (activeFilter === "3d") return o.dim === 3;
+    if (activeFilter === "dem") return o.dim === 2 && o.democratic;
+    if (activeFilter === "3dok") return o.stable_3d;
+    if (activeFilter === "col") return o.subspace === "collinear_L0";
+    if (activeFilter === "perp") return o.subspace === "perp_L_nonzero";
+    return true;
+  });
+  filtered.sort((a, b) => {
+    if (activeSort === "margin") return b.stab_margin - a.stab_margin;
+    if (activeSort === "swaps") return b.partner_swaps - a.partner_swaps;
+    if (activeSort === "rmin") return b.rmin - a.rmin;
+    if (activeSort === "T") return a.T - b.T;
+    return 0;
+  });
+  renderList();
+  drawFloquet();
+}
+
+function renderList() {
+  const el = document.getElementById("orbitList");
+  el.innerHTML = "";
+  for (const o of filtered) {
+    const div = document.createElement("div");
+    div.className = "orbit-item" + (o.id === currentOrbit.id ? " active" : "");
+    div.innerHTML = `
+      <div class="row">
+        <span class="mono" style="font-weight:600;">${o.id}</span>
+        <span class="mono" style="color:var(--green);font-size:11px;">marg ${o.stab_margin.toFixed(3)}</span>
+      </div>
+      <div class="row muted mono" style="font-size:11px;">
+        <span>m=[${o.masses.join(",")}]</span>
+        <span>T=${o.T.toFixed(2)} · sw=${o.partner_swaps}</span>
+      </div>`;
+    div.onclick = () => selectOrbit(o);
+    el.appendChild(div);
+  }
+}
+
+function drawFloquet() {
+  const w = fCanvas.width, h = fCanvas.height;
+  fctx.clearRect(0, 0, w, h);
+  const pad = 16;
+  const mx = k => pad + ((k + 2.2)/4.4)*(w - 2*pad);
+  const my = k => h - pad - ((k + 2.2)/4.4)*(h - 2*pad);
+
+  // Stability box [-2,2]^2
+  fctx.fillStyle = "rgba(34,197,94,0.08)";
+  fctx.fillRect(mx(-2), my(2), mx(2)-mx(-2), my(-2)-my(2));
+  fctx.strokeStyle = "rgba(34,197,94,0.5)";
+  fctx.setLineDash([4,4]);
+  fctx.strokeRect(mx(-2), my(2), mx(2)-mx(-2), my(-2)-my(2));
+  fctx.setLineDash([]);
+
+  fctx.strokeStyle = "rgba(139,155,180,0.2)";
+  fctx.beginPath();
+  fctx.moveTo(mx(-2.2), my(0)); fctx.lineTo(mx(2.2), my(0));
+  fctx.moveTo(mx(0), my(-2.2)); fctx.lineTo(mx(0), my(2.2));
+  fctx.stroke();
+
+  for (const o of filtered) {
+    const px = mx(o.k1), py = my(o.k2);
+    const isCur = o.id === currentOrbit.id;
+    fctx.beginPath();
+    fctx.arc(px, py, isCur ? 5 : 2.8, 0, Math.PI*2);
+    fctx.fillStyle = isCur ? "#3b82f6" : (o.dim===3 ? "#06b6d4" : (o.democratic ? "#22c55e" : "#8b9bb4"));
+    fctx.fill();
+    if (isCur) { fctx.strokeStyle = "#fff"; fctx.lineWidth = 1.5; fctx.stroke(); }
+  }
+}
+
+fCanvas.addEventListener("click", (ev) => {
+  const rect = fCanvas.getBoundingClientRect();
+  const x = (ev.clientX - rect.left) * (fCanvas.width / rect.width);
+  const y = (ev.clientY - rect.top) * (fCanvas.height / rect.height);
+  const pad = 16, w = fCanvas.width, h = fCanvas.height;
+  const mx = k => pad + ((k + 2.2)/4.4)*(w - 2*pad);
+  const my = k => h - pad - ((k + 2.2)/4.4)*(h - 2*pad);
+  let best = null, bestD = 1e9;
+  for (const o of filtered) {
+    const d = Math.hypot(mx(o.k1)-x, my(o.k2)-y);
+    if (d < bestD) { bestD = d; best = o; }
+  }
+  if (best && bestD < 18) selectOrbit(best);
+});
+
+const COLS = ["#3b82f6", "#f59e0b", "#ec4899"];
+
+function drawSim() {
+  const w = simCanvas.width, h = simCanvas.height;
+  ctx.clearRect(0, 0, w, h);
+  const d = currentOrbit.dim;
+
+  // Origin axes
+  const o0 = project(0,0,0);
+  ctx.strokeStyle = "rgba(139,155,180,0.2)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(o0[0]-8, o0[1]); ctx.lineTo(o0[0]+8, o0[1]);
+  ctx.moveTo(o0[0], o0[1]-8); ctx.lineTo(o0[0], o0[1]+8);
+  ctx.stroke();
+
+  if (document.getElementById("chkGhost").checked) {
+    for (let b = 0; b < 3; b++) {
+      ctx.beginPath();
+      for (let i = 0; i < refTrack.length; i++) {
+        const pt = refTrack[i];
+        const p = project(pt[d*b], pt[d*b+1], d===3 ? pt[d*b+2] : 0);
+        if (i === 0) ctx.moveTo(p[0], p[1]); else ctx.lineTo(p[0], p[1]);
+      }
+      ctx.strokeStyle = COLS[b];
+      ctx.globalAlpha = 0.22;
+      ctx.lineWidth = 1.4;
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  if (trail.length > 1) {
+    for (let b = 0; b < 3; b++) {
+      ctx.beginPath();
+      for (let i = 0; i < trail.length; i++) {
+        const pt = trail[i];
+        const p = project(pt[d*b], pt[d*b+1], d===3 ? pt[d*b+2] : 0);
+        if (i === 0) ctx.moveTo(p[0], p[1]); else ctx.lineTo(p[0], p[1]);
+      }
+      ctx.strokeStyle = COLS[b];
+      ctx.globalAlpha = 0.85;
+      ctx.lineWidth = 2.2;
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // Draw bodies depth-sorted
+  const bodies = [0,1,2].map(b => {
+    const p = project(state[d*b], state[d*b+1], d===3 ? state[d*b+2] : 0);
+    return { b, x: p[0], y: p[1], z: p[2], r: 5 + 3.2 * Math.cbrt(currentOrbit.masses[b]) };
+  }).sort((a,b) => a.z - b.z);
+
+  for (const bd of bodies) {
+    ctx.beginPath();
+    ctx.arc(bd.x, bd.y, bd.r, 0, Math.PI*2);
+    ctx.fillStyle = COLS[bd.b];
+    ctx.fill();
+    ctx.strokeStyle = "#fff";
+    ctx.lineWidth = 1.3;
+    ctx.stroke();
+  }
+
+  document.getElementById("timeReadout").textContent =
+    `t = ${simTime.toFixed(2)} (${(simTime / currentOrbit.T).toFixed(2)} T)`;
+}
+
+let lastTs = 0;
+function loop(ts) {
+  if (!lastTs) lastTs = ts;
+  const elapsed = Math.min(0.05, (ts - lastTs) / 1000);
+  lastTs = ts;
+  if (playing && state) {
+    const spd = parseFloat(document.getElementById("speedRange").value);
+    const dt = elapsed * spd * (currentOrbit.T / 8.0);
+    advance(state, dt, currentOrbit.masses, currentOrbit.dim, 1e-10);
+    simTime += dt;
+    const d = currentOrbit.dim;
+    trail.push(Array.from(state.slice(0, 3*d)));
+    if (trail.length > 220) trail.shift();
+    drawSim();
+  }
+  requestAnimationFrame(loop);
+}
+
+// Mouse drag for 3D rotation
+simCanvas.addEventListener("mousedown", e => { dragging = true; lastMX = e.clientX; lastMY = e.clientY; });
+window.addEventListener("mouseup", () => dragging = false);
+window.addEventListener("mousemove", e => {
+  if (!dragging) return;
+  camYaw += (e.clientX - lastMX) * 0.01;
+  camPitch = Math.max(-1.5, Math.min(1.5, camPitch + (e.clientY - lastMY) * 0.01));
+  lastMX = e.clientX; lastMY = e.clientY;
+  drawSim();
+});
+
+document.querySelectorAll("#filterTabs .tab").forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll("#filterTabs .tab").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    activeFilter = btn.dataset.f;
+    applyFilter();
+  };
+});
+document.getElementById("sortSelect").onchange = e => { activeSort = e.target.value; applyFilter(); };
+document.getElementById("btnPlay").onclick = e => { playing = !playing; e.target.textContent = playing ? "Pause" : "Play"; };
+document.getElementById("btnReset").onclick = () => selectOrbit(currentOrbit);
+document.getElementById("btnKick").onclick = () => {
+  const m = currentOrbit.masses, d = currentOrbit.dim, half = d===3 ? 9 : 6, k = 0.002;
+  state[half] += k; state[half + d] -= k * m[0] / m[1];
+  if (d === 3) { state[half+2] += k; state[half+d+2] -= k * m[0] / m[1]; }
+  document.getElementById("badgeKick").style.display = "inline-block";
+};
+document.getElementById("btnCopy").onclick = () => {
+  navigator.clipboard?.writeText(JSON.stringify(currentOrbit, null, 2));
+};
+
+resize();
+applyFilter();
+if (ORBITS.length) selectOrbit(ORBITS[0]);
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
