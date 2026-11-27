@@ -1,64 +1,149 @@
 #!/usr/bin/env python3
 """
 Compute exact Montgomery shape-sphere free-group homotopy words (F2 = <a, b>)
-for all 2D democratic periodic orbits in catalog.json.
+for all 2D periodic orbits in catalog.json.
 
-On the shape sphere (Jacobi coordinates rho, lambda -> Hopf map to S^2),
-the three binary collisions lie on the equator (n_z = 0) at 120-degree intervals.
-Stereographic projection from one collision (say r_12 = 0) sends the other two
-collisions to two punctures in the plane, and the equatorial crossings yield
-the standard free-group word in {a, A, b, B} (Šuvakov & Dmitrašinović 2013).
+Fixes applied following rigorous audit:
+  1. Adaptive Dormand-Prince 5(4) integration (tol=1e-11) instead of fixed-step RK4,
+     eliminating close-encounter drift/blowup.
+  2. Equator-safe traversal starting at argmax_t |n_z(t)|, so orbits starting on the
+     syzygy equator n_z(0) = 0 never drop their t = 0 crossing (e.g. AAAbbb).
+  3. Full S_3 3-puncture outer automorphism quotient over all three collision
+     projections (r_12 = 0, r_13 = 0, r_23 = 0), unifying equivalent words such as
+     (Ab)^7 and A^7.
+  4. Primitive root extraction (e.g. A^7 -> root 'A', power 7).
 """
+import argparse
 import json
 import math
 import os
+import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
-def deriv(s, m):
-    out = [s[6], s[7], s[8], s[9], s[10], s[11], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-    for i in range(3):
-        for j in range(i + 1, 3):
-            dx = s[2*j] - s[2*i]
-            dy = s[2*j + 1] - s[2*i + 1]
-            r2 = dx*dx + dy*dy
-            ir3 = 1.0 / (r2 * math.sqrt(r2))
-            out[6 + 2*i] += m[j] * dx * ir3
-            out[7 + 2*i] += m[j] * dy * ir3
-            out[6 + 2*j] -= m[i] * dx * ir3
-            out[7 + 2*j] -= m[i] * dy * ir3
-    return out
-
-
-def rk4_step(y, h, m):
-    k1 = deriv(y, m)
-    y2 = [y[i] + 0.5*h*k1[i] for i in range(12)]
-    k2 = deriv(y2, m)
-    y3 = [y[i] + 0.5*h*k2[i] for i in range(12)]
-    k3 = deriv(y3, m)
-    y4 = [y[i] + h*k3[i] for i in range(12)]
-    k4 = deriv(y4, m)
-    return [y[i] + (h/6.0)*(k1[i] + 2*k2[i] + 2*k3[i] + k4[i]) for i in range(12)]
+# Dormand-Prince 5(4) Butcher tableau
+A21 = 1.0 / 5.0
+A31, A32 = 3.0 / 40.0, 9.0 / 40.0
+A41, A42, A43 = 44.0 / 45.0, -56.0 / 15.0, 32.0 / 9.0
+A51, A52, A53, A54 = 19372.0 / 6561.0, -25360.0 / 2187.0, 64448.0 / 6561.0, -212.0 / 729.0
+A61, A62, A63, A64, A65 = (
+    9017.0 / 3168.0, -355.0 / 33.0, 46732.0 / 5247.0, 49.0 / 176.0, -5103.0 / 18656.0
+)
+B1, B3, B4, B5, B6 = 35.0 / 384.0, 500.0 / 1113.0, 125.0 / 192.0, -2187.0 / 6784.0, 11.0 / 84.0
+E1, E3, E4, E5, E6, E7 = (
+    71.0 / 57600.0, -71.0 / 16695.0, 71.0 / 1920.0,
+    -17253.0 / 339200.0, 22.0 / 525.0, -1.0 / 40.0,
+)
+INV_SQRT2 = 1.0 / math.sqrt(2.0)
+INV_SQRT6 = 1.0 / math.sqrt(6.0)
+INV_SQRT3 = 1.0 / math.sqrt(3.0)
 
 
-def shape_sphere_coords(y):
-    """Equal-weight Jacobi coordinates -> unit shape sphere (nx, ny, nz)."""
-    x1, y1, x2, y2, x3, y3 = y[0], y[1], y[2], y[3], y[4], y[5]
-    # rho = (r1 - r2)/sqrt(2), lam = (r1 + r2 - 2*r3)/sqrt(6)
-    rx = (x1 - x2) / math.sqrt(2.0)
-    ry = (y1 - y2) / math.sqrt(2.0)
-    lx = (x1 + x2 - 2.0*x3) / math.sqrt(6.0)
-    ly = (y1 + y2 - 2.0*y3) / math.sqrt(6.0)
-    r2 = rx*rx + ry*ry
-    l2 = lx*lx + ly*ly
+def deriv(s, m0, m1, m2):
+    x0, y0, x1, y1, x2, y2 = s[0], s[1], s[2], s[3], s[4], s[5]
+    dx01, dy01 = x1 - x0, y1 - y0
+    r2_01 = dx01 * dx01 + dy01 * dy01
+    ir3_01 = 1.0 / (r2_01 * math.sqrt(r2_01))
+    fx01, fy01 = dx01 * ir3_01, dy01 * ir3_01
+
+    dx02, dy02 = x2 - x0, y2 - y0
+    r2_02 = dx02 * dx02 + dy02 * dy02
+    ir3_02 = 1.0 / (r2_02 * math.sqrt(r2_02))
+    fx02, fy02 = dx02 * ir3_02, dy02 * ir3_02
+
+    dx12, dy12 = x2 - x1, y2 - y1
+    r2_12 = dx12 * dx12 + dy12 * dy12
+    ir3_12 = 1.0 / (r2_12 * math.sqrt(r2_12))
+    fx12, fy12 = dx12 * ir3_12, dy12 * ir3_12
+
+    return (
+        s[6], s[7], s[8], s[9], s[10], s[11],
+        m1 * fx01 + m2 * fx02,
+        m1 * fy01 + m2 * fy02,
+        -m0 * fx01 + m2 * fx12,
+        -m0 * fy01 + m2 * fy12,
+        -m0 * fx02 - m1 * fx12,
+        -m0 * fy02 - m1 * fy12,
+    )
+
+
+def integrate_trajectory_dopri5(y0, T, m, tol=1e-11):
+    """Integrate 2D 3-body orbit over [0, T] with adaptive DOPRI5, returning sampled positions."""
+    m0, m1, m2 = m[0], m[1], m[2]
+    y = tuple(y0)
+    t = 0.0
+    h = min(1e-3, T * 0.005)
+    hmax = min(0.05, T / 1600.0)
+    pts = [y[:6]]
+    k1 = deriv(y, m0, m1, m2)
+
+    while t < T - 1e-14:
+        if t + h > T:
+            h = T - t
+        accepted = False
+        for _ in range(30):
+            yt = tuple(y[i] + h * A21 * k1[i] for i in range(12))
+            k2 = deriv(yt, m0, m1, m2)
+            yt = tuple(y[i] + h * (A31 * k1[i] + A32 * k2[i]) for i in range(12))
+            k3 = deriv(yt, m0, m1, m2)
+            yt = tuple(y[i] + h * (A41 * k1[i] + A42 * k2[i] + A43 * k3[i]) for i in range(12))
+            k4 = deriv(yt, m0, m1, m2)
+            yt = tuple(
+                y[i] + h * (A51 * k1[i] + A52 * k2[i] + A53 * k3[i] + A54 * k4[i])
+                for i in range(12)
+            )
+            k5 = deriv(yt, m0, m1, m2)
+            yt = tuple(
+                y[i] + h * (A61 * k1[i] + A62 * k2[i] + A63 * k3[i] + A64 * k4[i] + A65 * k5[i])
+                for i in range(12)
+            )
+            k6 = deriv(yt, m0, m1, m2)
+            yn = tuple(
+                y[i] + h * (B1 * k1[i] + B3 * k3[i] + B4 * k4[i] + B5 * k5[i] + B6 * k6[i])
+                for i in range(12)
+            )
+            k7 = deriv(yn, m0, m1, m2)
+
+            err2 = 0.0
+            for i in range(12):
+                ei = h * (E1 * k1[i] + E3 * k3[i] + E4 * k4[i] + E5 * k5[i] + E6 * k6[i] + E7 * k7[i])
+                sc = tol * (1.0 + max(abs(y[i]), abs(yn[i])))
+                r = ei / sc
+                err2 += r * r
+            err = math.sqrt(err2 / 12.0)
+            if err <= 1.0:
+                y = yn
+                k1 = k7  # FSAL property
+                t += h
+                pts.append(y[:6])
+                fac = 5.0 if err == 0.0 else min(5.0, max(0.2, 0.9 * (err ** -0.2)))
+                h = min(h * fac, hmax)
+                accepted = True
+                break
+            h *= max(0.1, 0.9 * (err ** -0.25))
+            if h < 1e-14:
+                raise RuntimeError("DOPRI5 step underflow during topology integration")
+        if not accepted:
+            raise RuntimeError("DOPRI5 failed to converge step")
+    return pts
+
+
+def shape_sphere_coords_perm(pos, perm):
+    """Equal-weight Jacobi coordinates -> unit shape sphere (nx, ny, nz) for body permutation."""
+    p0, p1, p2 = perm
+    x1, y1 = pos[2 * p0], pos[2 * p0 + 1]
+    x2, y2 = pos[2 * p1], pos[2 * p1 + 1]
+    x3, y3 = pos[2 * p2], pos[2 * p2 + 1]
+    rx = (x1 - x2) * INV_SQRT2
+    ry = (y1 - y2) * INV_SQRT2
+    lx = (x1 + x2 - 2.0 * x3) * INV_SQRT6
+    ly = (y1 + y2 - 2.0 * y3) * INV_SQRT6
+    r2 = rx * rx + ry * ry
+    l2 = lx * lx + ly * ly
     R2 = r2 + l2
-    if R2 < 1e-15:
+    if R2 < 1e-30:
         return (0.0, 0.0, 0.0)
-    nx = (r2 - l2) / R2
-    ny = 2.0 * (rx*lx + ry*ly) / R2
-    nz = 2.0 * (rx*ly - ry*lx) / R2
-    return (nx, ny, nz)
+    return ((r2 - l2) / R2, 2.0 * (rx * lx + ry * ly) / R2, 2.0 * (rx * ly - ry * lx) / R2)
 
 
 def reduce_word(w):
@@ -70,110 +155,135 @@ def reduce_word(w):
             stack.pop()
         else:
             stack.append(ch)
-    # Cyclic reduction
-    while len(stack) >= 2 and inv[stack[0]] == stack[-1]:
-        stack.pop(0)
-        stack.pop()
-    return "".join(stack)
+    left = 0
+    right = len(stack)
+    while right - left >= 2 and inv[stack[left]] == stack[right - 1]:
+        left += 1
+        right -= 1
+    return "".join(stack[left:right])
 
 
-def canonical_word(w):
-    """Canonical representative under cyclic shift, inversion, and a<->b relabeling."""
+def canonical_word_basic(w):
+    """Canonical representative under cyclic shift, time reversal, and a<->b / a<->A relabeling."""
     if not w:
         return "1"
     inv = {'a': 'A', 'A': 'a', 'b': 'B', 'B': 'b'}
     swap = {'a': 'b', 'b': 'a', 'A': 'B', 'B': 'A'}
-    flip = {'a': 'A', 'A': 'a', 'b': 'B', 'B': 'b'}
     forms = set()
-    base_variants = [
-        w,
-        "".join(inv[c] for c in reversed(w)),
-    ]
-    for bv in base_variants:
+    rev = "".join(inv[c] for c in reversed(w))
+    for bv in (w, rev):
         for t in (
             bv,
             "".join(swap[c] for c in bv),
-            "".join(flip[c] for c in bv),
-            "".join(swap[flip[c]] for c in bv),
+            "".join(inv[c] for c in bv),
+            "".join(swap[inv[c]] for c in bv),
         ):
             for i in range(len(t)):
                 forms.add(t[i:] + t[:i])
     return min(forms)
 
 
-def compute_word(o):
-    m = o["masses"]
-    y = list(o["y0"])
-    T = o["T"]
-    N = max(2000, int(T * 120))
-    dt = T / N
+def primitive_root(w):
+    """Extract primitive cyclic root and repeat count (e.g. 'AAAAAAA' -> ('A', 7))."""
+    if not w or w == "1":
+        return "1", 1
+    n = len(w)
+    for p in range(1, n + 1):
+        if n % p != 0:
+            continue
+        sub = w[:p]
+        if sub * (n // p) == w:
+            return canonical_word_basic(sub), n // p
+    return w, 1
 
-    # Stereographic projection from collision r12=0 (which is nx=-1, ny=0, nz=0)
-    # Wait: r12=0 => rho=0 => nx=-1, ny=0, nz=0!
-    # The other two collisions on the equator nz=0 are at:
-    # r13=0 => (nx=+1/2, ny=+sqrt(3)/2, nz=0)
-    # r23=0 => (nx=+1/2, ny=-sqrt(3)/2, nz=0)
-    # Stereographic projection from (-1, 0, 0) onto (u, v) = (ny/(1+nx), nz/(1+nx)):
-    #   r13=0 -> u = +1/sqrt(3) = +0.57735, v = 0
-    #   r23=0 -> u = -1/sqrt(3) = -0.57735, v = 0
-    # Crossings of v = 0 (equator nz = 0):
-    #   u > +1/sqrt(3): outside right -> no generator (or basepoint)
-    #   -1/sqrt(3) < u < +1/sqrt(3): between punctures -> 'a' (if dv>0) / 'A' (if dv<0)
-    #   u < -1/sqrt(3): left of both -> 'b' (if dv>0) / 'B' (if dv<0)
-    # Wait: in F2 with two punctures at P1=(+c, 0) and P2=(-c, 0),
-    # crossing the real axis v=0 with u in (-c, +c) separates P1 from P2,
-    # and crossing u < -c goes around P2 (or u > +c goes around P1).
-    # Standard branch cuts: (-inf, -c] for 'b'/'B', and [+c, +inf) for 'a'/'A'!
-    c = 1.0 / math.sqrt(3.0)
-    prev = shape_sphere_coords(y)
+
+def format_word_compact(w_can_s3):
+    root, power = primitive_root(w_can_s3)
+    if root == "1":
+        return "1"
+    if power == 1:
+        return root
+    return f"({root})^{power}" if len(root) > 1 else f"{root}^{power}"
+
+
+def word_from_points(pts, perm):
+    """Extract reduced & basic-canonical word from sampled trajectory under given body permutation."""
+    spts = [shape_sphere_coords_perm(p, perm) for p in pts]
+    if len(spts) > 2:
+        spts.pop()  # Drop duplicate endpoint t = T for cyclic traversal
+    # Start strictly away from equator n_z = 0 so syzygy-starting orbits never miss t = 0 crossing!
+    start = max(range(len(spts)), key=lambda i: abs(spts[i][2]))
+    N = len(spts)
+    last_pt = spts[start]
+    last_sign = 1 if last_pt[2] > 0.0 else -1
     letters = []
-
-    for _ in range(N):
-        # Substep if close encounter
-        r12 = math.hypot(y[2]-y[0], y[3]-y[1])
-        r13 = math.hypot(y[4]-y[0], y[5]-y[1])
-        r23 = math.hypot(y[4]-y[2], y[5]-y[3])
-        rmin = min(r12, r13, r23)
-        sub = 1 if rmin > 0.1 else (8 if rmin > 0.02 else 32)
-        h = dt / sub
-        for _s in range(sub):
-            y = rk4_step(y, h, m)
-        cur = shape_sphere_coords(y)
-        if prev[2] * cur[2] < 0.0:
-            # Linear interpolation for equator crossing nz = 0
-            frac = abs(prev[2]) / (abs(prev[2]) + abs(cur[2]))
-            nx = prev[0] + frac * (cur[0] - prev[0])
-            ny = prev[1] + frac * (cur[1] - prev[1])
-            if 1.0 + nx > 1e-9:
+    for k in range(1, N + 1):
+        cur = spts[(start + k) % N]
+        if cur[2] == 0.0:
+            continue
+        cur_sign = 1 if cur[2] > 0.0 else -1
+        if cur_sign != last_sign:
+            frac = abs(last_pt[2]) / (abs(last_pt[2]) + abs(cur[2]))
+            nx = last_pt[0] + frac * (cur[0] - last_pt[0])
+            ny = last_pt[1] + frac * (cur[1] - last_pt[1])
+            if 1.0 + nx > 1e-12:
                 u = ny / (1.0 + nx)
-                up = cur[2] > prev[2]
-                if u > c:
+                up = cur_sign > 0
+                if u > INV_SQRT3:
                     letters.append('a' if up else 'A')
-                elif u < -c:
+                elif u < -INV_SQRT3:
                     letters.append('b' if up else 'B')
-        prev = cur
-
+            last_sign = cur_sign
+        last_pt = cur
     red = reduce_word(letters)
-    canon = canonical_word(red)
-    return red, canon
+    return (red if red else "1"), canonical_word_basic(red)
+
+
+def compute_word(o, tol=1e-11):
+    """Compute exact (word_red, word_can, word_can_s3, word_prim, word_pow) for a 2D orbit."""
+    pts = integrate_trajectory_dopri5(o["y0"], o["T"], o["masses"], tol=tol)
+    w_red, w_can0 = word_from_points(pts, (0, 1, 2))
+    _, w_can1 = word_from_points(pts, (0, 2, 1))
+    _, w_can2 = word_from_points(pts, (1, 2, 0))
+    w_can_s3 = min((w_can0, w_can1, w_can2), key=lambda w: (0 if w == "1" else len(w), w))
+    w_prim, w_pow = primitive_root(w_can_s3)
+    return w_red, w_can0, w_can_s3, w_prim, w_pow
 
 
 def main():
-    cat = json.load(open(os.path.join(ROOT, "catalog.json")))
-    dem = [o for o in cat["orbits"] if o["dim"] == 2 and o["democratic"]]
-    by_canon = {}
-    for o in dem:
-        red, canon = compute_word(o)
-        o["word_reduced"] = red
-        o["word_canonical"] = canon
-        by_canon.setdefault(canon, []).append(o)
+    ap = argparse.ArgumentParser(description="Classify 2D periodic orbits by S3 shape-sphere free-group words.")
+    ap.add_argument("--verify", action="store_true", help="Cross-check against word_can_s3 stored in catalog.json.")
+    args = ap.parse_args()
 
-    print(f"Classified {len(dem)} democratic 2D steady orbits into {len(by_canon)} distinct topological free-group classes:\n")
-    for canon, grp in sorted(by_canon.items(), key=lambda kv: (-len(kv[1]), len(kv[0]))):
-        ex = grp[0]
-        wdisp = canon if len(canon) <= 28 else canon[:25] + "..."
-        masses = sorted({tuple(x["masses"]) for x in grp})
-        print(f"  [{len(grp):2d} orbits] len={len(canon):2d} word={wdisp:28s} | top={ex['id']} ({ex['subspace']}, m={ex['masses']}, marg={ex['stab_margin']:.3f})")
+    cat = json.load(open(os.path.join(ROOT, "catalog.json")))
+    orbits_2d = [o for o in cat["orbits"] if o["dim"] == 2]
+    by_s3 = {}
+    mismatches = []
+
+    for o in orbits_2d:
+        w_red, w_can, w_s3, w_prim, w_pow = compute_word(o)
+        by_s3.setdefault(w_s3, []).append((o, w_prim, w_pow))
+        if args.verify and "word_can_s3" in o:
+            if o["word_can_s3"] != w_s3:
+                mismatches.append((o["id"], o["word_can_s3"], w_s3))
+
+    print(f"Classified {len(orbits_2d)} 2D Newtonian orbits into {len(by_s3)} distinct S3 shape-sphere classes:\n")
+    for w_s3, grp in sorted(by_s3.items(), key=lambda kv: (-len(kv[1]), 0 if kv[0] == "1" else len(kv[0]), kv[0])):
+        ex, w_prim, w_pow = grp[0]
+        compact = format_word_compact(w_s3)
+        wdisp = compact if len(compact) <= 28 else compact[:25] + "..."
+        print(
+            f"  [{len(grp):2d} orbits] len={0 if w_s3 == '1' else len(w_s3):2d} "
+            f"S3={wdisp:28s} | top={ex['id']} ({ex['subspace']}, m={ex['masses']}, marg={ex['stab_margin']:.4f})"
+        )
+
+    if args.verify:
+        if mismatches:
+            print(f"\nERROR: {len(mismatches)} mismatches vs catalog.json word_can_s3:")
+            for oid, exp, got in mismatches:
+                print(f"  {oid}: catalog={exp} vs python={got}")
+            sys.exit(1)
+        print(f"\nVERIFIED: 0/{len(orbits_2d)} mismatches against 80-bit C++ audit_catalog word_can_s3.")
 
 
 if __name__ == "__main__":
