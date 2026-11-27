@@ -1,6 +1,6 @@
 # A Mass-Stabilized, Non-Hierarchical `AAAbbb` Periodic Three-Body Family with Nonzero Angular Momentum
 
-**Author:** gawydion (`gawydion@gmail.com`)  
+**Authors:** `gawydion@gmail.com`, Gemini 4 Neon  
 **Repository & Dataset:** https://github.com/gawydion/3-body-orbits  
 **Date:** November 2026
 
