@@ -2,6 +2,14 @@
 
 High-precision C++20 discovery engine, exact Floquet stability analyzer, topological classifier, and interactive 2D/3D explorer for **linearly stable ("steady") periodic orbits** of the Newtonian gravitational three-body problem.
 
+<table>
+  <tr>
+    <td align="center" width="33%"><img src="assets/3d_delta14_5fold.gif" width="100%" /><br/><b>3D-Δ14 (5-Fold Inertial)</b></td>
+    <td align="center" width="33%"><img src="assets/2d_A7_deepest.gif" width="100%" /><br/><b>2D <code>A^7</code> (Margin 1.87)</b></td>
+    <td align="center" width="33%"><img src="assets/2d_AABaaB_distinct.gif" width="100%" /><br/><b>2D <code>AABaaB</code> (Distinct Masses)</b></td>
+  </tr>
+</table>
+
 ## Highlights
 - **124 unique verified linearly stable orbits** across equal and unequal masses (including all-distinct-mass triples)
 - **New `3D-Δ14` Family**: a 2-parameter continuous **3D non-planar democratic** steady family (14 partner swaps per relative period, full $18\times 18$ rotating-frame Floquet stability, 100/100 full-3D perturbation survival) with snapped **5-fold, 7-fold, and 12-fold exact fixed-inertial-frame closures** (verified to $10^{-10}$–$10^{-9}$)

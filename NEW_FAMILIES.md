@@ -2,9 +2,31 @@
 
 This report documents the newly discovered continuous families of linearly stable 3-body periodic orbits, including a **2-parameter continuous 3D non-planar democratic family** with an infinite rational sequence of exact inertial closures, plus **32 distinct free-group topological classes** in 2D.
 
+> Color legend in all animations: **Blue** = $m_1$, **Amber** = $m_2$, **Pink** = $m_3$ (radius $\propto m_i^{1/3}$).
+
 ---
 
 ## 1. The `3D-Δ14` Family: A New 2-Parameter Continuous 3D Democratic Steady Family
+
+<table>
+  <tr>
+    <td align="center" width="33%">
+      <img src="assets/3d_delta14_5fold.gif" alt="3D-Delta14 5-Fold Closure" width="100%" /><br/>
+      <b><code>3D-001</code> · 5-Fold Inertial Closure</b><br/>
+      <code>m = [1, 1, 0.5]</code> · $T_{\text{inert}} = 91.46$ · 70 swaps
+    </td>
+    <td align="center" width="33%">
+      <img src="assets/3d_delta14_7fold.gif" alt="3D-Delta14 7-Fold Closure" width="100%" /><br/>
+      <b><code>3D-004</code> · 7-Fold Inertial Closure</b><br/>
+      <code>m = [1, 1, 0.5]</code> · $T_{\text{inert}} = 128.27$ · 98 swaps
+    </td>
+    <td align="center" width="33%">
+      <img src="assets/3d_rpo_distinct.gif" alt="3D Distinct-Mass Trio" width="100%" /><br/>
+      <b><code>3D-005</code> · 3D Distinct-Mass Trio</b><br/>
+      <code>m = [1, 0.7, 0.4]</code> · $T_{\text{rpo}} = 11.03$ · 3D RPO
+    </td>
+  </tr>
+</table>
 
 ### Physical & Geometric Structure
 - **Symmetry:** Gauge-fixed 3D perpendicular-crossing Relative Periodic Orbits ($x_1 = -1$, $v_{z1} = 0$, $v_{z2} > 0$) co-precessing around the conserved angular momentum axis $\hat{\mathbf{u}} = \mathbf{L}/|\mathbf{L}|$ by angle $2\alpha$ per relative period $T_{\text{rpo}}$.
@@ -28,9 +50,9 @@ Because $2\alpha(v_{z2})$ varies smoothly across $[-3.78, -3.57]\text{ rad}$, ev
 
 | Closure | $2\alpha$ | Masses | $v_{z2}$ | $T_{\text{rpo}}$ | $T_{\text{inert}}$ | $\|\mathbf{y}(T_{\text{inert}}) - \mathbf{y}(0)\|$ | Swaps / $T_{\text{inert}}$ |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **5-Fold (`3D-5F`)** | $-6\pi/5$ | `[1, 1, 0.5]` | `0.6734752656928` | `18.29283582368` | `91.46417911842` | `1.76e-10` | 70 |
-| **7-Fold (`3D-7F`)** | $-8\pi/7$ | `[1, 1, 0.5]` | `0.5328015373813` | `18.32392838217` | `128.2674986752` | `6.05e-10` | 98 |
-| **12-Fold (`3D-12F`)** | $-7\pi/6$ | `[1, 1, 0.5]` | `0.6164617513438` | `18.30810191655` | `219.6972229987` | `1.50e-09` | 168 |
+| **5-Fold (`3D-001`)** | $-6\pi/5$ | `[1, 1, 0.5]` | `0.6734752656928` | `18.29283582368` | `91.46417911842` | `1.76e-10` | 70 |
+| **7-Fold (`3D-004`)** | $-8\pi/7$ | `[1, 1, 0.5]` | `0.5328015373813` | `18.32392838217` | `128.2674986752` | `6.05e-10` | 98 |
+| **12-Fold (`3D-003`)** | $-7\pi/6$ | `[1, 1, 0.5]` | `0.6164617513438` | `18.30810191655` | `219.6972229987` | `1.50e-09` | 168 |
 
 #### Exact 13-Digit Initial Conditions (`y0 = [x1,y1,z1, x2,y2,z2, x3,y3,z3, vx1,vy1,vz1, vx2,vy2,vz2, vx3,vy3,vz3]`)
 - **5-Fold (`T_inert = 91.46417911842`):**  
@@ -44,7 +66,39 @@ Because $2\alpha(v_{z2})$ varies smoothly across $[-3.78, -3.57]\text{ rad}$, ev
 
 ## 2. Highlighted New 2D Free-Group Topological Families (32 Distinct Classes Found)
 
-Using Montgomery's shape-sphere stereographic projection, the 74 democratic 2D steady orbits in `catalog.json` partition into **32 distinct free-group homotopy classes** in $F_2 = \langle a, b \rangle$. Standout rare/unequal-mass families:
+Using Montgomery's shape-sphere stereographic projection, the 74 democratic 2D steady orbits in `catalog.json` partition into **32 distinct free-group homotopy classes** in $F_2 = \langle a, b \rangle$.
+
+<table>
+  <tr>
+    <td align="center" width="33%">
+      <img src="assets/2d_A7_deepest.gif" alt="2D A^7 Family" width="100%" /><br/>
+      <b><code>A^7</code> · Deepest Stability Island</b><br/>
+      <code>2D-DEM-001</code> · <code>m=[1,1,0.5]</code> · margin <b>1.8725</b>
+    </td>
+    <td align="center" width="33%">
+      <img src="assets/2d_AABaaB_distinct.gif" alt="2D AABaaB Family" width="100%" /><br/>
+      <b><code>AABaaB</code> · All-Distinct-Mass Braid</b><br/>
+      <code>2D-DEM-006</code> · <code>m=[1,0.9,0.8]</code> · margin <b>1.2061</b>
+    </td>
+    <td align="center" width="33%">
+      <img src="assets/2d_Ab7_wide.gif" alt="2D (Ab)^7 Family" width="100%" /><br/>
+      <b><code>(Ab)^7</code> · Wide-Separation Dance</b><br/>
+      <code>2D-DEM-013</code> · <code>m=[1,1,0.3]</code> · $r_{\min} = 1.272$
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%" colspan="1">
+      <img src="assets/2d_heavy_center.gif" alt="2D AABABABabaB Heavy-Center Family" width="100%" /><br/>
+      <b><code>AABABABabaB</code> · Heavy-Center $L=0$</b><br/>
+      <code>2D-DEM-022</code> · <code>m=[1,1,3]</code> · stable $m_3 \in [2.84, 3.42]$
+    </td>
+    <td align="center" width="50%" colspan="2">
+      <img src="assets/2d_braid20.gif" alt="2D 20-Letter Braid" width="66%" /><br/>
+      <b><code>ABaBAbABaBabAbaBabAb</code> · 20-Letter $L=0$ Braid</b><br/>
+      <code>2D-DEM-015</code> · <code>m=[1,1,0.55]</code> · $r_{\min}=0.161$ · margin <b>0.4778</b>
+    </td>
+  </tr>
+</table>
 
 | Family Word ($F_2$) | Representative | Masses | Subspace | $r_{\min}$ | Stability Margin | 3D Stable ($k_z$) | Notes |
 | :--- | :--- | :--- | :--- | :---: | :---: | :---: | :--- |
