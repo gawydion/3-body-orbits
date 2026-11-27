@@ -8,22 +8,12 @@
 #include <string>
 #include <vector>
 
-struct OrbitInput {
-    int dim;
-    double m[3];
-    double y0[18];
-    double T_ghost; // full period for ghost track
-    double T_anim;  // period for 1 seamless animation loop
-    int frames;
-    double yaw0, yaw_span, pitch;
-};
-
-static inline void deriv(const double* s, const double m[3], int dim, double* ds) {
-    int half = (dim == 3) ? 9 : 6;
+static inline void deriv_newt(const double* s, const double* m, int nb, int dim, double* ds) {
+    int half = nb * dim;
     for (int i = 0; i < half; ++i) ds[i] = s[half + i];
     for (int i = half; i < 2 * half; ++i) ds[i] = 0.0;
-    for (int i = 0; i < 3; ++i) {
-        for (int j = i + 1; j < 3; ++j) {
+    for (int i = 0; i < nb; ++i) {
+        for (int j = i + 1; j < nb; ++j) {
             double dx = s[dim*j] - s[dim*i];
             double dy = s[dim*j+1] - s[dim*i+1];
             double dz = (dim == 3) ? (s[dim*j+2] - s[dim*i+2]) : 0.0;
@@ -41,26 +31,90 @@ static inline void deriv(const double* s, const double m[3], int dim, double* ds
     }
 }
 
-static void advance(double* y, double dt, const double m[3], int dim, double tol = 1e-11) {
+// Exact 1PN ADM Hamiltonian equations of motion for 3 bodies in 2D or 3D
+static inline void deriv_1pn(const double* s, const double* m, int dim, double beta, double* ds) {
+    // Expand to 3D canonical state (18 vars)
+    double r[3][3] = {{0}}, p[3][3] = {{0}};
+    int half = 3 * dim;
+    for (int a = 0; a < 3; ++a) {
+        r[a][0] = s[dim*a]; r[a][1] = s[dim*a+1]; r[a][2] = (dim == 3) ? s[dim*a+2] : 0.0;
+        p[a][0] = s[half + dim*a]; p[a][1] = s[half + dim*a+1]; p[a][2] = (dim == 3) ? s[half + dim*a+2] : 0.0;
+    }
+    double dr[3][3] = {{0}}, dp[3][3] = {{0}};
+    double phi[3] = {0, 0, 0}, p2[3] = {0, 0, 0};
+    for (int a = 0; a < 3; ++a) {
+        p2[a] = p[a][0]*p[a][0] + p[a][1]*p[a][1] + p[a][2]*p[a][2];
+        double f0 = 1.0 / m[a] - beta * 0.5 * p2[a] / (m[a]*m[a]*m[a]);
+        for (int k = 0; k < 3; ++k) dr[a][k] = f0 * p[a][k];
+    }
+    double dvec[3][3][3], rdist[3][3], invr[3][3], invr2[3][3], invr3[3][3];
+    for (int a = 0; a < 3; ++a) {
+        for (int b = a + 1; b < 3; ++b) {
+            double dx = r[a][0]-r[b][0], dy = r[a][1]-r[b][1], dz = r[a][2]-r[b][2];
+            double dist = std::sqrt(dx*dx + dy*dy + dz*dz);
+            double ir = 1.0 / dist, ir2 = ir*ir, ir3 = ir2*ir;
+            dvec[a][b][0]=dx; dvec[a][b][1]=dy; dvec[a][b][2]=dz;
+            rdist[a][b]=dist; invr[a][b]=ir; invr2[a][b]=ir2; invr3[a][b]=ir3;
+            phi[a] += m[b]*ir; phi[b] += m[a]*ir;
+            for (int k = 0; k < 3; ++k) {
+                double f = -m[a]*m[b]*ir3*dvec[a][b][k];
+                dp[a][k] += f; dp[b][k] -= f;
+            }
+        }
+    }
+    for (int a = 0; a < 3; ++a) {
+        for (int b = a + 1; b < 3; ++b) {
+            double ir = invr[a][b], ir2 = invr2[a][b], ir3 = invr3[a][b];
+            double nx = dvec[a][b][0]*ir, ny = dvec[a][b][1]*ir, nz = dvec[a][b][2]*ir;
+            double pa_pb = p[a][0]*p[b][0] + p[a][1]*p[b][1] + p[a][2]*p[b][2];
+            double npa = nx*p[a][0] + ny*p[a][1] + nz*p[a][2];
+            double npb = nx*p[b][0] + ny*p[b][1] + nz*p[b][2];
+            double K_ab = 3.0 * ((m[b]/m[a])*p2[a] + (m[a]/m[b])*p2[b]) - 7.0*pa_pb - npa*npb;
+            double nv[3] = {nx, ny, nz};
+            for (int k = 0; k < 3; ++k) {
+                dr[a][k] += beta * (-0.5*ir) * (6.0*(m[b]/m[a])*p[a][k] - 7.0*p[b][k] - npb*nv[k]);
+                dr[b][k] += beta * (-0.5*ir) * (6.0*(m[a]/m[b])*p[b][k] - 7.0*p[a][k] - npa*nv[k]);
+                double dK_dra = -ir * ( (p[a][k] - npa*nv[k])*npb + (p[b][k] - npb*nv[k])*npa );
+                double dH1_kin = 0.5*K_ab*ir2*nv[k] - 0.5*ir*dK_dra;
+                double dH1_pot = -m[a]*m[b]*(phi[a] + phi[b])*ir3*dvec[a][b][k];
+                double dH1_tot = beta * (dH1_kin + dH1_pot);
+                dp[a][k] -= dH1_tot;
+                dp[b][k] += dH1_tot;
+            }
+        }
+    }
+    for (int a = 0; a < 3; ++a) {
+        for (int k = 0; k < dim; ++k) {
+            ds[dim*a + k] = dr[a][k];
+            ds[half + dim*a + k] = dp[a][k];
+        }
+    }
+}
+
+static void advance(double* y, double dt, const double* m, int nb, int dim, double beta, double tol = 1e-11) {
     static constexpr double a21=1.0/5.0, a31=3.0/40.0, a32=9.0/40.0,
         a41=44.0/45.0, a42=-56.0/15.0, a43=32.0/9.0,
         a51=19372.0/6561.0, a52=-25360.0/2187.0, a53=64448.0/6561.0, a54=-212.0/729.0,
         a61=9017.0/3168.0, a62=-355.0/33.0, a63=46732.0/5247.0, a64=49.0/176.0, a65=-5103.0/18656.0,
         b1=35.0/384.0, b3=500.0/1113.0, b4=125.0/192.0, b5=-2187.0/6784.0, b6=11.0/84.0,
         e1=71.0/57600.0, e3=-71.0/16695.0, e4=71.0/1920.0, e5=-17253.0/339200.0, e6=22.0/525.0, e7=-1.0/40.0;
-    int n = (dim == 3) ? 18 : 12;
-    double k1[18], k2[18], k3[18], k4[18], k5[18], k6[18], k7[18], yt[18], yn[18];
+    int n = 2 * nb * dim;
+    double k1[24], k2[24], k3[24], k4[24], k5[24], k6[24], k7[24], yt[24], yn[24];
+    auto eval = [&](const double* s, double* ds) {
+        if (beta > 0.0 && nb == 3) deriv_1pn(s, m, dim, beta, ds);
+        else deriv_newt(s, m, nb, dim, ds);
+    };
     double t = 0.0, h = std::min(0.005, dt);
     int steps = 0;
-    while (t < dt - 1e-14 && steps < 20000) {
+    while (t < dt - 1e-14 && steps < 40000) {
         if (t + h > dt) h = dt - t;
-        deriv(y, m, dim, k1);
-        for (int i=0;i<n;++i) yt[i]=y[i]+h*a21*k1[i]; deriv(yt, m, dim, k2);
-        for (int i=0;i<n;++i) yt[i]=y[i]+h*(a31*k1[i]+a32*k2[i]); deriv(yt, m, dim, k3);
-        for (int i=0;i<n;++i) yt[i]=y[i]+h*(a41*k1[i]+a42*k2[i]+a43*k3[i]); deriv(yt, m, dim, k4);
-        for (int i=0;i<n;++i) yt[i]=y[i]+h*(a51*k1[i]+a52*k2[i]+a53*k3[i]+a54*k4[i]); deriv(yt, m, dim, k5);
-        for (int i=0;i<n;++i) yt[i]=y[i]+h*(a61*k1[i]+a62*k2[i]+a63*k3[i]+a64*k4[i]+a65*k5[i]); deriv(yt, m, dim, k6);
-        for (int i=0;i<n;++i) yn[i]=y[i]+h*(b1*k1[i]+b3*k3[i]+b4*k4[i]+b5*k5[i]+b6*k6[i]); deriv(yn, m, dim, k7);
+        eval(y, k1);
+        for (int i=0;i<n;++i) yt[i]=y[i]+h*a21*k1[i]; eval(yt, k2);
+        for (int i=0;i<n;++i) yt[i]=y[i]+h*(a31*k1[i]+a32*k2[i]); eval(yt, k3);
+        for (int i=0;i<n;++i) yt[i]=y[i]+h*(a41*k1[i]+a42*k2[i]+a43*k3[i]); eval(yt, k4);
+        for (int i=0;i<n;++i) yt[i]=y[i]+h*(a51*k1[i]+a52*k2[i]+a53*k3[i]+a54*k4[i]); eval(yt, k5);
+        for (int i=0;i<n;++i) yt[i]=y[i]+h*(a61*k1[i]+a62*k2[i]+a63*k3[i]+a64*k4[i]+a65*k5[i]); eval(yt, k6);
+        for (int i=0;i<n;++i) yn[i]=y[i]+h*(b1*k1[i]+b3*k3[i]+b4*k4[i]+b5*k5[i]+b6*k6[i]); eval(yn, k7);
         double err = 0.0;
         for (int i=0;i<n;++i) {
             double ei = h*(e1*k1[i]+e3*k3[i]+e4*k4[i]+e5*k5[i]+e6*k6[i]+e7*k7[i]);
@@ -81,7 +135,7 @@ static void advance(double* y, double dt, const double m[3], int dim, double tol
 
 struct Canvas {
     int W, H;
-    std::vector<float> buf; // RGB float [0,1]
+    std::vector<float> buf;
 
     Canvas(int w, int h) : W(w), H(h), buf(w * h * 3, 0.0f) {}
 
@@ -125,7 +179,6 @@ struct Canvas {
     }
 
     void draw_body(float cx, float cy, float rad, float r, float g, float b) {
-        // Soft glow halo
         int glow_r = (int)std::ceil(rad * 2.8f);
         for (int dy = -glow_r; dy <= glow_r; ++dy) {
             for (int dx = -glow_r; dx <= glow_r; ++dx) {
@@ -137,7 +190,6 @@ struct Canvas {
                 }
             }
         }
-        // Solid body with crisp AA edge + white rim
         int ir = (int)std::ceil(rad + 2.0f);
         for (int dy = -ir; dy <= ir; ++dy) {
             for (int dx = -ir; dx <= ir; ++dx) {
@@ -145,13 +197,11 @@ struct Canvas {
                 float d = std::hypot(px - cx, py - cy);
                 if (d <= rad + 1.2f) {
                     float cov = std::clamp(rad + 0.7f - d, 0.0f, 1.0f);
-                    // Subtle specular highlight
                     float hl = std::max(0.0f, 1.0f - std::hypot(dx + rad*0.28f, dy + rad*0.28f) / (rad * 0.85f));
                     float rr = std::min(1.0f, r + hl * 0.45f);
                     float gg = std::min(1.0f, g + hl * 0.45f);
                     float bb = std::min(1.0f, b + hl * 0.45f);
                     blend((int)px, (int)py, rr, gg, bb, cov);
-                    // Thin crisp outer rim
                     if (d > rad - 1.1f && d < rad + 0.8f) {
                         float rim = 1.0f - std::abs(d - (rad - 0.15f)) / 0.95f;
                         blend((int)px, (int)py, 1.0f, 1.0f, 1.0f, std::max(0.0f, rim) * 0.65f);
@@ -171,25 +221,26 @@ struct Canvas {
 };
 
 int main(int argc, char** argv) {
-    // Reads from stdin:
-    // dim W H frames T_ghost T_anim yaw0 yaw_span pitch m1 m2 m3 y0[0..2*3*dim-1]
-    int dim, W, H, frames;
-    double T_ghost, T_anim, yaw0, yaw_span, pitch;
-    double m[3], y0[18] = {0};
-    if (!(std::cin >> dim >> W >> H >> frames >> T_ghost >> T_anim >> yaw0 >> yaw_span >> pitch
-          >> m[0] >> m[1] >> m[2])) return 1;
-    int n = (dim == 3) ? 18 : 12;
+    // Format:
+    // nb dim beta W H frames T_ghost T_anim yaw0 yaw_span pitch m[0..nb-1] y0[0..2*nb*dim-1]
+    int nb, dim, W, H, frames;
+    double beta, T_ghost, T_anim, yaw0, yaw_span, pitch;
+    if (!(std::cin >> nb >> dim >> beta >> W >> H >> frames >> T_ghost >> T_anim >> yaw0 >> yaw_span >> pitch))
+        return 1;
+    if (nb < 3 || nb > 4 || (dim != 2 && dim != 3)) return 2;
+    double m[4] = {0}, y0[24] = {0};
+    for (int i = 0; i < nb; ++i) std::cin >> m[i];
+    int n = 2 * nb * dim;
     for (int i = 0; i < n; ++i) std::cin >> y0[i];
 
-    // Precompute ghost track (high resolution)
-    int N_ghost = (T_ghost > 50.0) ? 2400 : 800;
-    std::vector<std::array<double, 9>> ghost(N_ghost + 1);
-    double yt[18];
+    int N_ghost = (T_ghost > 120.0) ? 3600 : ((T_ghost > 50.0) ? 2400 : 800);
+    std::vector<std::array<double, 12>> ghost(N_ghost + 1);
+    double yt[24];
     for (int i = 0; i < n; ++i) yt[i] = y0[i];
     double maxR = 0.5;
     for (int k = 0; k <= N_ghost; ++k) {
-        std::array<double, 9> pt = {0};
-        for (int b = 0; b < 3; ++b) {
+        std::array<double, 12> pt = {0};
+        for (int b = 0; b < nb; ++b) {
             pt[3*b]   = yt[dim*b];
             pt[3*b+1] = yt[dim*b+1];
             pt[3*b+2] = (dim == 3) ? yt[dim*b+2] : 0.0;
@@ -197,37 +248,36 @@ int main(int argc, char** argv) {
             if (r > maxR) maxR = r;
         }
         ghost[k] = pt;
-        if (k < N_ghost) advance(yt, T_ghost / N_ghost, m, dim, 1e-11);
+        if (k < N_ghost) advance(yt, T_ghost / N_ghost, m, nb, dim, beta, 1e-11);
     }
 
-    // Precompute dense animation samples (substeps = 4 per frame for silky trails)
     int sub = 4;
     int N_anim = frames * sub;
-    std::vector<std::array<double, 9>> anim(N_anim + 1);
+    std::vector<std::array<double, 12>> anim(N_anim + 1);
     for (int i = 0; i < n; ++i) yt[i] = y0[i];
     for (int k = 0; k <= N_anim; ++k) {
-        std::array<double, 9> pt = {0};
-        for (int b = 0; b < 3; ++b) {
+        std::array<double, 12> pt = {0};
+        for (int b = 0; b < nb; ++b) {
             pt[3*b]   = yt[dim*b];
             pt[3*b+1] = yt[dim*b+1];
             pt[3*b+2] = (dim == 3) ? yt[dim*b+2] : 0.0;
         }
         anim[k] = pt;
-        if (k < N_anim) advance(yt, T_anim / N_anim, m, dim, 1e-11);
+        if (k < N_anim) advance(yt, T_anim / N_anim, m, nb, dim, beta, 1e-11);
     }
 
     double scale = std::min(W, H) * 0.42 / maxR;
-    const float cols[3][3] = {
-        {0.231f, 0.510f, 0.965f}, // blue #3b82f6
-        {0.961f, 0.620f, 0.043f}, // amber #f59e0b
-        {0.925f, 0.282f, 0.600f}  // pink #ec4899
+    const float cols[4][3] = {
+        {0.231f, 0.510f, 0.965f}, // blue    #3b82f6
+        {0.961f, 0.620f, 0.043f}, // amber   #f59e0b
+        {0.925f, 0.282f, 0.600f}, // pink    #ec4899
+        {0.063f, 0.725f, 0.506f}  // emerald #10b981
     };
 
     Canvas cv(W, H);
     int trail_len = std::min(N_anim - 1, (int)(N_anim * 0.42));
 
     for (int f = 0; f < frames; ++f) {
-        // Dark slate background #0b0e14
         cv.clear(0.043f, 0.055f, 0.078f);
 
         double yaw = yaw0 + yaw_span * ((double)f / frames);
@@ -251,7 +301,6 @@ int main(int argc, char** argv) {
             }
         };
 
-        // Subtle origin crosshair (or 3D triad)
         float ox, oy, oz;
         proj(0, 0, 0, ox, oy, oz);
         if (dim == 2) {
@@ -265,9 +314,8 @@ int main(int argc, char** argv) {
             proj(0, 0, ax, axx, axy, axz); cv.draw_line(ox, oy, axx, axy, 0.3f, 0.8f, 0.9f, 0.35f, 1.2f);
         }
 
-        // Faint ghost track
-        float ghost_alpha = (T_ghost > 50.0) ? 0.14f : 0.22f;
-        for (int b = 0; b < 3; ++b) {
+        float ghost_alpha = (T_ghost > 120.0) ? 0.11f : ((T_ghost > 50.0) ? 0.14f : 0.22f);
+        for (int b = 0; b < nb; ++b) {
             float px0, py0, pz0;
             proj(ghost[0][3*b], ghost[0][3*b+1], ghost[0][3*b+2], px0, py0, pz0);
             for (int k = 1; k <= N_ghost; ++k) {
@@ -278,17 +326,16 @@ int main(int argc, char** argv) {
             }
         }
 
-        // Live fading trail (wrapping seamlessly for periodic orbits!)
         int cur_idx = f * sub;
-        for (int b = 0; b < 3; ++b) {
+        double jump_thresh = std::max(0.25, 0.08 * maxR * maxR);
+        for (int b = 0; b < nb; ++b) {
             for (int step = 0; step < trail_len; ++step) {
                 int i0 = (cur_idx - trail_len + step + N_anim) % N_anim;
                 int i1 = (i0 + 1) % N_anim;
-                // Avoid wrap jump if T_anim != T_ghost (e.g. non-closed RPO)
                 double dx = anim[i1][3*b] - anim[i0][3*b];
                 double dy = anim[i1][3*b+1] - anim[i0][3*b+1];
                 double dz = anim[i1][3*b+2] - anim[i0][3*b+2];
-                if (dx*dx + dy*dy + dz*dz > 0.25) continue;
+                if (dx*dx + dy*dy + dz*dz > jump_thresh) continue;
                 float frac = (float)(step + 1) / trail_len;
                 float alpha = frac * frac * 0.92f;
                 float x0, y0p, z0, x1, y1p, z1;
@@ -298,13 +345,12 @@ int main(int argc, char** argv) {
             }
         }
 
-        // Bodies (depth-sorted in 3D)
         struct BDraw { int b; float x, y, z, r; };
-        std::array<BDraw, 3> bds;
-        for (int b = 0; b < 3; ++b) {
+        std::vector<BDraw> bds(nb);
+        for (int b = 0; b < nb; ++b) {
             float sx, sy_out, sz;
             proj(anim[cur_idx][3*b], anim[cur_idx][3*b+1], anim[cur_idx][3*b+2], sx, sy_out, sz);
-            float rad = 5.0f + 3.4f * (float)std::cbrt(m[b]);
+            float rad = 4.6f + 3.4f * (float)std::cbrt(std::max(0.02, m[b]));
             bds[b] = {b, sx, sy_out, sz, rad};
         }
         std::sort(bds.begin(), bds.end(), [](const BDraw& a, const BDraw& b) { return a.z < b.z; });

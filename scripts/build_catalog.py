@@ -33,6 +33,16 @@ def scale_invariants(o):
     return inv1, inv2
 
 
+def subspace_bucket(sub):
+    if sub == "free_fall_brake":
+        return "brake"
+    if "choreo" in sub:
+        return "choreo"
+    if "vertical_pd" in sub:
+        return "vertical_pd"
+    return "std"
+
+
 def deduplicate(rows):
     # Sort by return error ascending so we keep the cleanest representative
     rows = sorted(rows, key=lambda o: o.get("ret_err", 1.0))
@@ -50,12 +60,18 @@ def deduplicate(rows):
 
         inv1, inv2 = scale_invariants(o)
         m_key = tuple(round(x, 3) for x in o["masses"])
+        b_key = subspace_bucket(o.get("subspace", ""))
         is_dup = False
         for k in kept:
             if k["dim"] != o["dim"]:
                 continue
+            if subspace_bucket(k.get("subspace", "")) != b_key:
+                continue
             km = tuple(round(x, 3) for x in k["masses"])
             if km != m_key:
+                continue
+            # Preserve distinct q-fold inertial closures
+            if o.get("q_fold") != k.get("q_fold"):
                 continue
             kinv1, kinv2 = scale_invariants(k)
             if abs(inv1 - kinv1) < 0.03 * max(1.0, abs(inv1)) and abs(inv2 - kinv2) < 0.03 * max(0.2, abs(inv2)):
@@ -115,7 +131,9 @@ def analyze_continuation(pts):
 def main():
     raw_2d = load_jsonl("discoveries_2d*.jsonl")
     raw_3d = load_jsonl("discoveries_3d*.jsonl")
-    all_raw = raw_2d + raw_3d
+    raw_brake = load_jsonl("discoveries_brake.jsonl")
+    raw_choreo = load_jsonl("discoveries_choreo_rot.jsonl")
+    all_raw = raw_2d + raw_3d + raw_brake + raw_choreo
     unique = deduplicate(all_raw)
 
     # Sort: 3D first, then 2D democratic by stability margin, then 2D hierarchical by stability margin
@@ -137,7 +155,7 @@ def main():
             c2h += 1
             o["id"] = f"2D-HIE-{c2h:03d}"
 
-    # Load 3D vertical stability kz for 2D orbits if present
+    # Load 3D vertical stability kz for 2D orbits if present (preserve exact rotating-frame kz already in JSONL)
     kz_path = os.path.join(DATA, "kz_results.dat")
     kz_map = {}
     if os.path.exists(kz_path):
@@ -147,14 +165,42 @@ def main():
                 if len(p) >= 3:
                     kz_map[p[0]] = (float(p[1]), int(p[2]) == 1)
     for o in unique:
-        if o["dim"] == 2 and o["id"] in kz_map:
-            kzv, s3 = kz_map[o["id"]]
-            o["kz"] = kzv
-            o["stable_3d"] = s3
-            o["stab_margin_3d"] = (2.0 - max(abs(o["k1"]), abs(o["k2"]), abs(kzv))) if s3 else 0.0
+        if o["dim"] == 2:
+            if "kz" in o and o["kz"] is not None:
+                kzv = float(o["kz"])
+                s3 = bool(o.get("stable_3d", abs(kzv) < 2.0 - 1e-4))
+                o["stable_3d"] = s3
+                o["stab_margin_3d"] = (2.0 - max(abs(o["k1"]), abs(o["k2"]), abs(kzv))) if s3 else 0.0
+            elif o["id"] in kz_map:
+                kzv, s3 = kz_map[o["id"]]
+                o["kz"] = kzv
+                o["stable_3d"] = s3
+                o["stab_margin_3d"] = (2.0 - max(abs(o["k1"]), abs(o["k2"]), abs(kzv))) if s3 else 0.0
         elif o["dim"] == 3:
             o["stable_3d"] = True
             o["stab_margin_3d"] = o["stab_margin"]
+
+    # Load 1PN Relativistic steady orbits
+    rel_1pn = [
+        o for o in load_jsonl("discoveries_1pn.jsonl")
+        if o.get("survived_100T", 0) >= 100
+        and o.get("ret_err", 1.0) <= 1e-7
+        and o.get("stab_margin", -1.0) > 1e-4
+    ]
+    rel_1pn.sort(key=lambda o: (0 if o["dim"] == 3 else 1, -o["stab_margin"]))
+    for idx, o in enumerate(rel_1pn, 1):
+        o["id"] = f"1PN-{idx:03d}"
+
+    # Load 4-Body steady orbits
+    four_body = [
+        o for o in load_jsonl("discoveries_4body.jsonl")
+        if o.get("survived_100T", 0) >= 100
+        and o.get("ret_err", 1.0) <= 1e-7
+        and (o["dim"] == 2 or o.get("thickness_3d", 0.0) >= 0.05)
+    ]
+    four_body.sort(key=lambda o: (0 if o["dim"] == 3 else 1, -o["stab_margin"]))
+    for idx, o in enumerate(four_body, 1):
+        o["id"] = f"4B-{idx:03d}"
 
     # Load continuations
     conts = {
@@ -163,6 +209,7 @@ def main():
         "Heavy-Braid-1.75 (m3 around 1.75)": analyze_continuation(load_continuation("dem175")),
         "Light-Braid-0.55 (m3 around 0.55)": analyze_continuation(load_continuation("dem055")),
         "Figure-8 (m3 around 1.00)": analyze_continuation(load_continuation("fig8")),
+        "Free-Fall Brake (m3 around 0.174)": analyze_continuation(load_continuation("brake_m3")),
     }
 
     catalog = {
@@ -175,9 +222,17 @@ def main():
             "2d_hierarchical": sum(1 for o in unique if o["dim"] == 2 and not o["democratic"]),
             "2d_collinear_L0": sum(1 for o in unique if o["subspace"] == "collinear_L0"),
             "2d_perp_L_nonzero": sum(1 for o in unique if o["subspace"] == "perp_L_nonzero"),
+            "2d_brake": sum(1 for o in unique if o["subspace"] == "free_fall_brake"),
+            "2d_choreo_rot": sum(1 for o in unique if o["dim"] == 2 and "choreo" in o["subspace"]),
+            "3d_choreo_rot": sum(1 for o in unique if o["dim"] == 3 and "choreo" in o["subspace"]),
+            "3d_vertical_pd": sum(1 for o in unique if o["dim"] == 3 and "vertical_pd" in o["subspace"]),
+            "relativistic_1pn": len(rel_1pn),
+            "four_body": len(four_body),
         },
         "continuations": conts,
         "orbits": unique,
+        "relativistic_1pn": rel_1pn,
+        "four_body": four_body,
     }
 
     with open(os.path.join(ROOT, "catalog.json"), "w") as f:
@@ -185,25 +240,42 @@ def main():
 
     # Write CATALOG.md
     md = []
-    md.append("# 3-Body Steady (Linearly Stable) Periodic Orbit Discovery Catalog\n")
+    md.append("# 3-Body & 4-Body Steady (Linearly Stable) Periodic Orbit Discovery Catalog\n")
     md.append(f"Generated: `{catalog['generated_at']}`  \n")
-    md.append(f"**Total unique verified linearly stable orbits:** **{catalog['total_unique']}** (from {catalog['total_raw']} raw detections)\n")
-    md.append(f"- **3D Non-Planar Linearly Stable Orbits:** {catalog['counts']['3d']}\n")
-    md.append(f"- **2D Democratic (Partner-Swapping) Linearly Stable Orbits:** {catalog['counts']['2d_democratic']}\n")
-    md.append(f"- **2D Hierarchical Linearly Stable Orbits:** {catalog['counts']['2d_hierarchical']}\n")
-    md.append(f"- **By Subspace:** {catalog['counts']['2d_collinear_L0']} collinear ($L=0$), {catalog['counts']['2d_perp_L_nonzero']} perpendicular-crossing ($L\\neq 0$), {catalog['counts']['3d']} 3D non-planar\n")
+    md.append(
+        f"**Total unique verified Newtonian 3-body steady orbits:** **{catalog['total_unique']}** "
+        f"(from {catalog['total_raw']} raw detections)  \n"
+    )
+    md.append(
+        f"**Additional extension catalogs:** **{len(rel_1pn)} Post-Newtonian (1PN ADM) relativistic steady orbits** · "
+        f"**{len(four_body)} Newtonian 4-body (2D & 3D) steady orbits**\n\n"
+    )
+    md.append(f"- **3D Non-Planar Newtonian 3-Body Steady Orbits:** {catalog['counts']['3d']} "
+              f"(including {catalog['counts']['3d_choreo_rot']} 3D helical rotating choreographies and "
+              f"{catalog['counts']['3d_vertical_pd']} period-doubled vertical-bifurcation orbits)\n")
+    md.append(f"- **2D Democratic (Partner-Swapping) Steady Orbits:** {catalog['counts']['2d_democratic']} "
+              f"(including {catalog['counts']['2d_brake']} zero-velocity free-fall brake orbits and "
+              f"{catalog['counts']['2d_choreo_rot']} 2D rotating-frame choreographies)\n")
+    md.append(f"- **2D Hierarchical Steady Orbits:** {catalog['counts']['2d_hierarchical']}\n")
+    md.append(
+        f"- **By Newtonian 3-Body Subspace:** {catalog['counts']['2d_collinear_L0']} collinear ($L=0$), "
+        f"{catalog['counts']['2d_perp_L_nonzero']} perpendicular-crossing ($L\\neq 0$), "
+        f"{catalog['counts']['2d_brake']} free-fall brake ($v_0=0, L=0$), "
+        f"{catalog['counts']['2d_choreo_rot']} 2D rotating choreographies, "
+        f"{catalog['counts']['3d']} 3D non-planar\n"
+    )
 
     md.append("\n## Verification Criteria\n")
     md.append("Every orbit in this catalog passed **all four** rigorous criteria:\n")
     md.append("1. **Periodicity to high precision:** $|\\mathbf{z}(T) - \\mathbf{z}(0)| < 10^{-7}$ (most $< 10^{-10}$) using adaptive Dormand-Prince 5(4) at tolerance $10^{-13}$.\n")
-    md.append("2. **Exact Floquet linear stability:** All non-trivial Broucke stability indices of the $12\\times 12$ (2D) or $18\\times 18$ (3D) monodromy matrix are real with $|k_j| < 2$ (stability margin $2 - \\max_j |k_j| > 0$, Lyapunov exponent $= 0$).\n")
-    md.append("3. **100-period empirical perturbation survival:** Survives 100/100 full periods bounded after a momentum-preserving $10^{-5}$ velocity kick (in all 3 axes for 3D orbits).\n")
+    md.append("2. **Exact Floquet linear stability:** All non-trivial stability indices of the $12\\times 12$ (3B 2D), $18\\times 18$ (3B 3D / 1PN), $16\\times 16$ (4B 2D), or $24\\times 24$ (4B 3D) monodromy matrix lie strictly on the unit circle ($|k_j| < 2$, Lyapunov exponent $= 0$).\n")
+    md.append("3. **100-period empirical perturbation survival:** Survives 100/100 full periods bounded after a momentum-preserving $10^{-5}$ velocity/momentum kick (in all 3 axes for 3D orbits).\n")
     md.append("4. **True 3D check (for 3D orbits):** Out-of-best-fit-plane RMS thickness $h_{\\text{3D}} > 0.05$ (strictly excluding tilted planar orbits).\n")
 
-    # 3D section
+    # 3D Newtonian 3-body section
     orbits_3d = [o for o in unique if o["dim"] == 3]
     if orbits_3d:
-        md.append("\n## 3D Non-Planar Steady Orbits\n")
+        md.append("\n## 3D Non-Planar Newtonian 3-Body Steady Orbits\n")
         md.append("| ID | Subspace | Masses | Period $T$ | $|\\mathbf{L}|$ | $r_{\\min}$ | 3D Thickness | Swaps | Stability $(k_1, k_2, k_3)$ | Margin | 100T Drift |\n")
         md.append("| :--- | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |\n")
         for o in orbits_3d:
@@ -220,7 +292,12 @@ def main():
     md.append("| ID | Subspace | Masses | Period $T$ | $L$ | $r_{\\min}$ | Swaps | Stability $(k_1, k_2)$ | Margin | 3D Stable ($k_z$) | 100T Drift |\n")
     md.append("| :--- | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |\n")
     for o in orbits_2d_dem:
-        kz_str = f"YES ({o['kz']:+.2f})" if o.get("stable_3d") else ("L=0 (2.00)" if "kz" in o else "—")
+        if o.get("stable_3d"):
+            kz_str = f"YES ({o['kz']:+.2f})"
+        elif "kz" in o:
+            kz_str = f"NO ({o['kz']:+.2f})" if abs(o["kz"]) > 2.01 else f"L=0 ({o['kz']:+.2f})"
+        else:
+            kz_str = "—"
         md.append(
             f"| `{o['id']}` | `{o['subspace']}` | `{o['masses']}` | {o['T']:.4f} | {o['L']:+.3f} | "
             f"{o['rmin']:.4f} | {o['partner_swaps']} | "
@@ -240,6 +317,32 @@ def main():
                 f"({o['k1']:+.4f}, {o['k2']:+.4f}) | **{o['stab_margin']:.4f}** | {o['drift_100T']:.5f} |\n"
             )
 
+    # 1PN Relativistic section
+    if rel_1pn:
+        md.append(f"\n## Post-Newtonian (1PN ADM) Relativistic Steady Orbits ({len(rel_1pn)} Verified)\n")
+        md.append("Solved under the exact symplectic 1PN ADM / Einstein–Infeld–Hoffmann Hamiltonian $H = H_0 + \\beta H_1$ ($\\beta = 1/c^2$, $G=1$), with exact Francis-QR monodromy verification and 100T perturbation survival.\n\n")
+        md.append("| ID | Family | Dim | Masses | $\\beta = 1/c^2$ | $\\langle v^2\\rangle/c^2$ | Period $T$ | Precess $2\\alpha$ | Margin | Return Err | 100T Drift |\n")
+        md.append("| :--- | :--- | :---: | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |\n")
+        for o in rel_1pn:
+            md.append(
+                f"| `{o['id']}` | `{o['subspace']}` | {o['dim']}D | `{o['masses']}` | {o['beta_inv_c2']:.5f} | "
+                f"{o['beta_eff_v2c2']*100:.3f}% | {o['T']:.3f} | {o['precess_rad']:+.4f} | "
+                f"**{o['stab_margin']:.4f}** | `{o['ret_err']:.1e}` | {o['drift_100T']:.5f} |\n"
+            )
+
+    # 4-Body section
+    if four_body:
+        md.append(f"\n## 4-Body Steady Periodic Orbits — 2D & 3D ({len(four_body)} Verified)\n")
+        md.append("Verified via full $16\\times 16$ (2D) or $24\\times 24$ (3D) Francis double-shift QR monodromy spectrum + 100T kick survival.\n\n")
+        md.append("| ID | Family | Dim | Masses | Period $T$ | $r_{\\min}$ | $h_{\\text{3D}}$ | Swaps | Max $|\\lambda|-1$ | Margin | 100T Drift |\n")
+        md.append("| :--- | :--- | :---: | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |\n")
+        for o in four_body:
+            md.append(
+                f"| `{o['id']}` | `{o['subspace']}` | {o['dim']}D | `{o['masses']}` | {o['T']:.4f} | "
+                f"{o['rmin']:.4f} | {o['thickness_3d']:.4f} | {o['partner_swaps']} | "
+                f"`{o['max_eig_rad_err']:.2e}` | **{o['stab_margin']:.6f}** | {o['drift_100T']:.5f} |\n"
+            )
+
     # Mass continuation section
     md.append("\n## Mass-Continuation Stability Windows ($m_1 = m_2 = 1$, varying $m_3$)\n")
     for name, c in conts.items():
@@ -253,7 +356,7 @@ def main():
 
     # Exact initial conditions for top showcase orbits
     md.append("\n## Exact Initial Conditions (Top Showcase Orbits)\n")
-    showcase = orbits_3d[:8] + orbits_2d_dem[:12] + orbits_2d_hie[:5]
+    showcase = orbits_3d[:10] + orbits_2d_dem[:12] + orbits_2d_hie[:3]
     for o in showcase:
         md.append(f"### `{o['id']}` — `{o['subspace']}`, masses `{o['masses']}`, $T = {o['T']:.12f}$\n")
         md.append(f"- **Margin:** `{o['stab_margin']:.6f}`, **Return err:** `{o['ret_err']:.2e}`, **100T drift:** `{o['drift_100T']:.6f}`\n")
@@ -262,9 +365,12 @@ def main():
     with open(os.path.join(ROOT, "CATALOG.md"), "w") as f:
         f.writelines(md)
 
-    print(f"Wrote CATALOG.md and catalog.json: {catalog['total_unique']} unique steady orbits "
-          f"({catalog['counts']['3d']} 3D, {catalog['counts']['2d_democratic']} 2D democratic, "
-          f"{catalog['counts']['2d_hierarchical']} 2D hierarchical).")
+    print(
+        f"Wrote CATALOG.md and catalog.json: {catalog['total_unique']} Newtonian 3-body steady orbits "
+        f"({catalog['counts']['3d']} 3D, {catalog['counts']['2d_democratic']} 2D democratic, "
+        f"{catalog['counts']['2d_hierarchical']} 2D hierarchical) + "
+        f"{len(rel_1pn)} 1PN relativistic + {len(four_body)} 4-body steady orbits."
+    )
 
 
 if __name__ == "__main__":
