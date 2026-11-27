@@ -192,7 +192,7 @@ const CATALOG = __CATALOG_JSON__;
 const ORBITS = [
   ...CATALOG.orbits.map(o => ({ ...o, _kind: "newt3", n_bodies: 3 })),
   ...(CATALOG.relativistic_1pn || []).map(o => ({ ...o, _kind: "1pn", n_bodies: 3 })),
-  ...(CATALOG.four_body || []).map(o => ({ ...o, _kind: "4b", n_bodies: 4, k1: (o.k_indices||[0,0])[0], k2: (o.k_indices||[0,0])[1], stable_3d: o.dim === 3 })),
+  ...(CATALOG.four_body || []).map(o => ({ ...o, _kind: "4b", n_bodies: 4, k1: (o.k_indices||[0,0])[0], k2: (o.k_indices||[0,0])[1], stable_3d: o.stable_3d !== undefined ? o.stable_3d : (o.dim === 3) })),
 ];
 
 document.getElementById("hdrCounts").textContent =
@@ -422,12 +422,12 @@ function selectOrbit(o) {
 
   document.getElementById("stSub").textContent = o.subspace;
   document.getElementById("stClass").textContent = o.dynamical_class || (o._kind === "1pn" ? "relativistic_1pn" : (o._kind === "4b" ? "four_body" : "—"));
-  document.getElementById("stWord").textContent = o.word_compact || "—";
+  document.getElementById("stWord").textContent = o.syzygy_half_seq ? `${o.word_compact || "1"} (${o.syzygy_half_seq})` : (o.word_compact || "—");
   document.getElementById("stPhys").textContent = o._kind === "1pn" ? `1PN ADM (β=${o.beta_inv_c2.toFixed(4)})` : (nb === 4 ? "4-Body Newton" : "3-Body Newton");
   document.getElementById("stT").textContent = o.T.toFixed(4);
   document.getElementById("stE").textContent = o.E.toFixed(5);
   document.getElementById("stL").textContent = o.L.toFixed(4);
-  document.getElementById("stRmin").textContent = o.rmin.toFixed(4);
+  document.getElementById("stRmin").textContent = o.rmin.toFixed(5);
   document.getElementById("stSwaps").textContent = o.partner_swaps;
   document.getElementById("stRet").textContent = o.ret_err.toExponential(1);
   document.getElementById("stSymp").textContent = o.symp_err !== undefined ? o.symp_err.toExponential(1) : "—";
@@ -435,7 +435,7 @@ function selectOrbit(o) {
   document.getElementById("stMarg").textContent = o.stab_margin.toFixed(5);
   if (o._kind === "4b") {
     document.getElementById("stK").textContent = (o.k_indices || []).slice(0, 3).map(v => v.toFixed(3)).join(", ") + "…";
-    document.getElementById("stKz").textContent = o.dim === 3 ? `24D Stable (Δ|λ|=${o.max_eig_rad_err.toExponential(1)})` : `16D Stable`;
+    document.getElementById("stKz").textContent = o.stable_3d ? `24D Full-3D Stable (6/6 ell.)` : `16D Planar Stable`;
   } else {
     document.getElementById("stK").textContent = o.dim === 3
       ? `${o.k1.toFixed(2)}, ${o.k2.toFixed(2)}, ${o.k3.toFixed(2)}`

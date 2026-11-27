@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-27T14:30:32.366124",
-  "audit_standard": "80-bit long double DOPRI5 + analytical variational equations + canonical symplecticity (<1e-6) + Procrustes primitive-period check (q_inert=1) + S3 Montgomery shape-sphere words",
+  "generated_at": "2026-11-27T16:33:53.174127",
+  "audit_standard": "80-bit long double DOPRI5 + analytical variational equations (3B 18x18 & 4B 24x24) + canonical 1PN ADM symplecticity + Procrustes primitive-period check (q_inert=1) + adaptive per-step rmin/syzygies + S3 Montgomery shape-sphere words",
   "total_raw": 164,
   "total_unique": 133,
   "audit_rejections": {
@@ -11,6 +11,11 @@
     "symp_or_return_fail": 0,
     "unstable_or_sub_threshold": 0,
     "post_audit_dup": 0
+  },
+  "audit_rejections_1pn": 0,
+  "audit_rejections_4b": {
+    "hyperbolic_unstable": 8,
+    "other_fail": 0
   },
   "counts": {
     "3d": 16,
@@ -36,7 +41,7 @@
       "bhh_satellite": 2
     },
     "relativistic_1pn": 21,
-    "four_body": 11
+    "four_body": 3
   },
   "continuations": {
     "Braid-1.10 (m3 around 1.10)": {
@@ -273,11 +278,11 @@
       "k2": 1.003424406972,
       "k3": -1.084034912157,
       "stab_margin": 0.2476539214489,
-      "thickness_3d": 0.2100868701669,
+      "thickness_3d": 0.2100868746617,
       "survived_100T": 100,
       "drift_100T": 0.1401393370933,
       "rmin": 1.999999999955,
-      "rmax": 5.737100644842,
+      "rmax": 5.737099216476,
       "partner_swaps": 3,
       "democratic": true,
       "monodromy_method": "80bit_variational",
@@ -297,20 +302,20 @@
         1.999999999989
       ],
       "rmax_pair": [
-        5.737100644822,
-        5.737100644842,
-        5.737100644806
+        5.737099216456,
+        5.737099216476,
+        5.73709921644
       ],
       "closest_counts": [
-        801,
         800,
-        799
+        800,
+        800
       ],
       "stable_3d": true,
       "stab_margin_3d": 0.2476539214489,
       "dynamical_class": "choreography_3d_helical",
       "non_hierarchical": true,
-      "classification_note": "3D helical rotating-frame equal-mass choreography",
+      "classification_note": "3D helical rotating Figure-8 (Marchal 2000 P12 / Chenciner-F\u00e9joz-Montgomery 2005 \u0393_y)",
       "id": "3D-001"
     },
     {
@@ -354,8 +359,8 @@
       "survived_100T": 100,
       "drift_100T": 0.00367,
       "rmin": 0.8438078625925,
-      "rmax": 2.318098539216,
-      "thickness_3d": 0.2562284104388,
+      "rmax": 2.318098105851,
+      "thickness_3d": 0.2562277427146,
       "partner_swaps": 70,
       "democratic": false,
       "monodromy_method": "80bit_variational",
@@ -370,19 +375,19 @@
       "q_rpo": 5,
       "q_rpo_perm": 5,
       "rmin_pair": [
-        1.187687921501,
-        1.038078701274,
+        1.187538520419,
+        1.038078701275,
         0.8438078625925
       ],
       "rmax_pair": [
-        1.958655172627,
-        1.309169434484,
-        2.318098539216
+        1.958667094109,
+        1.309173216782,
+        2.318098105851
       ],
       "closest_counts": [
-        150,
-        1735,
-        515
+        153,
+        1745,
+        502
       ],
       "Lvec": [
         0,
@@ -443,8 +448,8 @@
       "survived_100T": 100,
       "drift_100T": 0.1309244241318,
       "rmin": 0.7462767497849,
-      "rmax": 2.431361812422,
-      "thickness_3d": 0.1873429488547,
+      "rmax": 2.431410168065,
+      "thickness_3d": 0.1873423066232,
       "partner_swaps": 280,
       "democratic": false,
       "monodromy_method": "80bit_variational",
@@ -459,19 +464,19 @@
       "q_rpo": 7,
       "q_rpo_perm": 7,
       "rmin_pair": [
-        1.174091099242,
+        1.174081417432,
         1.11518266863,
         0.7462767497849
       ],
       "rmax_pair": [
-        1.932381154963,
-        1.430916865251,
-        2.431361812422
+        1.932381152497,
+        1.430933932297,
+        2.431410168065
       ],
       "closest_counts": [
-        440,
-        1284,
-        676
+        435,
+        1286,
+        679
       ],
       "stable_3d": true,
       "stab_margin_3d": 0.1028868719103,
@@ -482,7 +487,7 @@
     },
     {
       "dim": 3,
-      "subspace": "3d_choreo_helical_12fold",
+      "subspace": "3d_choreo_helical_24fold",
       "masses": [
         1,
         1,
@@ -526,11 +531,11 @@
       "k2": 0.4240233864604,
       "k3": -1.901656020762,
       "stab_margin": 0.09834397923796,
-      "thickness_3d": 0.6978813457363,
+      "thickness_3d": 0.6978813457489,
       "survived_100T": 100,
       "drift_100T": 0.1399577023215,
-      "rmin": 1.999999999997,
-      "rmax": 5.743538150099,
+      "rmin": 1.999999999993,
+      "rmax": 5.743538149876,
       "partner_swaps": 72,
       "democratic": true,
       "monodromy_method": "80bit_variational",
@@ -545,25 +550,25 @@
       "q_rpo": 24,
       "q_rpo_perm": 36,
       "rmin_pair": [
-        1.999999999997,
-        2.000411823933,
-        2.00041182399
+        1.999999999994,
+        1.999999999993,
+        1.999999999993
       ],
       "rmax_pair": [
-        5.743538150099,
-        5.743138759526,
-        5.743138759363
+        5.743538149876,
+        5.743538130115,
+        5.743538120404
       ],
       "closest_counts": [
-        792,
-        792,
-        816
+        800,
+        800,
+        800
       ],
       "stable_3d": true,
       "stab_margin_3d": 0.09834397923796,
       "dynamical_class": "choreography_3d_helical",
       "non_hierarchical": true,
-      "classification_note": "3D helical rotating-frame equal-mass choreography",
+      "classification_note": "3D helical rotating Figure-8 (Marchal 2000 P12 / Chenciner-F\u00e9joz-Montgomery 2005 \u0393_y)",
       "id": "3D-004"
     },
     {
@@ -612,11 +617,11 @@
       "k2": -0.03369529066043,
       "k3": -1.660891498768,
       "stab_margin": 0.09476664651496,
-      "thickness_3d": 0.6968678592436,
+      "thickness_3d": 0.696867859284,
       "survived_100T": 100,
       "drift_100T": 0.1400134320056,
-      "rmin": 1.999999999987,
-      "rmax": 5.734324377147,
+      "rmin": 1.999999999976,
+      "rmax": 5.734324374444,
       "partner_swaps": 33,
       "democratic": true,
       "monodromy_method": "80bit_variational",
@@ -631,14 +636,14 @@
       "q_rpo": 11,
       "q_rpo_perm": 33,
       "rmin_pair": [
-        1.999999999993,
-        1.999999999992,
-        1.999999999987
+        1.999999999976,
+        1.999999999985,
+        1.999999999979
       ],
       "rmax_pair": [
-        5.734324377133,
-        5.734324377147,
-        5.734324377119
+        5.734324373892,
+        5.734324351498,
+        5.734324374444
       ],
       "closest_counts": [
         800,
@@ -649,7 +654,7 @@
       "stab_margin_3d": 0.09476664651496,
       "dynamical_class": "choreography_3d_helical",
       "non_hierarchical": true,
-      "classification_note": "3D helical rotating-frame equal-mass choreography",
+      "classification_note": "3D helical rotating Figure-8 (Marchal 2000 P12 / Chenciner-F\u00e9joz-Montgomery 2005 \u0393_y)",
       "id": "3D-005"
     },
     {
@@ -693,8 +698,8 @@
       "survived_100T": 100,
       "drift_100T": 0.008,
       "rmin": 0.8467865759341,
-      "rmax": 2.32942030637,
-      "thickness_3d": 0.1833134626939,
+      "rmax": 2.329419986153,
+      "thickness_3d": 0.1833130343082,
       "partner_swaps": 168,
       "democratic": false,
       "monodromy_method": "80bit_variational",
@@ -709,19 +714,19 @@
       "q_rpo": 12,
       "q_rpo_perm": 12,
       "rmin_pair": [
-        1.183907046343,
-        1.081949361902,
+        1.183129640849,
+        1.081013881664,
         0.8467865759341
       ],
       "rmax_pair": [
-        1.956208006774,
-        1.287085006764,
-        2.32942030637
+        1.957114735333,
+        1.287398800096,
+        2.329419986153
       ],
       "closest_counts": [
-        72,
-        1764,
-        564
+        74,
+        1792,
+        534
       ],
       "Lvec": [
         0,
@@ -779,9 +784,9 @@
       "stab_margin": 0.04663653936764,
       "survived_100T": 100,
       "drift_100T": 0.1174760951372,
-      "rmin": 0.7461569689294,
-      "rmax": 2.427694553846,
-      "thickness_3d": 0.2111129698432,
+      "rmin": 0.7461569689292,
+      "rmax": 2.427693346933,
+      "thickness_3d": 0.2111126068234,
       "partner_swaps": 40,
       "democratic": false,
       "monodromy_method": "80bit_variational",
@@ -796,19 +801,19 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        1.175230261972,
+        1.1752051972,
         1.110807304113,
-        0.7461569689294
+        0.7461569689292
       ],
       "rmax_pair": [
-        1.936159040412,
-        1.437499819829,
-        2.427694553846
+        1.936158195634,
+        1.437522136313,
+        2.427693346933
       ],
       "closest_counts": [
-        432,
-        1300,
-        668
+        436,
+        1292,
+        672
       ],
       "stable_3d": true,
       "stab_margin_3d": 0.04663653936764,
@@ -863,11 +868,11 @@
       "k2": 0.8287900364106,
       "k3": -1.980050280908,
       "stab_margin": 0.01994971909221,
-      "thickness_3d": 0.69981864525,
+      "thickness_3d": 0.6998186452853,
       "survived_100T": 100,
       "drift_100T": 0.1409582461608,
-      "rmin": 1.999999999995,
-      "rmax": 5.76109871483,
+      "rmin": 1.999999999992,
+      "rmax": 5.76109871277,
       "partner_swaps": 45,
       "democratic": true,
       "monodromy_method": "80bit_variational",
@@ -882,25 +887,25 @@
       "q_rpo": 15,
       "q_rpo_perm": 15,
       "rmin_pair": [
-        1.999999999995,
-        2.000162403268,
-        2.00016240327
+        1.999999999992,
+        1.999999999993,
+        1.999999999997
       ],
       "rmax_pair": [
-        5.76109871483,
-        5.760942277156,
-        5.760942277122
+        5.761098709477,
+        5.761098711394,
+        5.76109871277
       ],
       "closest_counts": [
-        795,
-        795,
-        810
+        800,
+        800,
+        800
       ],
       "stable_3d": true,
       "stab_margin_3d": 0.01994971909221,
       "dynamical_class": "choreography_3d_helical",
       "non_hierarchical": true,
-      "classification_note": "3D helical rotating-frame equal-mass choreography",
+      "classification_note": "3D helical rotating Figure-8 (Marchal 2000 P12 / Chenciner-F\u00e9joz-Montgomery 2005 \u0393_y)",
       "id": "3D-008"
     },
     {
@@ -949,9 +954,9 @@
       "stab_margin": 0.01897679999156,
       "survived_100T": 100,
       "drift_100T": 0.1256323183049,
-      "rmin": 0.7460478841924,
-      "rmax": 2.429584595153,
-      "thickness_3d": 0.1993723027927,
+      "rmin": 0.7460478841891,
+      "rmax": 2.429612479675,
+      "thickness_3d": 0.1993716144416,
       "partner_swaps": 440,
       "democratic": false,
       "monodromy_method": "80bit_variational",
@@ -966,19 +971,19 @@
       "q_rpo": 11,
       "q_rpo_perm": 11,
       "rmin_pair": [
-        1.174547116435,
-        1.112716407631,
-        0.7460478841924
+        1.174505515789,
+        1.112716407628,
+        0.7460478841891
       ],
       "rmax_pair": [
-        1.934140306497,
-        1.434274385298,
-        2.429584595153
+        1.934140293995,
+        1.43427441483,
+        2.429612479675
       ],
       "closest_counts": [
-        436,
-        1284,
-        680
+        435,
+        1290,
+        675
       ],
       "stable_3d": true,
       "stab_margin_3d": 0.01897679999156,
@@ -1034,8 +1039,8 @@
       "survived_100T": 100,
       "drift_100T": 0.2942877513885,
       "rmin": 0.7533644432234,
-      "rmax": 2.440203605311,
-      "thickness_3d": 0.1109341021733,
+      "rmax": 2.44183557075,
+      "thickness_3d": 0.1109337355095,
       "partner_swaps": 384,
       "democratic": false,
       "monodromy_method": "80bit_variational",
@@ -1050,19 +1055,19 @@
       "q_rpo": 8,
       "q_rpo_perm": 8,
       "rmin_pair": [
-        1.178010065001,
-        1.140027735772,
+        1.176627982904,
+        1.140027735781,
         0.7533644432234
       ],
       "rmax_pair": [
-        1.928329907336,
-        1.407177430546,
-        2.440203605311
+        1.928329897755,
+        1.408753150788,
+        2.44183557075
       ],
       "closest_counts": [
-        512,
-        1152,
-        736
+        522,
+        1169,
+        709
       ],
       "stable_3d": true,
       "stab_margin_3d": 0.01672337334238,
@@ -1112,8 +1117,8 @@
       "survived_100T": 100,
       "drift_100T": 0.012,
       "rmin": 0.8524431402736,
-      "rmax": 2.334744477371,
-      "thickness_3d": 0.1291591832015,
+      "rmax": 2.334744473955,
+      "thickness_3d": 0.1291589029999,
       "partner_swaps": 70,
       "democratic": false,
       "monodromy_method": "80bit_variational",
@@ -1128,19 +1133,19 @@
       "q_rpo": 7,
       "q_rpo_perm": 7,
       "rmin_pair": [
-        1.183182368518,
-        1.084644100223,
+        1.183178807048,
+        1.084639870735,
         0.8524431402736
       ],
       "rmax_pair": [
-        1.955714948371,
-        1.273200145626,
-        2.334744477371
+        1.955715997271,
+        1.273202159141,
+        2.334744473955
       ],
       "closest_counts": [
         0,
-        1851,
-        549
+        1850,
+        550
       ],
       "Lvec": [
         0,
@@ -1201,8 +1206,8 @@
       "survived_100T": 100,
       "drift_100T": 0.1629469427349,
       "rmin": 0.7491864849586,
-      "rmax": 2.437263877814,
-      "thickness_3d": 0.1458960641015,
+      "rmax": 2.43732175738,
+      "thickness_3d": 0.1458955757713,
       "partner_swaps": 120,
       "democratic": false,
       "monodromy_method": "80bit_variational",
@@ -1217,18 +1222,18 @@
       "q_rpo": 3,
       "q_rpo_perm": 3,
       "rmin_pair": [
-        1.174591499941,
-        1.127267498977,
+        1.174567805087,
+        1.127267498978,
         0.7491864849586
       ],
       "rmax_pair": [
-        1.928786614073,
-        1.418630883452,
-        2.437263877814
+        1.928786611774,
+        1.41886906261,
+        2.43732175738
       ],
       "closest_counts": [
-        444,
-        1260,
+        437,
+        1267,
         696
       ],
       "stable_3d": true,
@@ -1283,8 +1288,8 @@
       "survived_100T": 100,
       "drift_100T": 0.179280412338,
       "rmin": 0.7214778398121,
-      "rmax": 2.50519806477,
-      "thickness_3d": 0.2007199896962,
+      "rmax": 2.505230212709,
+      "thickness_3d": 0.2007188891723,
       "partner_swaps": 40,
       "democratic": false,
       "monodromy_method": "80bit_variational",
@@ -1299,19 +1304,19 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        1.20658377823,
+        1.206581069192,
         1.12049157422,
         0.7214778398121
       ],
       "rmax_pair": [
-        1.932558727673,
-        1.48538526961,
-        2.50519806477
+        1.932558571148,
+        1.485388643769,
+        2.505230212709
       ],
       "closest_counts": [
-        476,
-        1232,
-        692
+        474,
+        1238,
+        688
       ],
       "stable_3d": true,
       "stab_margin_3d": 0.008960358365815,
@@ -1365,8 +1370,8 @@
       "survived_100T": 100,
       "drift_100T": 0.003669935497696,
       "rmin": 0.8437960793497,
-      "rmax": 2.318195917717,
-      "thickness_3d": 0.1993085684166,
+      "rmax": 2.31819509726,
+      "thickness_3d": 0.199308136066,
       "partner_swaps": 14,
       "democratic": false,
       "monodromy_method": "80bit_variational",
@@ -1381,14 +1386,14 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        1.18748106172,
+        1.187481058111,
         1.038463826645,
         0.8437960793497
       ],
       "rmax_pair": [
-        1.958656777095,
-        1.309020602083,
-        2.318195917717
+        1.958660237771,
+        1.309022381458,
+        2.31819509726
       ],
       "closest_counts": [
         152,
@@ -1448,9 +1453,9 @@
       "stab_margin": 0.006818578905804,
       "survived_100T": 100,
       "drift_100T": 0.08799253724637,
-      "rmin": 0.5538966924764,
-      "rmax": 2.295198901505,
-      "thickness_3d": 0.09217208047118,
+      "rmin": 0.5538966924699,
+      "rmax": 2.295613403951,
+      "thickness_3d": 0.09217215110016,
       "partner_swaps": 0,
       "democratic": false,
       "monodromy_method": "80bit_variational",
@@ -1465,14 +1470,14 @@
       "q_rpo": 15,
       "q_rpo_perm": 15,
       "rmin_pair": [
-        1.707673929619,
-        1.607016802289,
-        0.5538966924764
+        1.707673929584,
+        1.606977624401,
+        0.5538966924699
       ],
       "rmax_pair": [
-        2.179324369883,
-        2.295198901505,
-        0.6359781721267
+        2.179324368504,
+        2.295613403951,
+        0.6362203623511
       ],
       "closest_counts": [
         0,
@@ -1530,9 +1535,9 @@
       "stab_margin": 0.002444138074718,
       "survived_100T": 100,
       "drift_100T": 0.09235333143128,
-      "rmin": 0.557363876836,
-      "rmax": 2.313405268494,
-      "thickness_3d": 0.09549384233411,
+      "rmin": 0.5573638768368,
+      "rmax": 2.313406110198,
+      "thickness_3d": 0.0954938394183,
       "partner_swaps": 0,
       "democratic": false,
       "monodromy_method": "80bit_variational",
@@ -1548,13 +1553,13 @@
       "q_rpo_perm": 1,
       "rmin_pair": [
         1.706413135579,
-        1.619117231497,
-        0.557363876836
+        1.619117082749,
+        0.5573638768368
       ],
       "rmax_pair": [
-        2.202823642094,
-        2.313405268494,
-        0.6412519853773
+        2.202822802913,
+        2.313406110198,
+        0.6412518138418
       ],
       "closest_counts": [
         0,
@@ -1606,8 +1611,8 @@
       "stab_margin": 1.589720590349,
       "survived_100T": 100,
       "drift_100T": 0.06355824037505,
-      "rmin": 0.51853386063,
-      "rmax": 3.395119952453,
+      "rmin": 0.5185338606302,
+      "rmax": 3.395184879492,
       "partner_swaps": 30,
       "democratic": true,
       "monodromy_method": "80bit_variational",
@@ -1622,21 +1627,22 @@
       "q_rpo": 5,
       "q_rpo_perm": 15,
       "rmin_pair": [
-        0.5185338606326,
-        0.51853386063,
-        0.5185338606351
+        0.5185338606327,
+        0.5185338606302,
+        0.5185338606353
       ],
       "rmax_pair": [
-        3.395119952449,
-        3.395119952453,
-        3.395119952452
+        3.395184879492,
+        3.395184752431,
+        3.395184867483
       ],
       "closest_counts": [
-        800,
-        800,
+        801,
+        799,
         800
       ],
       "syzygies": 30,
+      "syzygy_seq": "231231231231231231231231231231",
       "vertical_status": "stable_3d",
       "stab_margin_3d": 1.4636457476026,
       "word_red": "abABabABabABabABabAB",
@@ -1647,7 +1653,7 @@
       "word_compact": "(ABab)^5",
       "dynamical_class": "choreography_2d_rot",
       "non_hierarchical": true,
-      "classification_note": "2D rotating-frame equal-mass choreography (inertial q-fold closure)",
+      "classification_note": "5-fold inertial closure of Chenciner-F\u00e9joz-Montgomery (2005) \u0393_z rotating Figure-8",
       "id": "2D-DEM-001"
     },
     {
@@ -1681,8 +1687,8 @@
       "stab_margin": 1.206048339635,
       "survived_100T": 100,
       "drift_100T": 0.0005706312449471,
-      "rmin": 0.1894231461776,
-      "rmax": 2.316958934651,
+      "rmin": 0.189320375378,
+      "rmax": 2.316958934654,
       "partner_swaps": 2,
       "syzygies": 13,
       "democratic": true,
@@ -1698,20 +1704,21 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        0.2321172446315,
-        0.1894231461776,
-        1.290041947424
+        0.2321155859329,
+        0.189320375378,
+        1.290041947425
       ],
       "rmax_pair": [
-        2.223547020113,
-        2.316958934651,
-        1.948418943386
+        2.223546083501,
+        2.316958934654,
+        1.948417838715
       ],
       "closest_counts": [
         1229,
         1171,
         0
       ],
+      "syzygy_seq": "1211313131121",
       "kz": -0.2568175262344,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -1758,8 +1765,8 @@
       "stab_margin": 0.880029169624,
       "survived_100T": 100,
       "drift_100T": 0.0002691450540546,
-      "rmin": 0.02920157126377,
-      "rmax": 2.515331373002,
+      "rmin": 0.008564070266456,
+      "rmax": 2.515335355025,
       "partner_swaps": 14,
       "syzygies": 18,
       "democratic": true,
@@ -1775,20 +1782,21 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        0.08108349196701,
-        0.02920158158497,
-        0.02920157126377
+        0.08090529414979,
+        0.008564070266695,
+        0.008564070266456
       ],
       "rmax_pair": [
-        2,
-        2.515331372942,
-        2.515331373002
+        2.000000000001,
+        2.515333985829,
+        2.515335355025
       ],
       "closest_counts": [
-        1150,
-        625,
+        1149,
+        626,
         625
       ],
+      "syzygy_seq": "123213213213213123",
       "kz": 2.000000035423,
       "stable_3d": false,
       "vertical_status": "degenerate_L0",
@@ -1842,9 +1850,9 @@
       "stab_margin": 0.8213822665181,
       "survived_100T": 100,
       "drift_100T": 0.6657358440703,
-      "rmin": 0.0952272952249,
-      "rmax": 2.000000000341,
-      "partner_swaps": 26,
+      "rmin": 0.0949116376453,
+      "rmax": 2.000000000291,
+      "partner_swaps": 27,
       "democratic": true,
       "monodromy_method": "80bit_variational",
       "Tstar": 69.45010646552,
@@ -1858,21 +1866,22 @@
       "q_rpo": 3,
       "q_rpo_perm": 9,
       "rmin_pair": [
-        0.0955196518408,
-        0.09522729531361,
-        0.0952272952249
+        0.0949116376909,
+        0.09491163770132,
+        0.0949116376453
       ],
       "rmax_pair": [
-        2.000000000341,
-        1.999990649091,
-        1.999990649234
+        2.000000000291,
+        1.999993150166,
+        1.999998620973
       ],
       "closest_counts": [
+        800,
         801,
-        801,
-        798
+        799
       ],
       "syzygies": 18,
+      "syzygy_seq": "113322113322113322",
       "vertical_status": "stable_3d",
       "stab_margin_3d": 0.821382266518,
       "word_red": "1",
@@ -1883,7 +1892,7 @@
       "word_compact": "1",
       "dynamical_class": "choreography_2d_rot",
       "non_hierarchical": true,
-      "classification_note": "2D rotating-frame equal-mass choreography (inertial q-fold closure)",
+      "classification_note": "2D 8-swap 3-fold rotating choreography (distinct from \u0393_z; contractible word 1)",
       "id": "2D-DEM-004"
     },
     {
@@ -1924,8 +1933,8 @@
       "stab_margin": 0.7026935302193,
       "survived_100T": 100,
       "drift_100T": 0.04988399626389,
-      "rmin": 0.3341020437973,
-      "rmax": 3.014626226054,
+      "rmin": 0.3341020437979,
+      "rmax": 3.014634080746,
       "partner_swaps": 12,
       "democratic": true,
       "monodromy_method": "80bit_variational",
@@ -1940,21 +1949,22 @@
       "q_rpo": 2,
       "q_rpo_perm": 6,
       "rmin_pair": [
-        0.3341020437987,
-        0.3341020437973,
-        0.3341020438009
+        0.334102043799,
+        0.3341020437979,
+        0.3341020438013
       ],
       "rmax_pair": [
-        3.014626226051,
-        3.014626226054,
-        3.014626226053
+        3.014634025322,
+        3.014634080746,
+        3.014633413276
       ],
       "closest_counts": [
-        800,
-        800,
-        800
+        798,
+        801,
+        801
       ],
       "syzygies": 12,
+      "syzygy_seq": "231231231231",
       "vertical_status": "stable_3d",
       "stab_margin_3d": 0.40233667724299993,
       "word_red": "abABabAB",
@@ -1965,7 +1975,7 @@
       "word_compact": "(ABab)^2",
       "dynamical_class": "choreography_2d_rot",
       "non_hierarchical": true,
-      "classification_note": "2D rotating-frame equal-mass choreography (inertial q-fold closure)",
+      "classification_note": "2-fold inertial closure of Chenciner-F\u00e9joz-Montgomery (2005) \u0393_z rotating Figure-8",
       "id": "2D-DEM-005"
     },
     {
@@ -2006,8 +2016,8 @@
       "stab_margin": 0.5944347382382,
       "survived_100T": 100,
       "drift_100T": 0.08698906726136,
-      "rmin": 0.8991452386503,
-      "rmax": 4.084891240576,
+      "rmin": 0.8991452386502,
+      "rmax": 4.084920026499,
       "partner_swaps": 24,
       "democratic": true,
       "monodromy_method": "80bit_variational",
@@ -2022,14 +2032,14 @@
       "q_rpo": 4,
       "q_rpo_perm": 12,
       "rmin_pair": [
-        0.8991452386539,
-        0.8991452386503,
-        0.8991452386558
+        0.8991452386537,
+        0.8991452386502,
+        0.8991452386556
       ],
       "rmax_pair": [
-        4.084891240576,
-        4.084891240567,
-        4.084891240571
+        4.084920018845,
+        4.084919901957,
+        4.084920026499
       ],
       "closest_counts": [
         800,
@@ -2037,6 +2047,7 @@
         800
       ],
       "syzygies": 24,
+      "syzygy_seq": "231231231231231231231231",
       "vertical_status": "stable_3d",
       "stab_margin_3d": 0.41677925849700004,
       "word_red": "abABabABabABabAB",
@@ -2047,12 +2058,12 @@
       "word_compact": "(ABab)^4",
       "dynamical_class": "choreography_2d_rot",
       "non_hierarchical": true,
-      "classification_note": "2D rotating-frame equal-mass choreography (inertial q-fold closure)",
+      "classification_note": "4-fold inertial closure of Chenciner-F\u00e9joz-Montgomery (2005) \u0393_z rotating Figure-8",
       "id": "2D-DEM-006"
     },
     {
       "dim": 2,
-      "subspace": "2d_choreo_12swap_6fold",
+      "subspace": "2d_choreo_fig8_12fold",
       "masses": [
         1,
         1,
@@ -2073,9 +2084,9 @@
         0
       ],
       "T": 159.0739970348,
-      "T_rpo": 26.51233283913,
-      "q_fold": 6,
-      "precess_rad": 5.235987755983,
+      "T_rpo": 13.256166419565,
+      "q_fold": 12,
+      "precess_rad": 2.6179938779915,
       "omega": 0.1974925325415,
       "choreo_err": 1.707545107619e-10,
       "E": -0.7790070517028,
@@ -2088,8 +2099,8 @@
       "stab_margin": 0.591879413488,
       "survived_100T": 100,
       "drift_100T": 0.1224830025502,
-      "rmin": 0.4844948219325,
-      "rmax": 3.328138525909,
+      "rmin": 0.4844948219188,
+      "rmax": 3.328139631346,
       "partner_swaps": 72,
       "democratic": true,
       "monodromy_method": "80bit_variational",
@@ -2105,20 +2116,21 @@
       "q_rpo_perm": 36,
       "rmin_pair": [
         0.4844948219325,
-        0.4862670062906,
-        0.4862670062453
+        0.4844948219188,
+        0.4844948219219
       ],
       "rmax_pair": [
-        3.327970033552,
-        3.328138525874,
-        3.328138525909
+        3.328139600144,
+        3.32813959343,
+        3.328139631346
       ],
       "closest_counts": [
-        792,
-        804,
-        804
+        800,
+        800,
+        800
       ],
       "syzygies": 72,
+      "syzygy_seq": "132132132132132132132132132132132132132132132132132132132132132132132132",
       "vertical_status": "stable_3d",
       "stab_margin_3d": 0.010501544405000063,
       "word_red": "BAbaBAbaBAbaBAbaBAbaBAbaBAbaBAbaBAbaBAbaBAbaBAba",
@@ -2129,7 +2141,7 @@
       "word_compact": "(ABab)^12",
       "dynamical_class": "choreography_2d_rot",
       "non_hierarchical": true,
-      "classification_note": "2D rotating-frame equal-mass choreography (inertial q-fold closure)",
+      "classification_note": "12-fold inertial closure of Chenciner-F\u00e9joz-Montgomery (2005) \u0393_z rotating Figure-8",
       "id": "2D-DEM-007"
     },
     {
@@ -2163,8 +2175,8 @@
       "stab_margin": 0.4775934022796,
       "survived_100T": 100,
       "drift_100T": 0.0002553279387808,
-      "rmin": 0.0722249880188,
-      "rmax": 2.423910359599,
+      "rmin": 0.07035337793304,
+      "rmax": 2.423909368213,
       "partner_swaps": 18,
       "syzygies": 26,
       "democratic": true,
@@ -2180,20 +2192,21 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        0.5089375537989,
-        0.0722249880188,
-        0.07222498969081
+        0.5089375537988,
+        0.07035337793304,
+        0.07035337793663
       ],
       "rmax_pair": [
         2,
-        2.42391035952,
-        2.423910359599
+        2.423909368213,
+        2.42390811964
       ],
       "closest_counts": [
-        1222,
-        590,
-        588
+        1227,
+        586,
+        587
       ],
+      "syzygy_seq": "12132121321231213212132123",
       "kz": 2.000000066559,
       "stable_3d": false,
       "vertical_status": "degenerate_L0",
@@ -2240,8 +2253,8 @@
       "stab_margin": 0.4517500280178,
       "survived_100T": 100,
       "drift_100T": 0.001153657924963,
-      "rmin": 0.009180801395986,
-      "rmax": 2.072541959496,
+      "rmin": 0.004285920982637,
+      "rmax": 2.072541675233,
       "partner_swaps": 32,
       "syzygies": 50,
       "democratic": true,
@@ -2257,20 +2270,21 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        1.127889266376,
-        0.00918087377926,
-        0.009180801395986
+        1.127861736476,
+        0.004285920982637,
+        0.004285921009794
       ],
       "rmax_pair": [
-        2.072541959496,
-        1.686591203976,
-        1.686591233475
+        2.072541675233,
+        1.700070249127,
+        1.70007023257
       ],
       "closest_counts": [
         0,
-        1201,
-        1199
+        1200,
+        1200
       ],
+      "syzygy_seq": "13212313213213213231213231321231321321321323121323",
       "kz": 2.000000250433,
       "stable_3d": false,
       "vertical_status": "degenerate_L0",
@@ -2317,7 +2331,7 @@
       "stab_margin": 0.4266192731483,
       "survived_100T": 100,
       "drift_100T": 0.001392460284646,
-      "rmin": 0.007836066008171,
+      "rmin": 0.001659522307784,
       "rmax": 2,
       "partner_swaps": 28,
       "syzygies": 46,
@@ -2334,20 +2348,21 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        1.056697049062,
-        0.007836128783437,
-        0.007836066008171
+        1.056162117529,
+        0.001659522307784,
+        0.001659522308546
       ],
       "rmax_pair": [
         2,
-        1.629471096641,
-        1.629471030361
+        1.63195209913,
+        1.631952096716
       ],
       "closest_counts": [
         0,
-        1200,
-        1200
+        1199,
+        1201
       ],
+      "syzygy_seq": "1321321323123132132132313213213231231321321323",
       "kz": 2.000000157618,
       "stable_3d": false,
       "vertical_status": "degenerate_L0",
@@ -2394,8 +2409,8 @@
       "stab_margin": 0.3354355433864,
       "survived_100T": 100,
       "drift_100T": 0.0003603345481615,
-      "rmin": 0.03188589712408,
-      "rmax": 2.096263095504,
+      "rmin": 0.03137678254592,
+      "rmax": 2.0962622684,
       "partner_swaps": 26,
       "syzygies": 28,
       "democratic": true,
@@ -2411,20 +2426,21 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        0.8515653490705,
-        0.03188589712408,
-        0.03188589813273
+        0.8515606966958,
+        0.03137678254592,
+        0.03137678255252
       ],
       "rmax_pair": [
         2.000000000037,
-        2.096263095504,
-        2.096263095498
+        2.096262098053,
+        2.0962622684
       ],
       "closest_counts": [
-        516,
-        942,
-        942
+        519,
+        941,
+        940
       ],
+      "syzygy_seq": "1231231321321321321323123123",
       "kz": 2.000000028885,
       "stable_3d": false,
       "vertical_status": "degenerate_L0",
@@ -2471,8 +2487,8 @@
       "stab_margin": 0.3021889230799,
       "survived_100T": 100,
       "drift_100T": 0.000853209891671,
-      "rmin": 0.05963791336589,
-      "rmax": 2.255255708298,
+      "rmin": 0.04970416982318,
+      "rmax": 2.255255684926,
       "partner_swaps": 22,
       "syzygies": 28,
       "democratic": true,
@@ -2488,20 +2504,21 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        1.272952208204,
-        0.05963791336589,
-        0.05963791559155
+        1.272951262636,
+        0.04970416982318,
+        0.04970416986082
       ],
       "rmax_pair": [
-        2.000000000009,
-        2.255255708291,
-        2.255255708298
+        2.000000000011,
+        2.255255684926,
+        2.255254798527
       ],
       "closest_counts": [
-        196,
-        1102,
-        1102
+        194,
+        1103,
+        1103
       ],
+      "syzygy_seq": "1231231321321321321323123123",
       "kz": 2.000000051466,
       "stable_3d": false,
       "vertical_status": "degenerate_L0",
@@ -2548,8 +2565,8 @@
       "stab_margin": 0.2856857068191,
       "survived_100T": 100,
       "drift_100T": 0.001305142352177,
-      "rmin": 0.02299881068239,
-      "rmax": 2.164336191845,
+      "rmin": 0.00256667284475,
+      "rmax": 2.164340040061,
       "partner_swaps": 26,
       "syzygies": 36,
       "democratic": true,
@@ -2565,20 +2582,21 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        1.822241566026,
-        0.02299881068239,
-        0.022998814777
+        1.82023775365,
+        0.00256667289579,
+        0.00256667284475
       ],
       "rmax_pair": [
-        2.164336191845,
-        2.036232624736,
-        2.036232625851
+        2.164340040061,
+        2.037165547492,
+        2.037165371877
       ],
       "closest_counts": [
         0,
-        1200,
-        1200
+        1201,
+        1199
       ],
+      "syzygy_seq": "121321321231231213212312312132132123",
       "kz": 2.000000402687,
       "stable_3d": false,
       "vertical_status": "degenerate_L0",
@@ -2627,10 +2645,10 @@
       "stab_margin": 0.2316446062632,
       "survived_100T": 100,
       "drift_100T": 0.002642604838803,
-      "rmin": 0.002980880252022,
-      "rmax": 1.000000000039,
+      "rmin": 0.0007560779489619,
+      "rmax": 1.000000000036,
       "partner_swaps": 4,
-      "syzygies": 4,
+      "syzygies": 12,
       "democratic": true,
       "monodromy_method": "80bit_variational",
       "Tstar": 5.240709813065,
@@ -2644,20 +2662,22 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        0.01158577482555,
-        0.002980882651272,
-        0.002980880252022
+        0.01158577482553,
+        0.0007560779489619,
+        0.000756077951399
       ],
       "rmax_pair": [
-        1.000000000039,
+        1.000000000036,
         0.9576973035022,
-        0.9576973035449
+        0.9576968165634
       ],
       "closest_counts": [
-        370,
-        1015,
-        1015
+        372,
+        1014,
+        1014
       ],
+      "syzygy_seq": "321213312123",
+      "syzygy_half_seq": "3-2-1-2-1-3",
       "kz": 2,
       "stable_3d": false,
       "vertical_status": "degenerate_L0",
@@ -2670,7 +2690,7 @@
       "word_compact": "1",
       "dynamical_class": "free_fall_brake",
       "non_hierarchical": true,
-      "classification_note": "Collisionless zero-velocity (v0=0, L=0) free-fall brake family",
+      "classification_note": "Collisionless zero-velocity (v0=0, L=0) free-fall brake family (half-period Tanikawa-Mikkola word 3-2-1-2-1-3)",
       "id": "2D-DEM-014"
     },
     {
@@ -2706,8 +2726,8 @@
       "stab_margin": 0.2050689400273,
       "survived_100T": 100,
       "drift_100T": 0.0030392066187,
-      "rmin": 0.007693973718786,
-      "rmax": 1.000000000018,
+      "rmin": 0.00445484056463,
+      "rmax": 1.000000000016,
       "partner_swaps": 4,
       "syzygies": 12,
       "democratic": true,
@@ -2723,20 +2743,22 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        0.01597851371662,
-        0.007693973934811,
-        0.007693973718786
+        0.01597851371661,
+        0.004454840565,
+        0.00445484056463
       ],
       "rmax_pair": [
-        1.000000000018,
+        1.000000000016,
         0.8871375448946,
-        0.8871375448974
+        0.8871375358718
       ],
       "closest_counts": [
-        366,
-        1017,
-        1017
+        363,
+        1018,
+        1019
       ],
+      "syzygy_seq": "321213312123",
+      "syzygy_half_seq": "3-2-1-2-1-3",
       "kz": 2.000000000056,
       "stable_3d": false,
       "vertical_status": "degenerate_L0",
@@ -2749,7 +2771,7 @@
       "word_compact": "1",
       "dynamical_class": "free_fall_brake",
       "non_hierarchical": true,
-      "classification_note": "Collisionless zero-velocity (v0=0, L=0) free-fall brake family",
+      "classification_note": "Collisionless zero-velocity (v0=0, L=0) free-fall brake family (half-period Tanikawa-Mikkola word 3-2-1-2-1-3)",
       "id": "2D-DEM-015"
     },
     {
@@ -2783,8 +2805,8 @@
       "stab_margin": 0.1912585146936,
       "survived_100T": 100,
       "drift_100T": 0.0005279729370196,
-      "rmin": 0.02974676737784,
-      "rmax": 2.134366532918,
+      "rmin": 0.02955305697738,
+      "rmax": 2.134374163905,
       "partner_swaps": 12,
       "syzygies": 22,
       "democratic": true,
@@ -2800,20 +2822,21 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        1.072013508474,
-        0.02974676859314,
-        0.02974676737784
+        1.071936361355,
+        0.02955305697971,
+        0.02955305697738
       ],
       "rmax_pair": [
-        2.134366532918,
-        2.049831714904,
-        2.049831714921
+        2.134374163905,
+        2.049832963227,
+        2.04983307009
       ],
       "closest_counts": [
         0,
         1200,
         1200
       ],
+      "syzygy_seq": "1323123132313231231323",
       "kz": 2.000000008377,
       "stable_3d": false,
       "vertical_status": "degenerate_L0",
@@ -2860,8 +2883,8 @@
       "stab_margin": 0.1840690465774,
       "survived_100T": 100,
       "drift_100T": 0.0004465397963389,
-      "rmin": 0.05551877390084,
-      "rmax": 2.209638884904,
+      "rmin": 0.04476709435834,
+      "rmax": 2.209638548282,
       "partner_swaps": 26,
       "syzygies": 28,
       "democratic": true,
@@ -2877,20 +2900,21 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        1.074786388061,
-        0.05551877390084,
-        0.05551877635497
+        1.074781226358,
+        0.04476709435834,
+        0.04476709436694
       ],
       "rmax_pair": [
-        2.000000000062,
-        2.209638884899,
-        2.209638884904
+        2.000000000038,
+        2.209638548282,
+        2.209635450705
       ],
       "closest_counts": [
         380,
-        1010,
-        1010
+        1011,
+        1009
       ],
+      "syzygy_seq": "1231231321321321321323123123",
       "kz": 2.000000039538,
       "stable_3d": false,
       "vertical_status": "degenerate_L0",
@@ -2944,8 +2968,8 @@
       "stab_margin": 0.1652417504247,
       "survived_100T": 100,
       "drift_100T": 0.07326380426526,
-      "rmin": 0.6699033874338,
-      "rmax": 3.680807925174,
+      "rmin": 0.6699033874329,
+      "rmax": 3.680810999789,
       "partner_swaps": 18,
       "democratic": true,
       "monodromy_method": "80bit_variational",
@@ -2960,21 +2984,22 @@
       "q_rpo": 3,
       "q_rpo_perm": 9,
       "rmin_pair": [
-        0.6699033874338,
-        0.6699800199966,
-        0.6699800199989
+        0.6699033874346,
+        0.6699033874329,
+        0.6699033874343
       ],
       "rmax_pair": [
-        3.680780219725,
-        3.680807925169,
-        3.680807925174
+        3.680810615557,
+        3.680809648547,
+        3.680810999789
       ],
       "closest_counts": [
-        804,
-        798,
-        798
+        800,
+        800,
+        800
       ],
       "syzygies": 18,
+      "syzygy_seq": "231231231231231231",
       "vertical_status": "stable_3d",
       "stab_margin_3d": 0.1652417504249999,
       "word_red": "abABabABabAB",
@@ -2985,7 +3010,7 @@
       "word_compact": "(ABab)^3",
       "dynamical_class": "choreography_2d_rot",
       "non_hierarchical": true,
-      "classification_note": "2D rotating-frame equal-mass choreography (inertial q-fold closure)",
+      "classification_note": "3-fold inertial closure of Chenciner-F\u00e9joz-Montgomery (2005) \u0393_z rotating Figure-8",
       "id": "2D-DEM-018"
     },
     {
@@ -3019,8 +3044,8 @@
       "stab_margin": 0.1597866657067,
       "survived_100T": 100,
       "drift_100T": 0.0007292037716459,
-      "rmin": 0.1970390998608,
-      "rmax": 2.626278221678,
+      "rmin": 0.1970321343333,
+      "rmax": 2.626278221681,
       "partner_swaps": 2,
       "syzygies": 9,
       "democratic": true,
@@ -3036,20 +3061,21 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        0.3138915205349,
-        0.1970390998608,
-        1.32305802022
+        0.3138419173473,
+        0.1970321343333,
+        1.323055879161
       ],
       "rmax_pair": [
-        2.354468860154,
-        2.626278221678,
-        2.204428603692
+        2.354468131294,
+        2.626278221681,
+        2.204438424801
       ],
       "closest_counts": [
-        1273,
-        1127,
+        1272,
+        1128,
         0
       ],
+      "syzygy_seq": "123131321",
       "kz": 0.120224975221,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -3098,10 +3124,10 @@
       "stab_margin": 0.1445706217058,
       "survived_100T": 100,
       "drift_100T": 0.002577080123436,
-      "rmin": 0.01077101229656,
+      "rmin": 0.0005296993995291,
       "rmax": 1,
       "partner_swaps": 4,
-      "syzygies": 4,
+      "syzygies": 12,
       "democratic": true,
       "monodromy_method": "80bit_variational",
       "Tstar": 5.175211478229,
@@ -3115,20 +3141,22 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        0.01077101229656,
-        0.01137693563221,
-        0.01137693262236
+        0.01077101229651,
+        0.0005296993995291,
+        0.0005296994080455
       ],
       "rmax_pair": [
         1,
         0.966671471006,
-        0.9666714715417
+        0.9666710272505
       ],
       "closest_counts": [
         370,
         1015,
         1015
       ],
+      "syzygy_seq": "321213312123",
+      "syzygy_half_seq": "3-2-1-2-1-3",
       "kz": 1.999999998561,
       "stable_3d": false,
       "vertical_status": "degenerate_L0",
@@ -3141,7 +3169,7 @@
       "word_compact": "1",
       "dynamical_class": "free_fall_brake",
       "non_hierarchical": true,
-      "classification_note": "Collisionless zero-velocity (v0=0, L=0) free-fall brake family",
+      "classification_note": "Collisionless zero-velocity (v0=0, L=0) free-fall brake family (half-period Tanikawa-Mikkola word 3-2-1-2-1-3)",
       "id": "2D-DEM-020"
     },
     {
@@ -3177,8 +3205,8 @@
       "stab_margin": 0.1253354652213,
       "survived_100T": 100,
       "drift_100T": 0.002770213055751,
-      "rmin": 0.001189990581675,
-      "rmax": 1.000000000102,
+      "rmin": 0.001148742653299,
+      "rmax": 1.000000000099,
       "partner_swaps": 4,
       "syzygies": 12,
       "democratic": true,
@@ -3194,20 +3222,22 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        0.01264394798188,
-        0.001189990581675,
-        0.001189991174821
+        0.01264394798187,
+        0.001148742657768,
+        0.001148742653299
       ],
       "rmax_pair": [
-        1.000000000102,
+        1.000000000099,
         0.945248902568,
-        0.9452489024654
+        0.9452486170217
       ],
       "closest_counts": [
         370,
         1015,
         1015
       ],
+      "syzygy_seq": "321213312123",
+      "syzygy_half_seq": "3-2-1-2-1-3",
       "kz": 2.00000000007,
       "stable_3d": false,
       "vertical_status": "degenerate_L0",
@@ -3220,7 +3250,7 @@
       "word_compact": "1",
       "dynamical_class": "free_fall_brake",
       "non_hierarchical": true,
-      "classification_note": "Collisionless zero-velocity (v0=0, L=0) free-fall brake family",
+      "classification_note": "Collisionless zero-velocity (v0=0, L=0) free-fall brake family (half-period Tanikawa-Mikkola word 3-2-1-2-1-3)",
       "id": "2D-DEM-021"
     },
     {
@@ -3254,10 +3284,10 @@
       "stab_margin": 0.1200181259675,
       "survived_100T": 100,
       "drift_100T": 0.0001643497512203,
-      "rmin": 0.02919794852376,
-      "rmax": 2.000000000026,
+      "rmin": 0.01163565938658,
+      "rmax": 2.000000000023,
       "partner_swaps": 13,
-      "syzygies": 10,
+      "syzygies": 18,
       "democratic": true,
       "monodromy_method": "80bit_half_0",
       "Tstar": 36.99414408374,
@@ -3271,20 +3301,21 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        0.02919794852376,
-        0.7397258798695,
-        0.7397258799679
+        0.01163565938658,
+        0.7397255927229,
+        0.7397255928225
       ],
       "rmax_pair": [
-        2.000000000026,
-        1.619111557081,
-        1.619111557112
+        2.000000000023,
+        1.619117439668,
+        1.619117472949
       ],
       "closest_counts": [
-        806,
-        797,
-        797
+        802,
+        798,
+        800
       ],
+      "syzygy_seq": "123213123123213123",
       "kz": 2.000000026374,
       "stable_3d": false,
       "vertical_status": "degenerate_L0",
@@ -3331,10 +3362,10 @@
       "stab_margin": 0.102541247452,
       "survived_100T": 100,
       "drift_100T": 0.001200464118641,
-      "rmin": 0.03771634648286,
+      "rmin": 0.005500409410212,
       "rmax": 2,
       "partner_swaps": 36,
-      "syzygies": 54,
+      "syzygies": 62,
       "democratic": true,
       "monodromy_method": "80bit_half_0",
       "Tstar": 99.49243443132,
@@ -3348,20 +3379,21 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        0.9437094360946,
-        0.03771634648286,
-        0.03771635027519
+        0.9357304068376,
+        0.005500409410212,
+        0.005500409456367
       ],
       "rmax_pair": [
         2,
-        1.607075666613,
-        1.607075666225
+        1.607176240578,
+        1.607176063197
       ],
       "closest_counts": [
         0,
         1200,
         1200
       ],
+      "syzygy_seq": "13213231231323123132312313213231321323123132312313231231321323",
       "kz": 2.000000378644,
       "stable_3d": false,
       "vertical_status": "degenerate_L0",
@@ -3408,8 +3440,8 @@
       "stab_margin": 0.1009029054341,
       "survived_100T": 100,
       "drift_100T": 0.001062464654022,
-      "rmin": 0.008857153971611,
-      "rmax": 2.000000000125,
+      "rmin": 0.001391368580397,
+      "rmax": 2.000000000123,
       "partner_swaps": 34,
       "syzygies": 54,
       "democratic": true,
@@ -3425,20 +3457,21 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        0.9869326757628,
-        0.00885722998721,
-        0.008857153971611
+        0.9869208701315,
+        0.001391368619321,
+        0.001391368580397
       ],
       "rmax_pair": [
-        2.000000000125,
-        1.555786548391,
-        1.555786549274
+        2.000000000123,
+        1.55581902192,
+        1.555819092221
       ],
       "closest_counts": [
         0,
         1200,
         1200
       ],
+      "syzygy_seq": "132123132312132312312313213213231231231321231323121323",
       "kz": 2.000000389607,
       "stable_3d": false,
       "vertical_status": "degenerate_L0",
@@ -3487,10 +3520,10 @@
       "stab_margin": 0.0931832934363,
       "survived_100T": 100,
       "drift_100T": 0.002781182534875,
-      "rmin": 0.006155976610554,
-      "rmax": 1.000000000122,
+      "rmin": 0.001252172081018,
+      "rmax": 1.00000000012,
       "partner_swaps": 4,
-      "syzygies": 4,
+      "syzygies": 12,
       "democratic": true,
       "monodromy_method": "80bit_variational",
       "Tstar": 5.335621265308,
@@ -3504,20 +3537,22 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        0.01287246356009,
-        0.006155976610554,
-        0.006155976788603
+        0.01287246356008,
+        0.001252172087614,
+        0.001252172081018
       ],
       "rmax_pair": [
-        1.000000000122,
+        1.00000000012,
         0.9424016707343,
-        0.9424016705906
+        0.9424014273833
       ],
       "closest_counts": [
         370,
         1015,
         1015
       ],
+      "syzygy_seq": "321213312123",
+      "syzygy_half_seq": "3-2-1-2-1-3",
       "kz": 2.000000000019,
       "stable_3d": false,
       "vertical_status": "degenerate_L0",
@@ -3530,7 +3565,7 @@
       "word_compact": "1",
       "dynamical_class": "free_fall_brake",
       "non_hierarchical": true,
-      "classification_note": "Collisionless zero-velocity (v0=0, L=0) free-fall brake family",
+      "classification_note": "Collisionless zero-velocity (v0=0, L=0) free-fall brake family (half-period Tanikawa-Mikkola word 3-2-1-2-1-3)",
       "id": "2D-DEM-025"
     },
     {
@@ -3566,10 +3601,10 @@
       "stab_margin": 0.0799954430139,
       "survived_100T": 100,
       "drift_100T": 0.002792278873063,
-      "rmin": 0.006010158655734,
-      "rmax": 1.001019133799,
+      "rmin": 0.001148618233853,
+      "rmax": 1.001019055223,
       "partner_swaps": 4,
-      "syzygies": 4,
+      "syzygies": 12,
       "democratic": true,
       "monodromy_method": "80bit_variational",
       "Tstar": 5.315102474537,
@@ -3583,20 +3618,22 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        0.01340345073503,
-        0.006010158655734,
-        0.01040823137996
+        0.012775118051,
+        0.001259450463976,
+        0.001148618233853
       ],
       "rmax_pair": [
-        1.001019133799,
-        0.9455673066166,
-        0.942871799669
+        1.001019055223,
+        0.9455673066165,
+        0.9428717080406
       ],
       "closest_counts": [
         370,
         1015,
         1015
       ],
+      "syzygy_seq": "321213312123",
+      "syzygy_half_seq": "3-2-1-2-1-3",
       "kz": 2.000000000079,
       "stable_3d": false,
       "vertical_status": "degenerate_L0",
@@ -3609,7 +3646,7 @@
       "word_compact": "1",
       "dynamical_class": "free_fall_brake",
       "non_hierarchical": true,
-      "classification_note": "Collisionless zero-velocity (v0=0, L=0) free-fall brake family",
+      "classification_note": "Collisionless zero-velocity (v0=0, L=0) free-fall brake family (half-period Tanikawa-Mikkola word 3-2-1-2-1-3)",
       "id": "2D-DEM-026"
     },
     {
@@ -3643,7 +3680,7 @@
       "stab_margin": 0.07805596506756,
       "survived_100T": 100,
       "drift_100T": 0.0008638821608129,
-      "rmin": 0.00600254231118,
+      "rmin": 0.004700719448427,
       "rmax": 2.000000000059,
       "partner_swaps": 30,
       "syzygies": 52,
@@ -3660,20 +3697,21 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        0.8585631398927,
-        0.00600254231118,
-        0.006002567928584
+        0.8548924358951,
+        0.004700719452724,
+        0.004700719448427
       ],
       "rmax_pair": [
         2.000000000059,
-        1.617495257935,
-        1.617495258
+        1.617495140949,
+        1.617494751872
       ],
       "closest_counts": [
         0,
         1200,
         1200
       ],
+      "syzygy_seq": "1321323132132312313231231323123132312313213231321323",
       "kz": 2.000000231125,
       "stable_3d": false,
       "vertical_status": "degenerate_L0",
@@ -3722,10 +3760,10 @@
       "stab_margin": 0.06598187008926,
       "survived_100T": 100,
       "drift_100T": 0.002814321647355,
-      "rmin": 0.002442680004673,
-      "rmax": 1.000999737441,
+      "rmin": 0.001211495496723,
+      "rmax": 1.000999710289,
       "partner_swaps": 4,
-      "syzygies": 4,
+      "syzygies": 12,
       "democratic": true,
       "monodromy_method": "80bit_variational",
       "Tstar": 5.32458771545,
@@ -3739,20 +3777,22 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        0.01350003103771,
-        0.002442680004673,
-        0.0107847279938
+        0.01291123073002,
+        0.001322997483725,
+        0.001211495496723
       ],
       "rmax_pair": [
-        1.000999737441,
+        1.000999710289,
         0.9438195106141,
-        0.9411767458912
+        0.9411767142805
       ],
       "closest_counts": [
-        370,
-        1015,
-        1015
+        372,
+        1014,
+        1014
       ],
+      "syzygy_seq": "321213312123",
+      "syzygy_half_seq": "3-2-1-2-1-3",
       "kz": 2.000000000049,
       "stable_3d": false,
       "vertical_status": "degenerate_L0",
@@ -3765,7 +3805,7 @@
       "word_compact": "1",
       "dynamical_class": "free_fall_brake",
       "non_hierarchical": true,
-      "classification_note": "Collisionless zero-velocity (v0=0, L=0) free-fall brake family",
+      "classification_note": "Collisionless zero-velocity (v0=0, L=0) free-fall brake family (half-period Tanikawa-Mikkola word 3-2-1-2-1-3)",
       "id": "2D-DEM-028"
     },
     {
@@ -3799,8 +3839,8 @@
       "stab_margin": 0.06544541326616,
       "survived_100T": 100,
       "drift_100T": 0.0003531751620929,
-      "rmin": 0.04649250391951,
-      "rmax": 2.160205031128,
+      "rmin": 0.04588771453718,
+      "rmax": 2.160206170021,
       "partner_swaps": 8,
       "syzygies": 14,
       "democratic": true,
@@ -3816,20 +3856,21 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        1.167458279166,
-        0.04649250450769,
-        0.04649250391951
+        1.167455653635,
+        0.04588771453718,
+        0.04588771454348
       ],
       "rmax_pair": [
-        2.003347740809,
-        2.160205031122,
-        2.160205031128
+        2.003347740297,
+        2.160206170021,
+        2.160204960997
       ],
       "closest_counts": [
         0,
-        1202,
-        1198
+        1201,
+        1199
       ],
+      "syzygy_seq": "13213231321323",
       "kz": 2.000000003803,
       "stable_3d": false,
       "vertical_status": "degenerate_L0",
@@ -3878,10 +3919,10 @@
       "stab_margin": 0.06376796176843,
       "survived_100T": 100,
       "drift_100T": 0.002796158975795,
-      "rmin": 0.01075357945412,
-      "rmax": 1.000000000017,
+      "rmin": 0.001372001760844,
+      "rmax": 1.000000000014,
       "partner_swaps": 4,
-      "syzygies": 4,
+      "syzygies": 12,
       "democratic": true,
       "monodromy_method": "80bit_variational",
       "Tstar": 5.352464514646,
@@ -3895,20 +3936,22 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        0.01311734934038,
-        0.01075358024788,
-        0.01075357945412
+        0.01311734934036,
+        0.001372001760844,
+        0.001372001762921
       ],
       "rmax_pair": [
-        1.000000000017,
-        0.9392713123165,
-        0.9392713123337
+        1.000000000014,
+        0.9392713123166,
+        0.9392713054382
       ],
       "closest_counts": [
-        370,
+        371,
         1015,
-        1015
+        1014
       ],
+      "syzygy_seq": "321213312123",
+      "syzygy_half_seq": "3-2-1-2-1-3",
       "kz": 2.000000000099,
       "stable_3d": false,
       "vertical_status": "degenerate_L0",
@@ -3921,7 +3964,7 @@
       "word_compact": "1",
       "dynamical_class": "free_fall_brake",
       "non_hierarchical": true,
-      "classification_note": "Collisionless zero-velocity (v0=0, L=0) free-fall brake family",
+      "classification_note": "Collisionless zero-velocity (v0=0, L=0) free-fall brake family (half-period Tanikawa-Mikkola word 3-2-1-2-1-3)",
       "id": "2D-DEM-030"
     },
     {
@@ -3955,10 +3998,10 @@
       "stab_margin": 0.06162978332956,
       "survived_100T": 100,
       "drift_100T": 0.0004600564078123,
-      "rmin": 0.03564775085613,
+      "rmin": 0.005189781142502,
       "rmax": 2,
       "partner_swaps": 16,
-      "syzygies": 18,
+      "syzygies": 26,
       "democratic": true,
       "monodromy_method": "80bit_half_0",
       "Tstar": 34.92941856434,
@@ -3972,20 +4015,21 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        1.403118600826,
-        0.03564777515951,
-        0.03564775085613
+        1.401032095734,
+        0.005189781158575,
+        0.005189781142502
       ],
       "rmax_pair": [
         2,
-        1.79893586649,
-        1.798935866516
+        1.798935475233,
+        1.798935591006
       ],
       "closest_counts": [
         0,
-        1202,
-        1198
+        1201,
+        1199
       ],
+      "syzygy_seq": "12313213231231231321323123",
       "kz": 2.000000051712,
       "stable_3d": false,
       "vertical_status": "degenerate_L0",
@@ -4034,8 +4078,8 @@
       "stab_margin": 0.04119063177795,
       "survived_100T": 100,
       "drift_100T": 0.002976464419459,
-      "rmin": 0.004346094286488,
-      "rmax": 1.000000000021,
+      "rmin": 0.002916904096386,
+      "rmax": 1.000000000019,
       "partner_swaps": 4,
       "syzygies": 12,
       "democratic": true,
@@ -4051,20 +4095,22 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        0.0151090582769,
-        0.004346094632605,
-        0.004346094286488
+        0.01510905827689,
+        0.002916904096386,
+        0.002916904096401
       ],
       "rmax_pair": [
-        1.000000000021,
+        1.000000000019,
         0.9085950878786,
-        0.9085950878867
+        0.9085950586159
       ],
       "closest_counts": [
-        366,
-        1017,
-        1017
+        368,
+        1016,
+        1016
       ],
+      "syzygy_seq": "321213312123",
+      "syzygy_half_seq": "3-2-1-2-1-3",
       "kz": 2.000000000083,
       "stable_3d": false,
       "vertical_status": "degenerate_L0",
@@ -4077,7 +4123,7 @@
       "word_compact": "1",
       "dynamical_class": "free_fall_brake",
       "non_hierarchical": true,
-      "classification_note": "Collisionless zero-velocity (v0=0, L=0) free-fall brake family",
+      "classification_note": "Collisionless zero-velocity (v0=0, L=0) free-fall brake family (half-period Tanikawa-Mikkola word 3-2-1-2-1-3)",
       "id": "2D-DEM-032"
     },
     {
@@ -4113,10 +4159,10 @@
       "stab_margin": 0.03951447381727,
       "survived_100T": 100,
       "drift_100T": 0.002793765267286,
-      "rmin": 0.005713364369107,
-      "rmax": 1.001498686574,
+      "rmin": 0.001190198501735,
+      "rmax": 1.001498511601,
       "partner_swaps": 4,
-      "syzygies": 4,
+      "syzygies": 12,
       "democratic": true,
       "monodromy_method": "80bit_variational",
       "Tstar": 5.319071649538,
@@ -4130,20 +4176,22 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        0.01420395368618,
-        0.005713364369107,
-        0.007739955301406
+        0.01293002488121,
+        0.001357683203073,
+        0.001190198501735
       ],
       "rmax_pair": [
-        1.001498686574,
+        1.001498511601,
         0.9445584111411,
-        0.9405977889514
+        0.9405975854072
       ],
       "closest_counts": [
         370,
         1015,
         1015
       ],
+      "syzygy_seq": "321213312123",
+      "syzygy_half_seq": "3-2-1-2-1-3",
       "kz": 2.000000000005,
       "stable_3d": false,
       "vertical_status": "degenerate_L0",
@@ -4156,7 +4204,7 @@
       "word_compact": "1",
       "dynamical_class": "free_fall_brake",
       "non_hierarchical": true,
-      "classification_note": "Collisionless zero-velocity (v0=0, L=0) free-fall brake family",
+      "classification_note": "Collisionless zero-velocity (v0=0, L=0) free-fall brake family (half-period Tanikawa-Mikkola word 3-2-1-2-1-3)",
       "id": "2D-DEM-033"
     },
     {
@@ -4192,10 +4240,10 @@
       "stab_margin": 0.03541350375398,
       "survived_100T": 100,
       "drift_100T": 0.002824640003021,
-      "rmin": 0.006346403805331,
-      "rmax": 1.000000000005,
+      "rmin": 0.001530581144523,
+      "rmax": 1.000000000003,
       "partner_swaps": 4,
-      "syzygies": 4,
+      "syzygies": 12,
       "democratic": true,
       "monodromy_method": "80bit_variational",
       "Tstar": 5.372239940457,
@@ -4209,20 +4257,22 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        0.01341291762907,
-        0.006346403805331,
-        0.006346404641488
+        0.01341291762902,
+        0.001530581144523,
+        0.001530581145864
       ],
       "rmax_pair": [
-        1.000000000005,
-        0.935368643406,
-        0.9353686434129
+        1.000000000003,
+        0.9353686434062,
+        0.9353684121121
       ],
       "closest_counts": [
         370,
         1015,
         1015
       ],
+      "syzygy_seq": "321213312123",
+      "syzygy_half_seq": "3-2-1-2-1-3",
       "kz": 2.000000000142,
       "stable_3d": false,
       "vertical_status": "degenerate_L0",
@@ -4235,7 +4285,7 @@
       "word_compact": "1",
       "dynamical_class": "free_fall_brake",
       "non_hierarchical": true,
-      "classification_note": "Collisionless zero-velocity (v0=0, L=0) free-fall brake family",
+      "classification_note": "Collisionless zero-velocity (v0=0, L=0) free-fall brake family (half-period Tanikawa-Mikkola word 3-2-1-2-1-3)",
       "id": "2D-DEM-034"
     },
     {
@@ -4269,7 +4319,7 @@
       "stab_margin": 0.03448019214154,
       "survived_100T": 100,
       "drift_100T": 0.0003806658118844,
-      "rmin": 0.02948061830238,
+      "rmin": 0.001939318191694,
       "rmax": 2,
       "partner_swaps": 14,
       "syzygies": 20,
@@ -4286,20 +4336,21 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        1.320529437663,
-        0.02948061830238,
-        0.02948062525283
+        1.320529437662,
+        0.001939318196298,
+        0.001939318191694
       ],
       "rmax_pair": [
         2,
-        1.748731314881,
-        1.748731313675
+        1.749833957757,
+        1.749833957087
       ],
       "closest_counts": [
         0,
-        1200,
-        1200
+        1201,
+        1199
       ],
+      "syzygy_seq": "12312132132132123123",
       "kz": 2.000000055912,
       "stable_3d": false,
       "vertical_status": "degenerate_L0",
@@ -4346,10 +4397,10 @@
       "stab_margin": 0.03290974467845,
       "survived_100T": 100,
       "drift_100T": 0.001882990027522,
-      "rmin": 0.04071728890499,
-      "rmax": 2.19509569371,
+      "rmin": 0.004244263252969,
+      "rmax": 2.195096353555,
       "partner_swaps": 18,
-      "syzygies": 24,
+      "syzygies": 32,
       "democratic": true,
       "monodromy_method": "80bit_half_1",
       "Tstar": 83.30562140865,
@@ -4363,20 +4414,21 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        1.381136816722,
-        0.04071732675449,
-        0.04071728890499
+        1.381136816721,
+        0.004244263281188,
+        0.004244263252969
       ],
       "rmax_pair": [
-        2.19509569371,
-        1.87595390035,
-        1.875953899702
+        2.195096353555,
+        1.876008757192,
+        1.876008757181
       ],
       "closest_counts": [
         0,
         1200,
         1200
       ],
+      "syzygy_seq": "13213231323123132312313231321323",
       "kz": 2.000000063185,
       "stable_3d": false,
       "vertical_status": "degenerate_L0",
@@ -4423,8 +4475,8 @@
       "stab_margin": 0.01940080912859,
       "survived_100T": 100,
       "drift_100T": 0.0003930618085748,
-      "rmin": 0.03047342725263,
-      "rmax": 2.029488389547,
+      "rmin": 0.007993376088367,
+      "rmax": 2.029488360941,
       "partner_swaps": 12,
       "syzygies": 22,
       "democratic": true,
@@ -4440,20 +4492,21 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        1.407874093832,
-        0.03047342725263,
-        0.03047344211742
+        1.407820569616,
+        0.007993376088367,
+        0.007993376088443
       ],
       "rmax_pair": [
-        2.029488389547,
-        1.608604362552,
-        1.60860436159
+        2.029488360941,
+        1.609475589529,
+        1.60947558548
       ],
       "closest_counts": [
         0,
         1200,
         1200
       ],
+      "syzygy_seq": "1323123132313231231323",
       "kz": 1.999999999336,
       "stable_3d": false,
       "vertical_status": "degenerate_L0",
@@ -4500,10 +4553,10 @@
       "stab_margin": 0.0152869959265,
       "survived_100T": 100,
       "drift_100T": 0.001394813796128,
-      "rmin": 0.02144571895465,
-      "rmax": 2.000000000018,
+      "rmin": 0.004333124006478,
+      "rmax": 2.000000000016,
       "partner_swaps": 28,
-      "syzygies": 38,
+      "syzygies": 46,
       "democratic": true,
       "monodromy_method": "80bit_half_0",
       "Tstar": 65.03011064056,
@@ -4517,20 +4570,21 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        1.502544638798,
-        0.02144580737417,
-        0.02144571895465
+        1.50211605951,
+        0.004333124023095,
+        0.004333124006478
       ],
       "rmax_pair": [
-        2.000000000018,
-        1.839482801165,
-        1.839482800792
+        2.000000000016,
+        1.839618100628,
+        1.839618212564
       ],
       "closest_counts": [
         0,
-        1200,
-        1200
+        1199,
+        1201
       ],
+      "syzygy_seq": "1231321323123132132312312313213231231321323123",
       "kz": 2.000000220648,
       "stable_3d": false,
       "vertical_status": "degenerate_L0",
@@ -4579,10 +4633,10 @@
       "stab_margin": 0.01527023294769,
       "survived_100T": 100,
       "drift_100T": 0.002799005260238,
-      "rmin": 0.006607565238444,
-      "rmax": 1.002036992439,
+      "rmin": 0.001104842663468,
+      "rmax": 1.00203659089,
       "partner_swaps": 4,
-      "syzygies": 4,
+      "syzygies": 12,
       "democratic": true,
       "monodromy_method": "80bit_variational",
       "Tstar": 5.30408417299,
@@ -4596,20 +4650,22 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        0.01470927862761,
-        0.01133190655598,
-        0.006607565238444
+        0.01281175003086,
+        0.001327113452608,
+        0.001104842663468
       ],
       "rmax_pair": [
-        1.002036992439,
-        0.9471195081159,
-        0.9417356104185
+        1.00203659089,
+        0.9471195081158,
+        0.9417351429142
       ],
       "closest_counts": [
-        370,
-        1015,
-        1015
+        372,
+        1014,
+        1014
       ],
+      "syzygy_seq": "321213312123",
+      "syzygy_half_seq": "3-2-1-2-1-3",
       "kz": 1.999999999991,
       "stable_3d": false,
       "vertical_status": "degenerate_L0",
@@ -4622,7 +4678,7 @@
       "word_compact": "1",
       "dynamical_class": "free_fall_brake",
       "non_hierarchical": true,
-      "classification_note": "Collisionless zero-velocity (v0=0, L=0) free-fall brake family",
+      "classification_note": "Collisionless zero-velocity (v0=0, L=0) free-fall brake family (half-period Tanikawa-Mikkola word 3-2-1-2-1-3)",
       "id": "2D-DEM-039"
     },
     {
@@ -4656,8 +4712,8 @@
       "stab_margin": 0.01246233966725,
       "survived_100T": 100,
       "drift_100T": 0.0004869170553802,
-      "rmin": 0.04083158596734,
-      "rmax": 2.000000000144,
+      "rmin": 0.01089215574005,
+      "rmax": 2.000000000058,
       "partner_swaps": 20,
       "syzygies": 34,
       "democratic": true,
@@ -4673,20 +4729,21 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        1.347954510679,
-        0.04083160482222,
-        0.04083158596734
+        1.347513352449,
+        0.01089215576318,
+        0.01089215574005
       ],
       "rmax_pair": [
-        2.000000000144,
-        1.731093280111,
-        1.73109328015
+        2.000000000058,
+        1.731107432251,
+        1.731107319351
       ],
       "closest_counts": [
         0,
-        1200,
-        1200
+        1199,
+        1201
       ],
+      "syzygy_seq": "1321323123132132313213231231321323",
       "kz": 2.00000003965,
       "stable_3d": false,
       "vertical_status": "degenerate_L0",
@@ -4733,8 +4790,8 @@
       "stab_margin": 0.009182530461011,
       "survived_100T": 100,
       "drift_100T": 0.000337406783436,
-      "rmin": 0.01104470067139,
-      "rmax": 2.032249745439,
+      "rmin": 0.01088726791705,
+      "rmax": 2.032248200998,
       "partner_swaps": 14,
       "syzygies": 20,
       "democratic": true,
@@ -4750,20 +4807,21 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        1.737508849887,
-        0.01104470205864,
-        0.01104470067139
+        1.736895337249,
+        0.01088726793194,
+        0.01088726791705
       ],
       "rmax_pair": [
-        2.007955559289,
-        2.032249745428,
-        2.032249745439
+        2.00795818258,
+        2.032248024746,
+        2.032248200998
       ],
       "closest_counts": [
         0,
-        1200,
-        1200
+        1199,
+        1201
       ],
+      "syzygy_seq": "12312132132132123123",
       "kz": 2.000000046194,
       "stable_3d": false,
       "vertical_status": "degenerate_L0",
@@ -4812,10 +4870,10 @@
       "stab_margin": 0.005442044087694,
       "survived_100T": 100,
       "drift_100T": 0.0028758451118,
-      "rmin": 0.008894398477039,
+      "rmin": 0.001851597222411,
       "rmax": 1,
       "partner_swaps": 4,
-      "syzygies": 4,
+      "syzygies": 12,
       "democratic": true,
       "monodromy_method": "80bit_variational",
       "Tstar": 5.40523564223,
@@ -4829,20 +4887,22 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        0.0139292834846,
-        0.008894398513748,
-        0.008894398477039
+        0.01392928348455,
+        0.001851597222645,
+        0.001851597222411
       ],
       "rmax_pair": [
         1,
-        0.9281522737667,
-        0.9281522737658
+        0.9281522737668,
+        0.9281519879876
       ],
       "closest_counts": [
-        370,
-        1015,
+        371,
+        1014,
         1015
       ],
+      "syzygy_seq": "321213312123",
+      "syzygy_half_seq": "3-2-1-2-1-3",
       "kz": 2.000000000205,
       "stable_3d": false,
       "vertical_status": "degenerate_L0",
@@ -4855,7 +4915,7 @@
       "word_compact": "1",
       "dynamical_class": "free_fall_brake",
       "non_hierarchical": true,
-      "classification_note": "Collisionless zero-velocity (v0=0, L=0) free-fall brake family",
+      "classification_note": "Collisionless zero-velocity (v0=0, L=0) free-fall brake family (half-period Tanikawa-Mikkola word 3-2-1-2-1-3)",
       "id": "2D-DEM-042"
     },
     {
@@ -4889,8 +4949,8 @@
       "stab_margin": 0.003952688672392,
       "survived_100T": 100,
       "drift_100T": 0.0004365990637454,
-      "rmin": 0.03697406643503,
-      "rmax": 2.016325634539,
+      "rmin": 0.007528920920472,
+      "rmax": 2.016328983868,
       "partner_swaps": 18,
       "syzygies": 28,
       "democratic": true,
@@ -4906,20 +4966,21 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        1.702735842164,
-        0.03697406643503,
-        0.03697407578439
+        1.702670523171,
+        0.007528920920472,
+        0.007528920927028
       ],
       "rmax_pair": [
-        2.016325634539,
-        1.941852180186,
-        1.941852180155
+        2.016328983868,
+        1.94185209763,
+        1.94185179722
       ],
       "closest_counts": [
         0,
-        1200,
-        1200
+        1199,
+        1201
       ],
+      "syzygy_seq": "1231231321321321321323123123",
       "kz": 2.000000038396,
       "stable_3d": false,
       "vertical_status": "degenerate_L0",
@@ -4966,8 +5027,8 @@
       "stab_margin": 0.003158113963516,
       "survived_100T": 100,
       "drift_100T": 0.0002650887860892,
-      "rmin": 0.01629594459124,
-      "rmax": 2.000000000067,
+      "rmin": 0.003400822008348,
+      "rmax": 2.000000000064,
       "partner_swaps": 10,
       "syzygies": 16,
       "democratic": true,
@@ -4983,20 +5044,21 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        1.564968392278,
-        0.01629594459124,
-        0.01629595394165
+        1.564968392277,
+        0.003400822008348,
+        0.003400822014961
       ],
       "rmax_pair": [
-        2.000000000067,
-        1.758978484651,
-        1.758978484399
+        2.000000000064,
+        1.75913723988,
+        1.759137323385
       ],
       "closest_counts": [
         0,
-        1200,
-        1200
+        1199,
+        1201
       ],
+      "syzygy_seq": "1231321321323123",
       "kz": 2.000000005034,
       "stable_3d": false,
       "vertical_status": "degenerate_L0",
@@ -5045,8 +5107,8 @@
       "stab_margin": 0.002823676867508,
       "survived_100T": 100,
       "drift_100T": 0.002934171733574,
-      "rmin": 0.00380735979767,
-      "rmax": 1.000000000029,
+      "rmin": 0.002279997290993,
+      "rmax": 1.000000000027,
       "partner_swaps": 4,
       "syzygies": 12,
       "democratic": true,
@@ -5062,20 +5124,22 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        0.01448555369654,
-        0.003807360280201,
-        0.00380735979767
+        0.01448555369653,
+        0.002279997291411,
+        0.002279997290993
       ],
       "rmax_pair": [
-        1.000000000029,
+        1.000000000027,
         0.9196188849543,
-        0.9196188849568
+        0.9196188849482
       ],
       "closest_counts": [
-        370,
+        369,
         1015,
-        1015
+        1016
       ],
+      "syzygy_seq": "321213312123",
+      "syzygy_half_seq": "3-2-1-2-1-3",
       "kz": 2.00000000005,
       "stable_3d": false,
       "vertical_status": "degenerate_L0",
@@ -5088,7 +5152,7 @@
       "word_compact": "1",
       "dynamical_class": "free_fall_brake",
       "non_hierarchical": true,
-      "classification_note": "Collisionless zero-velocity (v0=0, L=0) free-fall brake family",
+      "classification_note": "Collisionless zero-velocity (v0=0, L=0) free-fall brake family (half-period Tanikawa-Mikkola word 3-2-1-2-1-3)",
       "id": "2D-DEM-045"
     },
     {
@@ -5122,8 +5186,8 @@
       "stab_margin": 0.002800035815924,
       "survived_100T": 100,
       "drift_100T": 7.936861621967e-05,
-      "rmin": 0.6905266290251,
-      "rmax": 2.000000000023,
+      "rmin": 0.6905266290252,
+      "rmax": 2,
       "partner_swaps": 6,
       "syzygies": 6,
       "democratic": true,
@@ -5140,19 +5204,20 @@
       "q_rpo_perm": 3,
       "rmin_pair": [
         0.690526629133,
-        0.6905266290347,
-        0.6905266290251
+        0.6905266290348,
+        0.6905266290252
       ],
       "rmax_pair": [
         2,
-        2.000000000023,
-        2.000000000022
+        1.999999730668,
+        1.999999730667
       ],
       "closest_counts": [
         800,
         800,
         800
       ],
+      "syzygy_seq": "123123",
       "kz": 1.99999999997,
       "stable_3d": false,
       "vertical_status": "degenerate_L0",
@@ -5199,8 +5264,8 @@
       "stab_margin": 0.002601584720361,
       "survived_100T": 100,
       "drift_100T": 9.445265063212e-05,
-      "rmin": 0.08090701660799,
-      "rmax": 2.160066279856,
+      "rmin": 0.07946749438886,
+      "rmax": 2.160066213689,
       "partner_swaps": 10,
       "syzygies": 16,
       "democratic": true,
@@ -5216,20 +5281,21 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        1.456390200192,
-        0.08090701660799,
-        0.08090701679395
+        1.45637991123,
+        0.07946749438886,
+        0.07946749439374
       ],
       "rmax_pair": [
-        2.000000000009,
-        2.160066279856,
-        2.160066279847
+        2.00000000001,
+        2.160065482185,
+        2.160066213689
       ],
       "closest_counts": [
         0,
         1200,
         1200
       ],
+      "syzygy_seq": "1231321321323123",
       "kz": 2.000000008468,
       "stable_3d": false,
       "vertical_status": "degenerate_L0",
@@ -5276,7 +5342,7 @@
       "stab_margin": 0.002440217905868,
       "survived_100T": 100,
       "drift_100T": 0.0002219040247615,
-      "rmin": 0.02280611075347,
+      "rmin": 0.002653035736026,
       "rmax": 2,
       "partner_swaps": 12,
       "syzygies": 18,
@@ -5293,20 +5359,21 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        1.137107070921,
-        0.02280612439207,
-        0.02280611075347
+        1.137106960638,
+        0.002653035736026,
+        0.002653035743693
       ],
       "rmax_pair": [
         2,
-        1.660411647147,
-        1.66041164698
+        1.660430223488,
+        1.660430111986
       ],
       "closest_counts": [
         0,
-        1200,
-        1200
+        1199,
+        1201
       ],
+      "syzygy_seq": "132121323132121323",
       "kz": 2.000000028726,
       "stable_3d": false,
       "vertical_status": "degenerate_L0",
@@ -5353,10 +5420,10 @@
       "stab_margin": 0.001452152890853,
       "survived_100T": 100,
       "drift_100T": 0.0005632427503891,
-      "rmin": 0.01136534012254,
-      "rmax": 2.000000000032,
+      "rmin": 0.007621132005961,
+      "rmax": 2.000000000031,
       "partner_swaps": 20,
-      "syzygies": 26,
+      "syzygies": 34,
       "democratic": true,
       "monodromy_method": "80bit_half_0",
       "Tstar": 52.34978962095,
@@ -5370,20 +5437,21 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        1.452067980985,
-        0.01136534012254,
-        0.01136536510054
+        1.451577527613,
+        0.007621132018511,
+        0.007621132005961
       ],
       "rmax_pair": [
-        2.000000000032,
-        1.742035957182,
-        1.742035957079
+        2.000000000031,
+        1.742163011752,
+        1.742162984293
       ],
       "closest_counts": [
         0,
-        1200,
-        1200
+        1199,
+        1201
       ],
+      "syzygy_seq": "1321323123132132313213231231321323",
       "kz": 2.000000027626,
       "stable_3d": false,
       "vertical_status": "degenerate_L0",
@@ -5430,10 +5498,10 @@
       "stab_margin": 0.001406618109201,
       "survived_100T": 100,
       "drift_100T": 0.0003610167997855,
-      "rmin": 0.02087381091328,
-      "rmax": 2.000000000008,
+      "rmin": 0.007259163144654,
+      "rmax": 2.000000000002,
       "partner_swaps": 16,
-      "syzygies": 18,
+      "syzygies": 26,
       "democratic": true,
       "monodromy_method": "80bit_half_0",
       "Tstar": 32.85181205699,
@@ -5447,20 +5515,21 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        1.535648659495,
-        0.0208738316889,
-        0.02087381091328
+        1.535567579256,
+        0.007259163154132,
+        0.007259163144654
       ],
       "rmax_pair": [
-        2.000000000008,
-        1.811240261295,
-        1.811240261373
+        2.000000000002,
+        1.811299045236,
+        1.811298681141
       ],
       "closest_counts": [
         0,
-        1202,
-        1198
+        1198,
+        1202
       ],
+      "syzygy_seq": "12313213231231231321323123",
       "kz": 2.000000027222,
       "stable_3d": false,
       "vertical_status": "degenerate_L0",
@@ -5507,8 +5576,8 @@
       "stab_margin": 0.001135461189535,
       "survived_100T": 100,
       "drift_100T": 0.000210761718527,
-      "rmin": 0.01908656886918,
-      "rmax": 2.000000000008,
+      "rmin": 0.004319506254565,
+      "rmax": 2,
       "partner_swaps": 10,
       "syzygies": 16,
       "democratic": true,
@@ -5524,20 +5593,21 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        1.714137325781,
-        0.01908656886918,
-        0.01908657524105
+        1.71413732578,
+        0.004319506254565,
+        0.004319506263019
       ],
       "rmax_pair": [
-        2.000000000008,
-        1.763637801895,
-        1.763637801837
+        2,
+        1.763637619611,
+        1.763637781445
       ],
       "closest_counts": [
         0,
-        1200,
-        1200
+        1198,
+        1202
       ],
+      "syzygy_seq": "1231321321323123",
       "kz": 2.000000000915,
       "stable_3d": false,
       "vertical_status": "degenerate_L0",
@@ -5584,10 +5654,10 @@
       "stab_margin": 0.001128704817047,
       "survived_100T": 100,
       "drift_100T": 0.00089149005932,
-      "rmin": 0.04992054143169,
-      "rmax": 2.031416265405,
+      "rmin": 0.005792375226031,
+      "rmax": 2.031436154437,
       "partner_swaps": 26,
-      "syzygies": 32,
+      "syzygies": 40,
       "democratic": true,
       "monodromy_method": "80bit_half_1",
       "Tstar": 39.40116216954,
@@ -5601,20 +5671,21 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        1.701029741108,
-        0.04992054143169,
-        0.0499205487629
+        1.701029649708,
+        0.005792375226031,
+        0.005792375254092
       ],
       "rmax_pair": [
-        2.031416265405,
-        1.995427728101,
-        1.99542772809
+        2.031436154437,
+        1.995427413657,
+        1.995426460743
       ],
       "closest_counts": [
         0,
-        1200,
-        1200
+        1202,
+        1198
       ],
+      "syzygy_seq": "1231231231321321321321321321323123123123",
       "kz": 2.000000152097,
       "stable_3d": false,
       "vertical_status": "degenerate_L0",
@@ -5661,10 +5732,10 @@
       "stab_margin": 0.0001617971608493,
       "survived_100T": 100,
       "drift_100T": 0.006580625330945,
-      "rmin": 0.0272724478291,
-      "rmax": 2.036116533336,
+      "rmin": 0.00266486287435,
+      "rmax": 2.036117553101,
       "partner_swaps": 30,
-      "syzygies": 48,
+      "syzygies": 56,
       "democratic": true,
       "monodromy_method": "80bit_half_1",
       "Tstar": 252.3517980459,
@@ -5679,19 +5750,20 @@
       "q_rpo_perm": 1,
       "rmin_pair": [
         1.218232531047,
-        0.02727248868777,
-        0.0272724478291
+        0.00266486287435,
+        0.002664862884883
       ],
       "rmax_pair": [
-        2.036116533336,
-        1.699958457731,
-        1.699958457581
+        2.036117553101,
+        1.700003821712,
+        1.700003773676
       ],
       "closest_counts": [
         0,
-        1200,
-        1200
+        1199,
+        1201
       ],
+      "syzygy_seq": "13231321323132313231231323132313231231323132313213231323",
       "kz": 2.000000086628,
       "stable_3d": false,
       "vertical_status": "degenerate_L0",
@@ -5738,10 +5810,10 @@
       "stab_margin": 0.0001289325052208,
       "survived_100T": 100,
       "drift_100T": 0.002634891014054,
-      "rmin": 0.02408712339122,
-      "rmax": 2.021165580933,
+      "rmin": 0.005102660056086,
+      "rmax": 2.021180750532,
       "partner_swaps": 20,
-      "syzygies": 30,
+      "syzygies": 38,
       "democratic": true,
       "monodromy_method": "80bit_half_0",
       "Tstar": 229.9027218111,
@@ -5755,20 +5827,21 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        1.184240098552,
-        0.02408720505557,
-        0.02408712339122
+        1.184196121038,
+        0.005102660056086,
+        0.005102660058091
       ],
       "rmax_pair": [
-        2.021165580933,
-        1.633629162153,
-        1.633629161893
+        2.021180750532,
+        1.633676113572,
+        1.633676118129
       ],
       "closest_counts": [
         0,
         1200,
         1200
       ],
+      "syzygy_seq": "13231323123132313231323132312313231323",
       "kz": 2.0000000107,
       "stable_3d": false,
       "vertical_status": "degenerate_L0",
@@ -5815,8 +5888,8 @@
       "stab_margin": 0.000119021067851,
       "survived_100T": 100,
       "drift_100T": 0.0002900734186737,
-      "rmin": 0.01559972641743,
-      "rmax": 2.00000000002,
+      "rmin": 0.008336702764232,
+      "rmax": 2.000000000018,
       "partner_swaps": 14,
       "syzygies": 24,
       "democratic": true,
@@ -5832,20 +5905,21 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        1.526431892851,
-        0.01559972641743,
-        0.01559973340154
+        1.526339802318,
+        0.008336702764232,
+        0.008336702766113
       ],
       "rmax_pair": [
-        2.00000000002,
-        1.712201000756,
-        1.71220100076
+        2.000000000018,
+        1.712200847929,
+        1.712200895732
       ],
       "closest_counts": [
         0,
-        1200,
-        1200
+        1202,
+        1198
       ],
+      "syzygy_seq": "132132312313231231321323",
       "kz": 2.000000002605,
       "stable_3d": false,
       "vertical_status": "degenerate_L0",
@@ -5893,7 +5967,7 @@
       "survived_100T": 100,
       "drift_100T": 0.0001054766683951,
       "rmin": 0.9824374187566,
-      "rmax": 2.351513369183,
+      "rmax": 2.351513344693,
       "partner_swaps": 14,
       "syzygies": 13,
       "democratic": false,
@@ -5909,20 +5983,21 @@
       "q_rpo": 7,
       "q_rpo_perm": 7,
       "rmin_pair": [
-        1.292640327431,
-        1.011708387494,
+        1.292640327426,
+        1.011708387493,
         0.9824374187566
       ],
       "rmax_pair": [
-        1.994145806253,
-        1.134703377896,
-        2.351513369183
+        1.994145806254,
+        1.134703357547,
+        2.351513344693
       ],
       "closest_counts": [
         0,
         2205,
         195
       ],
+      "syzygy_seq": "1313131313131",
       "kz": -1.916022039834,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -5969,8 +6044,8 @@
       "stab_margin": 1.702879453389,
       "survived_100T": 100,
       "drift_100T": 0.0001113071647166,
-      "rmin": 1.049910324091,
-      "rmax": 2.320820882801,
+      "rmin": 1.049910324089,
+      "rmax": 2.320820725379,
       "partner_swaps": 0,
       "syzygies": 13,
       "democratic": false,
@@ -5986,20 +6061,21 @@
       "q_rpo": 7,
       "q_rpo_perm": 7,
       "rmin_pair": [
-        1.250344829222,
+        1.250344829214,
         1.114336957661,
-        1.049910324091
+        1.049910324089
       ],
       "rmax_pair": [
-        2.164247281758,
-        2.320820882801,
-        1.165254729163
+        2.164247281757,
+        2.320820725379,
+        1.165254786633
       ],
       "closest_counts": [
         0,
         0,
         2400
       ],
+      "syzygy_seq": "2323232323232",
       "kz": -1.899900272231,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -6047,7 +6123,7 @@
       "survived_100T": 100,
       "drift_100T": 9.757543940909e-05,
       "rmin": 0.9911047362086,
-      "rmax": 2.260433931983,
+      "rmax": 2.260433841271,
       "partner_swaps": 14,
       "syzygies": 13,
       "democratic": false,
@@ -6063,20 +6139,21 @@
       "q_rpo": 7,
       "q_rpo_perm": 7,
       "rmin_pair": [
-        1.220497129873,
-        1.005559539861,
+        1.220497129857,
+        1.005559539853,
         0.9911047362086
       ],
       "rmax_pair": [
         1.996664276082,
-        1.116619918915,
-        2.260433931983
+        1.116619845774,
+        2.260433841271
       ],
       "closest_counts": [
         0,
         2255,
         145
       ],
+      "syzygy_seq": "1313131313131",
       "kz": -1.680786856441,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -6123,7 +6200,7 @@
       "stab_margin": 1.634355487657,
       "survived_100T": 100,
       "drift_100T": 0.0002032624549968,
-      "rmin": 0.8966636244479,
+      "rmin": 0.8966636244285,
       "rmax": 2.154137719895,
       "partner_swaps": 0,
       "syzygies": 22,
@@ -6140,20 +6217,21 @@
       "q_rpo": 11,
       "q_rpo_perm": 11,
       "rmin_pair": [
-        0.9489466710813,
-        0.8966636244479,
+        0.9489466710505,
+        0.8966636244285,
         1.231206579843
       ],
       "rmax_pair": [
         2.154137719895,
-        0.9517523046963,
-        1.845610295529
+        0.9517523147639,
+        1.845610227448
       ],
       "closest_counts": [
         0,
         2400,
         0
       ],
+      "syzygy_seq": "1313131313131313131313",
       "kz": 0.6581701764935,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -6201,7 +6279,7 @@
       "survived_100T": 100,
       "drift_100T": 6.591477002055e-05,
       "rmin": 1.046233911719,
-      "rmax": 2.271688117518,
+      "rmax": 2.271688117516,
       "partner_swaps": 0,
       "syzygies": 16,
       "democratic": false,
@@ -6218,19 +6296,20 @@
       "q_rpo_perm": 16,
       "rmin_pair": [
         1.046233911719,
-        1.225454205659,
+        1.225454205658,
         1.225454205653
       ],
       "rmax_pair": [
-        1.100406723791,
-        2.271688117518,
-        2.271688117511
+        1.10040671018,
+        2.271688117516,
+        2.271687933705
       ],
       "closest_counts": [
         2400,
         0,
         0
       ],
+      "syzygy_seq": "1212121212121212",
       "kz": 1.11354383337,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -6277,7 +6356,7 @@
       "stab_margin": 1.407735463536,
       "survived_100T": 100,
       "drift_100T": 0.0001112556701677,
-      "rmin": 1.000951108029,
+      "rmin": 1.00095110801,
       "rmax": 2.154251200285,
       "partner_swaps": 0,
       "syzygies": 13,
@@ -6295,19 +6374,20 @@
       "q_rpo_perm": 7,
       "rmin_pair": [
         1.134311599794,
-        1.00506861059,
-        1.000951108029
+        1.005068610561,
+        1.00095110801
       ],
       "rmax_pair": [
-        2.006019718619,
+        2.00601971859,
         2.154251200285,
-        1.097598138381
+        1.097598159051
       ],
       "closest_counts": [
         0,
         0,
         2400
       ],
+      "syzygy_seq": "3232323232323",
       "kz": -1.237062356659,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -6355,7 +6435,7 @@
       "survived_100T": 100,
       "drift_100T": 0.0001236674778281,
       "rmin": 1.042984991604,
-      "rmax": 2.452277066475,
+      "rmax": 2.452277013096,
       "partner_swaps": 14,
       "syzygies": 14,
       "democratic": false,
@@ -6371,20 +6451,21 @@
       "q_rpo": 7,
       "q_rpo_perm": 7,
       "rmin_pair": [
-        1.297323227739,
-        1.118294290512,
+        1.297323227727,
+        1.11829429051,
         1.042984991604
       ],
       "rmax_pair": [
         2.161279282124,
-        1.226943338427,
-        2.452277066475
+        1.226943291618,
+        2.452277013096
       ],
       "closest_counts": [
         0,
         2087,
         313
       ],
+      "syzygy_seq": "13131313131313",
       "kz": -0.8176421348439,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -6431,8 +6512,8 @@
       "stab_margin": 1.337937134511,
       "survived_100T": 100,
       "drift_100T": 0.0001293830548703,
-      "rmin": 0.9619427137482,
-      "rmax": 2.594238848451,
+      "rmin": 0.9619427137397,
+      "rmax": 2.594238812814,
       "partner_swaps": 14,
       "syzygies": 14,
       "democratic": false,
@@ -6449,19 +6530,20 @@
       "q_rpo_perm": 7,
       "rmin_pair": [
         1.483039686235,
-        1.029274835568,
-        0.9619427137482
+        1.029274835564,
+        0.9619427137397
       ],
       "rmax_pair": [
         1.991217549327,
-        1.18399456915,
-        2.594238848451
+        1.183994530101,
+        2.594238812814
       ],
       "closest_counts": [
         0,
-        2139,
-        261
+        2141,
+        259
       ],
+      "syzygy_seq": "13131313131313",
       "kz": -1.749124960908,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -6508,8 +6590,8 @@
       "stab_margin": 1.304944593576,
       "survived_100T": 100,
       "drift_100T": 0.0001144991452195,
-      "rmin": 0.8059499275537,
-      "rmax": 2.175976609662,
+      "rmin": 0.8059499275526,
+      "rmax": 2.175976609648,
       "partner_swaps": 16,
       "syzygies": 16,
       "democratic": false,
@@ -6525,20 +6607,21 @@
       "q_rpo": 8,
       "q_rpo_perm": 8,
       "rmin_pair": [
-        0.8059499275537,
-        0.9029565507047,
+        0.8059499275526,
+        0.9029565507052,
         1.234635479366
       ],
       "rmax_pair": [
-        2.175976609662,
-        0.9594846219042,
-        1.708906478422
+        2.175976609648,
+        0.9594862511971,
+        1.708906469614
       ],
       "closest_counts": [
-        328,
-        2072,
+        323,
+        2077,
         0
       ],
+      "syzygy_seq": "1313131313131313",
       "kz": 1.505892356079,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -6585,7 +6668,7 @@
       "stab_margin": 1.204167486226,
       "survived_100T": 100,
       "drift_100T": 8.067875228342e-05,
-      "rmin": 0.9906334559022,
+      "rmin": 0.9906334559021,
       "rmax": 2.009366544108,
       "partner_swaps": 0,
       "syzygies": 13,
@@ -6602,20 +6685,21 @@
       "q_rpo": 7,
       "q_rpo_perm": 14,
       "rmin_pair": [
-        1.018733088203,
-        0.9906334559022,
-        1.018733088194
+        1.018733088193,
+        0.9906334559021,
+        1.018733088193
       ],
       "rmax_pair": [
         2.009366544108,
-        1.068606003718,
-        2.009366544105
+        1.068605993734,
+        2.009366463151
       ],
       "closest_counts": [
         0,
         2400,
         0
       ],
+      "syzygy_seq": "1313131313131",
       "kz": -0.543608143351,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -6662,8 +6746,8 @@
       "stab_margin": 1.18926944186,
       "survived_100T": 100,
       "drift_100T": 0.0009673691654239,
-      "rmin": 0.6503868534562,
-      "rmax": 5.64555616159,
+      "rmin": 0.6503868534567,
+      "rmax": 5.645556193063,
       "partner_swaps": 2,
       "syzygies": 2,
       "democratic": false,
@@ -6680,19 +6764,20 @@
       "q_rpo_perm": 1,
       "rmin_pair": [
         0.7075098408741,
-        0.6503868534562,
-        3.910696806542
+        0.6503868534567,
+        3.910696806543
       ],
       "rmax_pair": [
-        4.561083659998,
+        4.561083468901,
         4.918313651585,
-        5.64555616159
+        5.645556193063
       ],
       "closest_counts": [
         1187,
         1213,
         0
       ],
+      "syzygy_seq": "32",
       "kz": 0.6733392197152,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -6758,18 +6843,19 @@
       "rmin_pair": [
         1.217486363185,
         1.347540908997,
-        1.347540909084
+        1.347540909083
       ],
       "rmax_pair": [
-        1.263560235401,
+        1.263560234949,
         2.565027273341,
-        2.565027273169
+        2.565027218297
       ],
       "closest_counts": [
         2400,
         0,
         0
       ],
+      "syzygy_seq": "1212121212121212",
       "kz": 1.929616748756,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -6817,7 +6903,7 @@
       "survived_100T": 100,
       "drift_100T": 9.477645656984e-05,
       "rmin": 0.9154854326829,
-      "rmax": 1.975966244455,
+      "rmax": 1.975966181884,
       "partner_swaps": 14,
       "syzygies": 14,
       "democratic": false,
@@ -6834,19 +6920,20 @@
       "q_rpo_perm": 7,
       "rmin_pair": [
         0.9154854326829,
-        1.010629463944,
-        0.9521262210554
+        1.010629463818,
+        0.9521262209363
       ],
       "rmax_pair": [
-        1.975966244455,
-        1.867611653879,
-        1.028427773037
+        1.975966181884,
+        1.86761165388,
+        1.02842776873
       ],
       "closest_counts": [
-        257,
+        256,
         0,
-        2143
+        2144
       ],
+      "syzygy_seq": "32323232323232",
       "kz": -0.01247988572021,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -6915,15 +7002,16 @@
         1.083719012075
       ],
       "rmax_pair": [
-        1.025676897749,
+        1.025674835639,
         2.041859506186,
-        2.041859506132
+        2.041852318943
       ],
       "closest_counts": [
         2400,
         0,
         0
       ],
+      "syzygy_seq": "1212121212",
       "kz": 0.8621736102163,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -6970,7 +7058,7 @@
       "stab_margin": 0.9028675603837,
       "survived_100T": 100,
       "drift_100T": 6.98478564031e-05,
-      "rmin": 0.8950873112469,
+      "rmin": 0.895087311247,
       "rmax": 1.947862716522,
       "partner_swaps": 0,
       "syzygies": 10,
@@ -6987,20 +7075,21 @@
       "q_rpo": 5,
       "q_rpo_perm": 5,
       "rmin_pair": [
-        0.9506664943929,
+        0.9506664943928,
         1.041709826782,
-        0.8950873112469
+        0.895087311247
       ],
       "rmax_pair": [
         1.947862716522,
-        1.845753805756,
-        0.9592552449254
+        1.845752600883,
+        0.9592560357197
       ],
       "closest_counts": [
         0,
         0,
         2400
       ],
+      "syzygy_seq": "2323232323",
       "kz": 1.140832259725,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -7048,7 +7137,7 @@
       "survived_100T": 100,
       "drift_100T": 7.301453876278e-05,
       "rmin": 1.054905693895,
-      "rmax": 2.244923767467,
+      "rmax": 2.24491572065,
       "partner_swaps": 0,
       "syzygies": 10,
       "democratic": false,
@@ -7069,15 +7158,16 @@
         1.133325400093
       ],
       "rmax_pair": [
-        1.124113435637,
+        1.124114543621,
         2.188231094252,
-        2.244923767467
+        2.24491572065
       ],
       "closest_counts": [
         2400,
         0,
         0
       ],
+      "syzygy_seq": "1212121212",
       "kz": 1.288289473868,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -7125,7 +7215,7 @@
       "survived_100T": 100,
       "drift_100T": 8.993713850131e-05,
       "rmin": 0.9626211728844,
-      "rmax": 2.170667403537,
+      "rmax": 2.170666229563,
       "partner_swaps": 0,
       "syzygies": 10,
       "democratic": false,
@@ -7147,14 +7237,15 @@
       ],
       "rmax_pair": [
         2.028034120248,
-        1.045746002825,
-        2.170667403537
+        1.045746554193,
+        2.170666229563
       ],
       "closest_counts": [
         0,
         2400,
         0
       ],
+      "syzygy_seq": "1313131313",
       "kz": 0.4187639969387,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -7201,7 +7292,7 @@
       "stab_margin": 0.8189971336502,
       "survived_100T": 100,
       "drift_100T": 6.214748995554e-05,
-      "rmin": 0.8475909541727,
+      "rmin": 0.8475909541726,
       "rmax": 2.088789267775,
       "partner_swaps": 10,
       "syzygies": 10,
@@ -7218,20 +7309,21 @@
       "q_rpo": 5,
       "q_rpo_perm": 5,
       "rmin_pair": [
-        0.8475909541727,
+        0.8475909541726,
         0.9235106177684,
         1.133183901663
       ],
       "rmax_pair": [
         2.088789267775,
-        0.9902160987142,
-        1.771101572075
+        0.9902174168163,
+        1.771101491634
       ],
       "closest_counts": [
-        315,
-        2085,
+        318,
+        2082,
         0
       ],
+      "syzygy_seq": "1313131313",
       "kz": 1.54459798225,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -7300,15 +7392,16 @@
         1.213150069145
       ],
       "rmax_pair": [
-        1.226861138264,
+        1.226859679705,
         2.383218793507,
-        2.383218793382
+        2.383211413115
       ],
       "closest_counts": [
         2400,
         0,
         0
       ],
+      "syzygy_seq": "1212121212",
       "kz": 1.844340095895,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -7356,7 +7449,7 @@
       "survived_100T": 100,
       "drift_100T": 0.001648956538877,
       "rmin": 0.5110372785904,
-      "rmax": 4.042709289927,
+      "rmax": 4.04270928745,
       "partner_swaps": 2,
       "syzygies": 2,
       "democratic": false,
@@ -7372,20 +7465,21 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        0.5524837740082,
+        0.5524837740084,
         0.5110372785904,
-        2.733444081408
+        2.733444081411
       ],
       "rmax_pair": [
         3.244481360705,
-        3.483302747191,
-        4.042709289927
+        3.483302284493,
+        4.04270928745
       ],
       "closest_counts": [
-        1191,
-        1209,
+        1190,
+        1210,
         0
       ],
+      "syzygy_seq": "23",
       "kz": 0.9493068434353,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -7432,7 +7526,7 @@
       "stab_margin": 0.6263565538082,
       "survived_100T": 100,
       "drift_100T": 0.0001878817178329,
-      "rmin": 0.7969539485307,
+      "rmin": 0.796953948508,
       "rmax": 1.896208822076,
       "partner_swaps": 26,
       "syzygies": 26,
@@ -7449,20 +7543,21 @@
       "q_rpo": 13,
       "q_rpo_perm": 13,
       "rmin_pair": [
-        0.7969539485307,
-        1.051895588983,
-        0.8178204356711
+        0.796953948508,
+        1.051895588967,
+        0.8178204356576
       ],
       "rmax_pair": [
         1.896208822076,
-        1.614774384202,
-        0.8730998872661
+        1.614774314343,
+        0.8730999220628
       ],
       "closest_counts": [
         173,
         0,
         2227
       ],
+      "syzygy_seq": "23232323232323232323232323",
       "kz": -0.1482871142029,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -7509,7 +7604,7 @@
       "stab_margin": 0.6171791174622,
       "survived_100T": 100,
       "drift_100T": 9.490051600215e-05,
-      "rmin": 1.271833032739,
+      "rmin": 1.271833032738,
       "rmax": 2.747563871369,
       "partner_swaps": 28,
       "syzygies": 14,
@@ -7527,19 +7622,20 @@
       "q_rpo_perm": 14,
       "rmin_pair": [
         1.475730838596,
-        1.271833032766,
+        1.271833032738,
         1.271833032739
       ],
       "rmax_pair": [
-        1.52066700777,
+        1.520666855006,
         2.747563871369,
-        2.747563871362
+        2.747563868551
       ],
       "closest_counts": [
-        1374,
-        513,
-        513
+        1376,
+        512,
+        512
       ],
+      "syzygy_seq": "12121212121212",
       "kz": 1.568126913944,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -7587,7 +7683,7 @@
       "survived_100T": 100,
       "drift_100T": 0.0002393814553429,
       "rmin": 1.187016786415,
-      "rmax": 3.264735645222,
+      "rmax": 3.264735631655,
       "partner_swaps": 10,
       "syzygies": 10,
       "democratic": false,
@@ -7609,14 +7705,15 @@
       ],
       "rmax_pair": [
         2.506783373256,
-        1.458474472746,
-        3.264735645222
+        1.458476487282,
+        3.264735631655
       ],
       "closest_counts": [
         0,
-        2085,
-        315
+        2087,
+        313
       ],
+      "syzygy_seq": "1313131313",
       "kz": 0.2757288954323,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -7664,7 +7761,7 @@
       "survived_100T": 100,
       "drift_100T": 0.0004487599694131,
       "rmin": 0.8746466525792,
-      "rmax": 2.702298111509,
+      "rmax": 2.702297694506,
       "partner_swaps": 0,
       "syzygies": 22,
       "democratic": false,
@@ -7680,20 +7777,21 @@
       "q_rpo": 11,
       "q_rpo_perm": 11,
       "rmin_pair": [
-        1.803345728712,
+        1.803345728551,
         0.8746466525792,
         1.438030021131
       ],
       "rmax_pair": [
-        2.31267667372,
-        0.9235165931337,
-        2.702298111509
+        2.312676673721,
+        0.9235166316241,
+        2.702297694506
       ],
       "closest_counts": [
         0,
         2400,
         0
       ],
+      "syzygy_seq": "1313131313131313131313",
       "kz": 0.2576625050437,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -7740,7 +7838,7 @@
       "stab_margin": 0.1940387690937,
       "survived_100T": 100,
       "drift_100T": 0.0001900576499277,
-      "rmin": 0.8452486728689,
+      "rmin": 0.8452486728707,
       "rmax": 2.399895270542,
       "partner_swaps": 0,
       "syzygies": 14,
@@ -7757,20 +7855,21 @@
       "q_rpo": 7,
       "q_rpo_perm": 7,
       "rmin_pair": [
-        1.120398751373,
-        0.8452486728689,
+        1.120398751266,
+        0.8452486728707,
         1.533193694056
       ],
       "rmax_pair": [
         2.399895270542,
-        0.8777210090849,
-        1.965647424242
+        0.87772094566,
+        1.965647424498
       ],
       "closest_counts": [
         0,
         2400,
         0
       ],
+      "syzygy_seq": "13131313131313",
       "kz": 1.872671175338,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -7818,7 +7917,7 @@
       "survived_100T": 100,
       "drift_100T": 6.517824705131e-05,
       "rmin": 1.087164805975,
-      "rmax": 2.521391992792,
+      "rmax": 2.521391989465,
       "partner_swaps": 0,
       "syzygies": 5,
       "democratic": false,
@@ -7839,15 +7938,16 @@
         1.434227182965
       ],
       "rmax_pair": [
-        1.126308966539,
-        2.521391992148,
-        2.521391992792
+        1.126308781758,
+        2.521391989465,
+        2.521390794005
       ],
       "closest_counts": [
         2400,
         0,
         0
       ],
+      "syzygy_seq": "12121",
       "kz": 1.969021996313,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -7895,7 +7995,7 @@
       "survived_100T": 100,
       "drift_100T": 7.69779889277e-05,
       "rmin": 1.103814318353,
-      "rmax": 2.65334999552,
+      "rmax": 2.653348117698,
       "partner_swaps": 0,
       "syzygies": 6,
       "democratic": false,
@@ -7916,15 +8016,16 @@
         1.42443325715
       ],
       "rmax_pair": [
-        1.151677189658,
-        2.528247575845,
-        2.65334999552
+        1.1516774457,
+        2.528247575527,
+        2.653348117698
       ],
       "closest_counts": [
         2400,
         0,
         0
       ],
+      "syzygy_seq": "121212",
       "kz": 1.945488594343,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -7971,8 +8072,8 @@
       "stab_margin": 0.1152270460478,
       "survived_100T": 100,
       "drift_100T": 6.351847957044e-05,
-      "rmin": 0.9677498385986,
-      "rmax": 2.338399621111,
+      "rmin": 0.9677498385987,
+      "rmax": 2.338399154547,
       "partner_swaps": 0,
       "syzygies": 6,
       "democratic": false,
@@ -7988,20 +8089,21 @@
       "q_rpo": 3,
       "q_rpo_perm": 3,
       "rmin_pair": [
-        0.9677498385986,
+        0.9677498385987,
         1.366573848793,
         1.318531592884
       ],
       "rmax_pair": [
-        1.014755334451,
-        2.286281432128,
-        2.338399621111
+        1.01475555783,
+        2.286281431547,
+        2.338399154547
       ],
       "closest_counts": [
         2400,
         0,
         0
       ],
+      "syzygy_seq": "121212",
       "kz": 1.876061243267,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -8049,7 +8151,7 @@
       "survived_100T": 100,
       "drift_100T": 6.915925809443e-05,
       "rmin": 1.165247990235,
-      "rmax": 2.669504024178,
+      "rmax": 2.669504018124,
       "partner_swaps": 0,
       "syzygies": 5,
       "democratic": false,
@@ -8070,15 +8172,16 @@
         1.504256026852
       ],
       "rmax_pair": [
-        1.201566451341,
-        2.669504022983,
-        2.669504024178
+        1.201566192053,
+        2.669504018124,
+        2.669502084502
       ],
       "closest_counts": [
         2400,
         0,
         0
       ],
+      "syzygy_seq": "12121",
       "kz": 1.991529391759,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -8126,7 +8229,7 @@
       "survived_100T": 100,
       "drift_100T": 6.110534598681e-05,
       "rmin": 0.7424752364864,
-      "rmax": 1.852566194098,
+      "rmax": 1.852566193865,
       "partner_swaps": 0,
       "syzygies": 6,
       "democratic": false,
@@ -8147,15 +8250,16 @@
         0.7424752364864
       ],
       "rmax_pair": [
-        1.852566194098,
-        1.699783804429,
-        0.7820292893307
+        1.852566193865,
+        1.699783208658,
+        0.7820295074407
       ],
       "closest_counts": [
         0,
         0,
         2400
       ],
+      "syzygy_seq": "232323",
       "kz": 1.883344375864,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -8203,7 +8307,7 @@
       "survived_100T": 100,
       "drift_100T": 6.617093047447e-05,
       "rmin": 0.758705945347,
-      "rmax": 1.869778726315,
+      "rmax": 1.869778726087,
       "partner_swaps": 0,
       "syzygies": 6,
       "democratic": false,
@@ -8224,15 +8328,16 @@
         0.758705945347
       ],
       "rmax_pair": [
-        1.869778726315,
-        1.783190325248,
-        0.7989214013328
+        1.869778726087,
+        1.783189773212,
+        0.7989215703516
       ],
       "closest_counts": [
         0,
         0,
         2400
       ],
+      "syzygy_seq": "232323",
       "kz": 1.850796449903,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -8280,7 +8385,7 @@
       "survived_100T": 100,
       "drift_100T": 5.568547820671e-05,
       "rmin": 0.718732260309,
-      "rmax": 1.824499305167,
+      "rmax": 1.82449930487,
       "partner_swaps": 0,
       "syzygies": 6,
       "democratic": false,
@@ -8301,15 +8406,16 @@
         0.718732260309
       ],
       "rmax_pair": [
-        1.824499305167,
-        1.57750197553,
-        0.7567637143328
+        1.82449930487,
+        1.57750130302,
+        0.7567640138515
       ],
       "closest_counts": [
         0,
         0,
         2400
       ],
+      "syzygy_seq": "232323",
       "kz": 1.921660469439,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -8357,7 +8463,7 @@
       "survived_100T": 100,
       "drift_100T": 8.395580003309e-05,
       "rmin": 0.779398027262,
-      "rmax": 1.889699013782,
+      "rmax": 1.88969901364,
       "partner_swaps": 0,
       "syzygies": 6,
       "democratic": false,
@@ -8378,15 +8484,16 @@
         0.779398027262
       ],
       "rmax_pair": [
-        1.889699013753,
-        1.889699013782,
-        0.8200980682508
+        1.889698789768,
+        1.88969901364,
+        0.8200980185419
       ],
       "closest_counts": [
         0,
         0,
         2400
       ],
+      "syzygy_seq": "323232",
       "kz": 1.800344893565,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -8434,7 +8541,7 @@
       "survived_100T": 100,
       "drift_100T": 0.0001002927618529,
       "rmin": 0.9180772422927,
-      "rmax": 2.288980090551,
+      "rmax": 2.28897978357,
       "partner_swaps": 0,
       "syzygies": 6,
       "democratic": false,
@@ -8455,15 +8562,16 @@
         1.265854097859
       ],
       "rmax_pair": [
-        2.18393134044,
-        0.9706498322022,
-        2.288980090551
+        2.183931340177,
+        0.9706501461976,
+        2.28897978357
       ],
       "closest_counts": [
         0,
         2400,
         0
       ],
+      "syzygy_seq": "131313",
       "kz": 1.79520239737,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -8510,8 +8618,8 @@
       "stab_margin": 0.09240199837727,
       "survived_100T": 100,
       "drift_100T": 5.783536001674e-05,
-      "rmin": 0.8790433397422,
-      "rmax": 2.273375940362,
+      "rmin": 0.8790433397423,
+      "rmax": 2.273375940113,
       "partner_swaps": 0,
       "syzygies": 6,
       "democratic": false,
@@ -8528,19 +8636,20 @@
       "q_rpo_perm": 3,
       "rmin_pair": [
         0.9406554307766,
-        0.8790433397422,
+        0.8790433397423,
         1.364501253471
       ],
       "rmax_pair": [
-        2.273375940362,
-        0.9235923818325,
-        1.819698770769
+        2.273375940113,
+        0.9235925201533,
+        1.819698280837
       ],
       "closest_counts": [
         0,
         2400,
         0
       ],
+      "syzygy_seq": "131313",
       "kz": 1.95581171834,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -8588,7 +8697,7 @@
       "survived_100T": 100,
       "drift_100T": 9.594472735171e-05,
       "rmin": 0.797537686212,
-      "rmax": 2.032895932605,
+      "rmax": 2.032895931084,
       "partner_swaps": 0,
       "syzygies": 6,
       "democratic": false,
@@ -8609,15 +8718,16 @@
         0.797537686212
       ],
       "rmax_pair": [
-        1.915065327539,
-        2.032895932605,
-        0.8484392187551
+        1.915065322747,
+        2.032895931084,
+        0.8484392382008
       ],
       "closest_counts": [
         0,
         0,
         2400
       ],
+      "syzygy_seq": "323232",
       "kz": 1.715682146564,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -8665,7 +8775,7 @@
       "survived_100T": 100,
       "drift_100T": 0.0001358115136578,
       "rmin": 1.528716875589,
-      "rmax": 3.661940869874,
+      "rmax": 3.661937543064,
       "partner_swaps": 0,
       "syzygies": 5,
       "democratic": false,
@@ -8686,15 +8796,16 @@
         1.747182706566
       ],
       "rmax_pair": [
-        1.577723623502,
-        3.275899695612,
-        3.661940869874
+        1.577724048037,
+        3.275899587112,
+        3.661937543064
       ],
       "closest_counts": [
         2400,
         0,
         0
       ],
+      "syzygy_seq": "12121",
       "kz": 1.999999752651,
       "stable_3d": false,
       "vertical_status": "vertically_unstable",
@@ -8742,7 +8853,7 @@
       "survived_100T": 100,
       "drift_100T": 9.846229064979e-05,
       "rmin": 0.8715315479603,
-      "rmax": 2.304073872213,
+      "rmax": 2.304073555869,
       "partner_swaps": 0,
       "syzygies": 6,
       "democratic": false,
@@ -8763,15 +8874,16 @@
         1.20554952315
       ],
       "rmax_pair": [
-        2.077081071429,
-        0.9349955178092,
-        2.304073872213
+        2.077081071185,
+        0.9349957897593,
+        2.304073555869
       ],
       "closest_counts": [
         0,
         2400,
         0
       ],
+      "syzygy_seq": "131313",
       "kz": 1.634017473433,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -8819,7 +8931,7 @@
       "survived_100T": 100,
       "drift_100T": 0.0001042580661696,
       "rmin": 0.8403379986133,
-      "rmax": 2.199075275656,
+      "rmax": 2.199074955861,
       "partner_swaps": 0,
       "syzygies": 6,
       "democratic": false,
@@ -8841,14 +8953,15 @@
       ],
       "rmax_pair": [
         2.074430570834,
-        2.199075275656,
-        0.9013727545815
+        2.199074955861,
+        0.901372925039
       ],
       "closest_counts": [
         0,
         0,
         2400
       ],
+      "syzygy_seq": "232323",
       "kz": 1.559146381063,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -8895,8 +9008,8 @@
       "stab_margin": 0.07395704308091,
       "survived_100T": 100,
       "drift_100T": 0.0001166172891253,
-      "rmin": 0.6446762556225,
-      "rmax": 2.151523272136,
+      "rmin": 0.6446747988306,
+      "rmax": 2.1515220833,
       "partner_swaps": 12,
       "syzygies": 7,
       "democratic": false,
@@ -8912,20 +9025,21 @@
       "q_rpo": 1,
       "q_rpo_perm": 1,
       "rmin_pair": [
-        0.8995859318129,
-        0.6446762556225,
-        0.8004144736292
+        0.8995798064778,
+        0.6446747988306,
+        0.8004144733888
       ],
       "rmax_pair": [
-        2.151523272136,
-        2.124320356822,
-        1.523645754771
+        2.1515220833,
+        2.124321810941,
+        1.523647523828
       ],
       "closest_counts": [
         512,
-        646,
-        1242
+        645,
+        1243
       ],
+      "syzygy_seq": "2323232",
       "kz": -1.679692969267,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -8973,7 +9087,7 @@
       "survived_100T": 100,
       "drift_100T": 0.0001845735504644,
       "rmin": 1.710910944742,
-      "rmax": 4.154412349733,
+      "rmax": 4.154409765334,
       "partner_swaps": 0,
       "syzygies": 6,
       "democratic": false,
@@ -8994,15 +9108,16 @@
         1.867267165613
       ],
       "rmax_pair": [
-        1.765335730977,
-        3.578178110843,
-        4.154412349733
+        1.765335647864,
+        3.578178110428,
+        4.154409765334
       ],
       "closest_counts": [
         2400,
         0,
         0
       ],
+      "syzygy_seq": "121212",
       "kz": 1.999488113118,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -9050,7 +9165,7 @@
       "survived_100T": 100,
       "drift_100T": 0.000174872781555,
       "rmin": 1.064714645877,
-      "rmax": 2.86977744482,
+      "rmax": 2.869774379034,
       "partner_swaps": 0,
       "syzygies": 6,
       "democratic": false,
@@ -9071,15 +9186,16 @@
         1.326876984928
       ],
       "rmax_pair": [
-        2.391591631036,
-        1.142902388138,
-        2.86977744482
+        2.391591630884,
+        1.142902689413,
+        2.869774379034
       ],
       "closest_counts": [
         0,
         2400,
         0
       ],
+      "syzygy_seq": "131313",
       "kz": 1.713171846432,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -9127,7 +9243,7 @@
       "survived_100T": 100,
       "drift_100T": 0.0001045528939836,
       "rmin": 0.8347853067916,
-      "rmax": 2.261987455571,
+      "rmax": 2.261987108621,
       "partner_swaps": 0,
       "syzygies": 6,
       "democratic": false,
@@ -9149,14 +9265,15 @@
       ],
       "rmax_pair": [
         2.012423323854,
-        2.261987455571,
-        0.9017471957907
+        2.261987108621,
+        0.901747467835
       ],
       "closest_counts": [
         0,
         0,
         2400
       ],
+      "syzygy_seq": "232323",
       "kz": 1.521588445639,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -9204,7 +9321,7 @@
       "survived_100T": 100,
       "drift_100T": 0.0001038704446462,
       "rmin": 0.8713822172205,
-      "rmax": 2.368720663393,
+      "rmax": 2.368720169482,
       "partner_swaps": 0,
       "syzygies": 6,
       "democratic": false,
@@ -9226,14 +9343,15 @@
       ],
       "rmax_pair": [
         2.06430889139,
-        0.9410848422856,
-        2.368720663393
+        0.9410848417124,
+        2.368720169482
       ],
       "closest_counts": [
         0,
         2400,
         0
       ],
+      "syzygy_seq": "131313",
       "kz": 1.557469408963,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -9281,7 +9399,7 @@
       "survived_100T": 100,
       "drift_100T": 0.0001443861746577,
       "rmin": 0.9881184036348,
-      "rmax": 2.701051100242,
+      "rmax": 2.701049068792,
       "partner_swaps": 0,
       "syzygies": 6,
       "democratic": false,
@@ -9302,15 +9420,16 @@
         1.267822394378
       ],
       "rmax_pair": [
-        2.255940798342,
-        1.066152014915,
-        2.701051100242
+        2.255940798126,
+        1.066151978706,
+        2.701049068792
       ],
       "closest_counts": [
         0,
         2400,
         0
       ],
+      "syzygy_seq": "131313",
       "kz": 1.626165959406,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -9358,7 +9477,7 @@
       "survived_100T": 100,
       "drift_100T": 0.0002382590778454,
       "rmin": 1.182113861148,
-      "rmax": 3.246312149769,
+      "rmax": 3.246307440753,
       "partner_swaps": 0,
       "syzygies": 6,
       "democratic": false,
@@ -9379,15 +9498,16 @@
         1.393495874748
       ],
       "rmax_pair": [
-        2.575609736266,
-        1.272576349138,
-        3.246312149769
+        2.575609736027,
+        1.272576615742,
+        3.246307440753
       ],
       "closest_counts": [
         0,
         2400,
         0
       ],
+      "syzygy_seq": "131313",
       "kz": 1.701659974555,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -9435,7 +9555,7 @@
       "survived_100T": 100,
       "drift_100T": 0.0001341197071436,
       "rmin": 0.8698782230035,
-      "rmax": 2.431738660316,
+      "rmax": 2.431738660035,
       "partner_swaps": 0,
       "syzygies": 6,
       "democratic": false,
@@ -9456,15 +9576,16 @@
         0.8698782230035
       ],
       "rmax_pair": [
-        2.126807799283,
-        2.431738660316,
-        0.9475697849141
+        2.126807123869,
+        2.431738660035,
+        0.9475702633311
       ],
       "closest_counts": [
         0,
         0,
         2400
       ],
+      "syzygy_seq": "323232",
       "kz": 1.369624587789,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -9512,7 +9633,7 @@
       "survived_100T": 100,
       "drift_100T": 0.0003252002927576,
       "rmin": 1.337185748557,
-      "rmax": 3.677410391398,
+      "rmax": 3.677406771583,
       "partner_swaps": 0,
       "syzygies": 6,
       "democratic": false,
@@ -9533,15 +9654,16 @@
         1.494221376943
       ],
       "rmax_pair": [
-        2.831407125886,
-        1.436567163261,
-        3.677410391398
+        2.831407125648,
+        1.436566780534,
+        3.677406771583
       ],
       "closest_counts": [
         0,
         2400,
         0
       ],
+      "syzygy_seq": "131313",
       "kz": 1.742885907975,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -9589,7 +9711,7 @@
       "survived_100T": 100,
       "drift_100T": 0.0001169914490832,
       "rmin": 0.8416254614597,
-      "rmax": 2.445870927209,
+      "rmax": 2.445870191572,
       "partner_swaps": 0,
       "syzygies": 5,
       "democratic": false,
@@ -9610,15 +9732,16 @@
         0.8416254614597
       ],
       "rmax_pair": [
-        1.963452032675,
-        2.445870927209,
-        0.9243914847775
+        1.963452029601,
+        2.445870191572,
+        0.9243914617274
       ],
       "closest_counts": [
         0,
         0,
         2400
       ],
+      "syzygy_seq": "23232",
       "kz": 1.308713427764,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -9687,15 +9810,16 @@
         1.440530801847
       ],
       "rmax_pair": [
-        2.83121470016,
+        2.831213276023,
         3.349813722305,
-        1.743098318562
+        1.743098681201
       ],
       "closest_counts": [
         0,
-        246,
-        2154
+        244,
+        2156
       ],
+      "syzygy_seq": "323",
       "kz": -0.6238204032479,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -9742,8 +9866,8 @@
       "stab_margin": 0.01708683106442,
       "survived_100T": 100,
       "drift_100T": 0.0003342490285234,
-      "rmin": 1.118479838946,
-      "rmax": 3.635753115295,
+      "rmin": 1.118479838947,
+      "rmax": 3.635748445956,
       "partner_swaps": 0,
       "syzygies": 8,
       "democratic": false,
@@ -9760,19 +9884,20 @@
       "q_rpo_perm": 4,
       "rmin_pair": [
         2.483373365879,
-        1.118479838946,
+        1.118479838947,
         1.822280238455
       ],
       "rmax_pair": [
         2.940760079485,
-        1.168278038751,
-        3.635753115295
+        1.168277854558,
+        3.635748445956
       ],
       "closest_counts": [
         0,
         2400,
         0
       ],
+      "syzygy_seq": "13131313",
       "kz": 1.880674873836,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -9820,7 +9945,7 @@
       "survived_100T": 100,
       "drift_100T": 0.0002612050554176,
       "rmin": 1.108659798145,
-      "rmax": 2.766836846822,
+      "rmax": 2.766836846034,
       "partner_swaps": 4,
       "syzygies": 3,
       "democratic": false,
@@ -9841,15 +9966,16 @@
         1.285177461884
       ],
       "rmax_pair": [
-        2.393837260106,
-        2.766836846822,
-        1.507817885632
+        2.393836560545,
+        2.766836846034,
+        1.507818405346
       ],
       "closest_counts": [
         0,
-        494,
-        1906
+        492,
+        1908
       ],
+      "syzygy_seq": "323",
       "kz": 0.1864857361551,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -9896,8 +10022,8 @@
       "stab_margin": 0.01216040113182,
       "survived_100T": 100,
       "drift_100T": 0.0001756106202705,
-      "rmin": 0.6798085538554,
-      "rmax": 2.520914679805,
+      "rmin": 0.6798085538558,
+      "rmax": 2.520910159581,
       "partner_swaps": 0,
       "syzygies": 10,
       "democratic": false,
@@ -9914,19 +10040,20 @@
       "q_rpo_perm": 5,
       "rmin_pair": [
         1.832265281983,
-        0.6798085538554,
+        0.6798085538558,
         1.609186693493
       ],
       "rmax_pair": [
-        2.288995248987,
-        0.7009795822878,
-        2.520914679805
+        2.288995247678,
+        0.7009799023944,
+        2.520910159581
       ],
       "closest_counts": [
         0,
         2400,
         0
       ],
+      "syzygy_seq": "1313131313",
       "kz": 1.889911657369,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -9974,7 +10101,7 @@
       "survived_100T": 100,
       "drift_100T": 0.0001747815387807,
       "rmin": 0.900180598682,
-      "rmax": 2.503764418334,
+      "rmax": 2.503764417277,
       "partner_swaps": 8,
       "syzygies": 3,
       "democratic": false,
@@ -9995,15 +10122,16 @@
         1.18482195795
       ],
       "rmax_pair": [
-        2.085002556693,
-        2.503764418334,
-        1.369347292488
+        2.085002504684,
+        2.503764417277,
+        1.36934748959
       ],
       "closest_counts": [
         174,
         614,
         1612
       ],
+      "syzygy_seq": "323",
       "kz": 0.765768048423,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -10051,7 +10179,7 @@
       "survived_100T": 100,
       "drift_100T": 9.572482755493e-05,
       "rmin": 0.9124417857783,
-      "rmax": 2.235022408429,
+      "rmax": 2.235022376453,
       "partner_swaps": 8,
       "syzygies": 3,
       "democratic": false,
@@ -10073,14 +10201,15 @@
       ],
       "rmax_pair": [
         2.065668660421,
-        2.235022408429,
-        1.295160913549
+        2.235022376453,
+        1.295161025271
       ],
       "closest_counts": [
         586,
         650,
         1164
       ],
+      "syzygy_seq": "232",
       "kz": 1.196580356385,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -10128,7 +10257,7 @@
       "survived_100T": 100,
       "drift_100T": 8.316231885117e-05,
       "rmin": 0.9294033999266,
-      "rmax": 2.070596661938,
+      "rmax": 2.070596599953,
       "partner_swaps": 8,
       "syzygies": 4,
       "democratic": false,
@@ -10149,15 +10278,16 @@
         1.141193199814
       ],
       "rmax_pair": [
-        2.070596661938,
-        2.070596631537,
-        1.255262928296
+        2.070596599953,
+        2.070596374109,
+        1.255262834557
       ],
       "closest_counts": [
         674,
         674,
         1052
       ],
+      "syzygy_seq": "2323",
       "kz": 1.442423170735,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -10205,7 +10335,7 @@
       "survived_100T": 100,
       "drift_100T": 9.671311825641e-05,
       "rmin": 0.8727675433854,
-      "rmax": 2.126183990861,
+      "rmax": 2.126183854678,
       "partner_swaps": 8,
       "syzygies": 4,
       "democratic": false,
@@ -10221,20 +10351,21 @@
       "q_rpo": 2,
       "q_rpo_perm": 2,
       "rmin_pair": [
-        0.979348449321,
+        0.9793484493211,
         1.126181888789,
         0.8727675433854
       ],
       "rmax_pair": [
-        1.998949432797,
-        1.250342773566,
-        2.126183990861
+        1.998949432188,
+        1.250342853012,
+        2.126183854678
       ],
       "closest_counts": [
         654,
-        1060,
-        686
+        1062,
+        684
       ],
+      "syzygy_seq": "1313",
       "kz": 1.427017426794,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -10281,8 +10412,8 @@
       "stab_margin": 0.003732367287253,
       "survived_100T": 100,
       "drift_100T": 0.0004238345127354,
-      "rmin": 0.7220603648955,
-      "rmax": 2.197264847525,
+      "rmin": 0.7220547650238,
+      "rmax": 2.197273003537,
       "partner_swaps": 22,
       "syzygies": 14,
       "democratic": false,
@@ -10298,20 +10429,21 @@
       "q_rpo": 1,
       "q_rpo_perm": 2,
       "rmin_pair": [
-        0.7220603648955,
-        0.7220603649179,
+        0.7220547650238,
+        0.7220547650497,
         1.125792191966
       ],
       "rmax_pair": [
-        2.197264847523,
-        2.197264847525,
-        1.610772539064
+        2.197272380039,
+        2.197273003537,
+        1.610762645266
       ],
       "closest_counts": [
-        990,
-        990,
-        420
+        991,
+        991,
+        418
       ],
+      "syzygy_seq": "32323232323232",
       "kz": -1.34166743448,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -10359,7 +10491,7 @@
       "survived_100T": 100,
       "drift_100T": 6.092956014443e-05,
       "rmin": 0.6149115744423,
-      "rmax": 1.931432081437,
+      "rmax": 1.931432079988,
       "partner_swaps": 8,
       "syzygies": 4,
       "democratic": false,
@@ -10380,15 +10512,16 @@
         0.8971481199646
       ],
       "rmax_pair": [
-        1.931432081437,
-        1.086341200768,
-        1.598527175218
+        1.931432079988,
+        1.086341076356,
+        1.598526505319
       ],
       "closest_counts": [
-        750,
-        916,
-        734
+        752,
+        912,
+        736
       ],
+      "syzygy_seq": "1313",
       "kz": 1.807340726192,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -10436,7 +10569,7 @@
       "survived_100T": 100,
       "drift_100T": 0.0002084133062677,
       "rmin": 1.034104780705,
-      "rmax": 3.223595945351,
+      "rmax": 3.223593867973,
       "partner_swaps": 8,
       "syzygies": 4,
       "democratic": false,
@@ -10457,15 +10590,16 @@
         1.034104780705
       ],
       "rmax_pair": [
-        1.878011615492,
-        2.800514303537,
-        3.223595945351
+        1.878012026981,
+        2.800514298257,
+        3.223593867973
       ],
       "closest_counts": [
-        712,
-        862,
+        710,
+        864,
         826
       ],
+      "syzygy_seq": "1212",
       "kz": 1.982141444496,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -10513,7 +10647,7 @@
       "survived_100T": 100,
       "drift_100T": 0.0002976135854164,
       "rmin": 1.897798585301,
-      "rmax": 4.767138161349,
+      "rmax": 4.767138160921,
       "partner_swaps": 8,
       "syzygies": 3,
       "democratic": false,
@@ -10534,15 +10668,16 @@
         1.897798585414
       ],
       "rmax_pair": [
-        2.979981443936,
-        4.767138161149,
-        4.767138161349
+        2.979981186343,
+        4.767136239104,
+        4.767138160921
       ],
       "closest_counts": [
-        652,
-        874,
-        874
+        656,
+        872,
+        872
       ],
+      "syzygy_seq": "212",
       "kz": 1.869459960965,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -10607,19 +10742,20 @@
       "q_rpo_perm": 18,
       "rmin_pair": [
         0.9838621661898,
-        1.008068916864,
+        1.008068916859,
         0.9838621661888
       ],
       "rmax_pair": [
         1.991931083094,
-        1.092098753801,
-        1.991931083093
+        1.092098706863,
+        1.991930966497
       ],
       "closest_counts": [
         225,
         1950,
         225
       ],
+      "syzygy_seq": "13131313131313131",
       "kz": -1.698133831261,
       "stable_3d": true,
       "vertical_status": "stable_3d",
@@ -10640,51 +10776,63 @@
     {
       "physics": "1pn_adm",
       "beta_inv_c2": 0.0045,
-      "beta_eff_v2c2": 0.00262733770837,
-      "beta_max_v2c2": 0.008631314003567,
+      "beta_eff_v2c2": 0.00262702647883,
+      "beta_max_v2c2": 0.008647525385685,
       "dim": 3,
-      "subspace": "1pn_3d_delta14_stabilized",
+      "subspace": "1pn_3d_delta14_12fold",
       "masses": [
         1,
         1,
         0.5
       ],
       "z0_canonical": [
-        -1.000458867719,
+        -1.000464305202,
         0,
         0,
-        0.9478756492759,
+        0.9479176264411,
         0,
         0,
-        0.1028720982916,
+        0.1027718315106,
         0,
         0,
         0,
-        0.2256435222116,
-        3.775165034724e-09,
+        0.2164508095717,
+        1.972475514549e-09,
         0,
-        -0.476659262652,
-        0.6782282718796,
+        -0.4891507139972,
+        0.6705490466277,
         0,
-        0.2510157487446,
-        -0.6782282662112
+        0.272699908713,
+        -0.670549043666
       ],
-      "T": 18.51291476027,
-      "precess_rad": -3.683336715738,
-      "E": -0.6889004618832,
-      "L": 0.8678781198052,
-      "ret_err": 4.03405993369e-12,
-      "k1": 1.95472873139,
-      "k2": 1.128956446317,
-      "k3": -1.939833071286,
-      "stab_margin": 0.04527126860951,
-      "thickness_3d": 0.1937870390281,
+      "T": 222.2147520482,
+      "T_rpo": 18.51789600402,
+      "q_fold": 12,
+      "precess_rad": -3.665191429188,
+      "E": -0.689040566219,
+      "L": 0.8640179556581,
+      "ret_err": 2.7145385891e-10,
+      "k1": -0.5533500895892,
+      "k2": -1.430360902956,
+      "k3": -1.892991959138,
+      "stab_margin": 0.1070080408625,
+      "thickness_3d": 0.2319098750813,
       "survived_100T": 100,
-      "drift_100T": 0.002435292155231,
-      "rmin": 0.8450035509842,
-      "rmax": 2.321786125986,
-      "partner_swaps": 14,
+      "drift_100T": 0.003226685340479,
+      "rmin": 0.8451457949305,
+      "rmax": 2.323588049583,
+      "partner_swaps": 168,
       "democratic": true,
+      "dH": 1.34370596247e-14,
+      "symp_err": 5.266862366793e-07,
+      "monodromy_method": "80bit_1pn_canonical",
+      "rpo_stab_margin": 0.02374928973875,
+      "rpo_k": [
+        1.961196552684,
+        1.374963994465,
+        -1.976250710261
+      ],
+      "stable_3d": true,
       "id": "1PN-001"
     },
     {
@@ -10723,323 +10871,31 @@
       "T_rpo": 18.48846402162,
       "q_fold": 17,
       "precess_rad": -3.695991357164,
-      "E": -0.6898483378872,
-      "L": 0.8669324512989,
-      "ret_err": 1.421760780823e-09,
-      "k1": 1.959049556138,
-      "k2": 0.9616827519576,
-      "k3": -1.900846259307,
-      "stab_margin": 0.04095044386162,
-      "thickness_3d": 0.1957517596497,
+      "E": -0.6898483378874,
+      "L": 0.8669324512988,
+      "ret_err": 1.971485166174e-10,
+      "k1": 1.563342430967,
+      "k2": -1.231057017223,
+      "k3": -1.908024399059,
+      "stab_margin": 0.09197560094119,
+      "thickness_3d": 0.2471390076833,
       "survived_100T": 100,
       "drift_100T": 0.002427094772343,
       "rmin": 0.8448353049203,
-      "rmax": 2.321124380049,
+      "rmax": 2.321124299171,
       "partner_swaps": 238,
       "democratic": true,
+      "dH": 1.945774270873e-14,
+      "symp_err": 4.198137804945e-06,
+      "monodromy_method": "80bit_1pn_canonical",
+      "rpo_stab_margin": 0.0409501095303,
+      "rpo_k": [
+        1.95904989047,
+        0.9616826754383,
+        -1.900846190792
+      ],
+      "stable_3d": true,
       "id": "1PN-002"
-    },
-    {
-      "physics": "1pn_adm",
-      "beta_inv_c2": 0.0045,
-      "beta_eff_v2c2": 0.002627135745306,
-      "beta_max_v2c2": 0.008642309640127,
-      "dim": 3,
-      "subspace": "1pn_3d_delta14",
-      "masses": [
-        1,
-        1,
-        0.5
-      ],
-      "z0_canonical": [
-        -1.000462525254,
-        0,
-        0,
-        0.9478921311336,
-        0,
-        0,
-        0.1028281619695,
-        0,
-        0,
-        0,
-        0.2194948490136,
-        2.515047861513e-09,
-        0,
-        -0.4849088222411,
-        0.6732282706106,
-        0,
-        0.2654139787178,
-        -0.6732282668342
-      ],
-      "T": 18.51615330739,
-      "precess_rad": -3.671266949876,
-      "E": -0.6889955762057,
-      "L": 0.8652768981879,
-      "ret_err": 5.041409886045e-12,
-      "k1": 1.958918219251,
-      "k2": 1.296294061011,
-      "k3": -1.966842590793,
-      "stab_margin": 0.03315740920671,
-      "thickness_3d": 0.1882664545999,
-      "survived_100T": 100,
-      "drift_100T": 0.002924578811353,
-      "rmin": 0.8450639691641,
-      "rmax": 2.323001667006,
-      "partner_swaps": 14,
-      "democratic": true,
-      "id": "1PN-003"
-    },
-    {
-      "physics": "1pn_adm",
-      "beta_inv_c2": 0.003,
-      "beta_eff_v2c2": 0.001766591163181,
-      "beta_max_v2c2": 0.005851250590767,
-      "dim": 3,
-      "subspace": "1pn_3d_delta14_stabilized",
-      "masses": [
-        1,
-        1,
-        0.5
-      ],
-      "z0_canonical": [
-        -1.000300520984,
-        0,
-        0,
-        0.9478824691498,
-        0,
-        0,
-        0.1033334987491,
-        0,
-        0,
-        0,
-        0.2291716923658,
-        2.487257924008e-09,
-        0,
-        -0.4666691336771,
-        0.6782282705892,
-        0,
-        0.237497446818,
-        -0.6782282668558
-      ],
-      "T": 18.44009690032,
-      "precess_rad": -3.716833193576,
-      "E": -0.6917668943796,
-      "L": 0.8641560649144,
-      "ret_err": 3.405980721211e-12,
-      "k1": 1.96794605985,
-      "k2": 0.6810583653275,
-      "k3": -1.815079088362,
-      "stab_margin": 0.03205394014966,
-      "thickness_3d": 0.1977114845782,
-      "survived_100T": 100,
-      "drift_100T": 0.002574419600822,
-      "rmin": 0.8445489704006,
-      "rmax": 2.320193007575,
-      "partner_swaps": 14,
-      "democratic": true,
-      "id": "1PN-004"
-    },
-    {
-      "physics": "1pn_adm",
-      "beta_inv_c2": 0.003,
-      "beta_eff_v2c2": 0.001766514477498,
-      "beta_max_v2c2": 0.005859705502831,
-      "dim": 3,
-      "subspace": "1pn_3d_delta14",
-      "masses": [
-        1,
-        1,
-        0.5
-      ],
-      "z0_canonical": [
-        -1.000303183269,
-        0,
-        0,
-        0.9478606129838,
-        0,
-        0,
-        0.1033692242252,
-        0,
-        0,
-        0,
-        0.2224569747708,
-        1.81074485351e-09,
-        0,
-        -0.475280126042,
-        0.6732282699047,
-        0,
-        0.2528231552514,
-        -0.6732282671868
-      ],
-      "T": 18.4424761091,
-      "precess_rad": -3.704004286023,
-      "E": -0.6918981553496,
-      "L": 0.8612193324936,
-      "ret_err": 3.766095405026e-12,
-      "k1": 1.969752779647,
-      "k2": 0.8869151345107,
-      "k3": -1.877019813195,
-      "stab_margin": 0.0302472203527,
-      "thickness_3d": 0.19177036754,
-      "survived_100T": 100,
-      "drift_100T": 0.002884532423398,
-      "rmin": 0.8444913887586,
-      "rmax": 2.32165058697,
-      "partner_swaps": 14,
-      "democratic": true,
-      "id": "1PN-005"
-    },
-    {
-      "physics": "1pn_adm",
-      "beta_inv_c2": 0.0045,
-      "beta_eff_v2c2": 0.00262702647883,
-      "beta_max_v2c2": 0.008647525385685,
-      "dim": 3,
-      "subspace": "1pn_3d_delta14_12fold",
-      "masses": [
-        1,
-        1,
-        0.5
-      ],
-      "z0_canonical": [
-        -1.000464305202,
-        0,
-        0,
-        0.9479176264411,
-        0,
-        0,
-        0.1027718315106,
-        0,
-        0,
-        0,
-        0.2164508095717,
-        1.972475514549e-09,
-        0,
-        -0.4891507139972,
-        0.6705490466277,
-        0,
-        0.272699908713,
-        -0.670549043666
-      ],
-      "T": 222.2147520482,
-      "T_rpo": 18.51789600402,
-      "q_fold": 12,
-      "precess_rad": -3.665191429188,
-      "E": -0.6890405662187,
-      "L": 0.8640179556582,
-      "ret_err": 1.018587055255e-09,
-      "k1": 1.961196149625,
-      "k2": 1.374963960111,
-      "k3": -1.976250669115,
-      "stab_margin": 0.0237493308851,
-      "thickness_3d": 0.1854846012813,
-      "survived_100T": 100,
-      "drift_100T": 0.003226685340479,
-      "rmin": 0.8451457949305,
-      "rmax": 2.323588080073,
-      "partner_swaps": 168,
-      "democratic": true,
-      "id": "1PN-006"
-    },
-    {
-      "physics": "1pn_adm",
-      "beta_inv_c2": 0.0015,
-      "beta_eff_v2c2": 0.0008908913022885,
-      "beta_max_v2c2": 0.00297852896431,
-      "dim": 3,
-      "subspace": "1pn_3d_delta14",
-      "masses": [
-        1,
-        1,
-        0.5
-      ],
-      "z0_canonical": [
-        -1.000149001411,
-        0,
-        0,
-        0.94787853072,
-        0,
-        0,
-        0.1037959343276,
-        0,
-        0,
-        0,
-        0.2257363900596,
-        6.263831655798e-10,
-        0,
-        -0.4655576487495,
-        0.6732282687192,
-        0,
-        0.2398212600759,
-        -0.6732282677793
-      ],
-      "T": 18.36784310702,
-      "precess_rad": -3.736616229165,
-      "E": -0.6947424674256,
-      "L": 0.8574972839343,
-      "ret_err": 3.476306211087e-12,
-      "k1": 1.979177236607,
-      "k2": 0.4396289017678,
-      "k3": -1.723486697269,
-      "stab_margin": 0.02082276339251,
-      "thickness_3d": 0.1954629681776,
-      "survived_100T": 100,
-      "drift_100T": 0.002508060198606,
-      "rmin": 0.8440825963924,
-      "rmax": 2.320064649291,
-      "partner_swaps": 14,
-      "democratic": true,
-      "id": "1PN-007"
-    },
-    {
-      "physics": "1pn_adm",
-      "beta_inv_c2": 0.0015,
-      "beta_eff_v2c2": 0.0008908962533536,
-      "beta_max_v2c2": 0.002973585121357,
-      "dim": 3,
-      "subspace": "1pn_3d_delta14_stabilized",
-      "masses": [
-        1,
-        1,
-        0.5
-      ],
-      "z0_canonical": [
-        -1.000147531344,
-        0,
-        0,
-        0.9479455015682,
-        0,
-        0,
-        0.1036664028319,
-        0,
-        0,
-        0,
-        0.2331408779411,
-        8.386794920655e-10,
-        0,
-        -0.4565283984637,
-        0.678228268939,
-        0,
-        0.2233875223908,
-        -0.6782282676806
-      ],
-      "T": 18.36639115022,
-      "precess_rad": -3.750381239686,
-      "E": -0.6945695130869,
-      "L": 0.8608454202953,
-      "ret_err": 3.233564134333e-12,
-      "k1": 1.982572823539,
-      "k2": 0.1973681772523,
-      "k3": -1.605528832023,
-      "stab_margin": 0.0174271764605,
-      "thickness_3d": 0.2019090520533,
-      "survived_100T": 100,
-      "drift_100T": 0.002735832078159,
-      "rmin": 0.8442790987363,
-      "rmax": 2.318297758888,
-      "partner_swaps": 14,
-      "democratic": true,
-      "id": "1PN-008"
     },
     {
       "physics": "1pn_adm",
@@ -11077,20 +10933,354 @@
       "T_rpo": 18.34137286999,
       "q_fold": 5,
       "precess_rad": -3.769911184308,
-      "E": -0.6953684880687,
-      "L": 0.8620038137383,
-      "ret_err": 1.76289472175e-10,
-      "k1": 1.997463445677,
-      "k2": -0.13123136367,
-      "k3": -1.392742941027,
-      "stab_margin": 0.002536554322599,
-      "thickness_3d": 0.2072698476423,
+      "E": -0.6953684880688,
+      "L": 0.8620038137382,
+      "ret_err": 5.942250658605e-11,
+      "k1": 1.936904048859,
+      "k2": 1.303747540963,
+      "k3": -0.6448954694304,
+      "stab_margin": 0.06309595114086,
+      "thickness_3d": 0.2664979477522,
       "survived_100T": 100,
       "drift_100T": 0.006140421828331,
       "rmin": 0.844481790733,
-      "rmax": 2.316410189565,
+      "rmax": 2.316409279254,
       "partner_swaps": 70,
       "democratic": true,
+      "dH": 6.011033684694e-15,
+      "symp_err": 1.520827001555e-07,
+      "monodromy_method": "80bit_1pn_canonical",
+      "rpo_stab_margin": 0.002536687936979,
+      "rpo_k": [
+        1.997463312063,
+        -0.1312313256851,
+        -1.392742917905
+      ],
+      "stable_3d": true,
+      "id": "1PN-003"
+    },
+    {
+      "physics": "1pn_adm",
+      "beta_inv_c2": 0.0045,
+      "beta_eff_v2c2": 0.00262733770837,
+      "beta_max_v2c2": 0.008631314003567,
+      "dim": 3,
+      "subspace": "1pn_3d_delta14_stabilized",
+      "masses": [
+        1,
+        1,
+        0.5
+      ],
+      "z0_canonical": [
+        -1.000458867719,
+        0,
+        0,
+        0.9478756492759,
+        0,
+        0,
+        0.1028720982916,
+        0,
+        0,
+        0,
+        0.2256435222116,
+        3.775165034724e-09,
+        0,
+        -0.476659262652,
+        0.6782282718796,
+        0,
+        0.2510157487446,
+        -0.6782282662112
+      ],
+      "T": 18.51291476027,
+      "precess_rad": -3.683336715738,
+      "E": -0.688900461883,
+      "L": 0.8678781198053,
+      "ret_err": 2.316656987539e-11,
+      "k1": 1.954728898981,
+      "k2": 1.128956432195,
+      "k3": -1.939833072006,
+      "stab_margin": 0.04527110101889,
+      "thickness_3d": 0.1937205822374,
+      "survived_100T": 100,
+      "drift_100T": 0.002435292155231,
+      "rmin": 0.8450035509843,
+      "rmax": 2.321786048517,
+      "partner_swaps": 14,
+      "democratic": true,
+      "dH": 1.036605697113e-15,
+      "symp_err": 6.767345104436e-09,
+      "monodromy_method": "80bit_1pn_canonical",
+      "stable_3d": true,
+      "id": "1PN-004"
+    },
+    {
+      "physics": "1pn_adm",
+      "beta_inv_c2": 0.0045,
+      "beta_eff_v2c2": 0.002627135745306,
+      "beta_max_v2c2": 0.008642309640127,
+      "dim": 3,
+      "subspace": "1pn_3d_delta14",
+      "masses": [
+        1,
+        1,
+        0.5
+      ],
+      "z0_canonical": [
+        -1.000462525254,
+        0,
+        0,
+        0.9478921311336,
+        0,
+        0,
+        0.1028281619695,
+        0,
+        0,
+        0,
+        0.2194948490136,
+        2.515047861513e-09,
+        0,
+        -0.4849088222411,
+        0.6732282706106,
+        0,
+        0.2654139787178,
+        -0.6732282668342
+      ],
+      "T": 18.51615330739,
+      "precess_rad": -3.671266949876,
+      "E": -0.688995576206,
+      "L": 0.8652768981878,
+      "ret_err": 4.022534935918e-11,
+      "k1": 1.958918983053,
+      "k2": 1.296294120691,
+      "k3": -1.966842500045,
+      "stab_margin": 0.03315749995494,
+      "thickness_3d": 0.1882129759023,
+      "survived_100T": 100,
+      "drift_100T": 0.002924578811353,
+      "rmin": 0.8450639691641,
+      "rmax": 2.322989352584,
+      "partner_swaps": 14,
+      "democratic": true,
+      "dH": 1.02847418082e-15,
+      "symp_err": 9.222874801981e-09,
+      "monodromy_method": "80bit_1pn_canonical",
+      "stable_3d": true,
+      "id": "1PN-005"
+    },
+    {
+      "physics": "1pn_adm",
+      "beta_inv_c2": 0.003,
+      "beta_eff_v2c2": 0.001766591163181,
+      "beta_max_v2c2": 0.005851250590767,
+      "dim": 3,
+      "subspace": "1pn_3d_delta14_stabilized",
+      "masses": [
+        1,
+        1,
+        0.5
+      ],
+      "z0_canonical": [
+        -1.000300520984,
+        0,
+        0,
+        0.9478824691498,
+        0,
+        0,
+        0.1033334987491,
+        0,
+        0,
+        0,
+        0.2291716923658,
+        2.487257924008e-09,
+        0,
+        -0.4666691336771,
+        0.6782282705892,
+        0,
+        0.237497446818,
+        -0.6782282668558
+      ],
+      "T": 18.44009690032,
+      "precess_rad": -3.716833193576,
+      "E": -0.6917668943794,
+      "L": 0.8641560649145,
+      "ret_err": 8.97287495357e-12,
+      "k1": 1.967945991243,
+      "k2": 0.6810584058009,
+      "k3": -1.815079046609,
+      "stab_margin": 0.03205400875739,
+      "thickness_3d": 0.1976277580218,
+      "survived_100T": 100,
+      "drift_100T": 0.002574419600822,
+      "rmin": 0.8445489704007,
+      "rmax": 2.320192680825,
+      "partner_swaps": 14,
+      "democratic": true,
+      "dH": 1.074064882173e-15,
+      "symp_err": 8.05088596614e-09,
+      "monodromy_method": "80bit_1pn_canonical",
+      "stable_3d": true,
+      "id": "1PN-006"
+    },
+    {
+      "physics": "1pn_adm",
+      "beta_inv_c2": 0.003,
+      "beta_eff_v2c2": 0.001766514477498,
+      "beta_max_v2c2": 0.005859705502831,
+      "dim": 3,
+      "subspace": "1pn_3d_delta14",
+      "masses": [
+        1,
+        1,
+        0.5
+      ],
+      "z0_canonical": [
+        -1.000303183269,
+        0,
+        0,
+        0.9478606129838,
+        0,
+        0,
+        0.1033692242252,
+        0,
+        0,
+        0,
+        0.2224569747708,
+        1.81074485351e-09,
+        0,
+        -0.475280126042,
+        0.6732282699047,
+        0,
+        0.2528231552514,
+        -0.6732282671868
+      ],
+      "T": 18.4424761091,
+      "precess_rad": -3.704004286023,
+      "E": -0.6918981553497,
+      "L": 0.8612193324936,
+      "ret_err": 3.810066759541e-12,
+      "k1": 1.969752285546,
+      "k2": 0.8869152041148,
+      "k3": -1.877019760571,
+      "stab_margin": 0.03024771445419,
+      "thickness_3d": 0.1917011703463,
+      "survived_100T": 100,
+      "drift_100T": 0.002884532423398,
+      "rmin": 0.8444913887586,
+      "rmax": 2.321640200223,
+      "partner_swaps": 14,
+      "democratic": true,
+      "dH": 1.064903373815e-15,
+      "symp_err": 7.422623245212e-09,
+      "monodromy_method": "80bit_1pn_canonical",
+      "stable_3d": true,
+      "id": "1PN-007"
+    },
+    {
+      "physics": "1pn_adm",
+      "beta_inv_c2": 0.0015,
+      "beta_eff_v2c2": 0.0008908913022885,
+      "beta_max_v2c2": 0.00297852896431,
+      "dim": 3,
+      "subspace": "1pn_3d_delta14",
+      "masses": [
+        1,
+        1,
+        0.5
+      ],
+      "z0_canonical": [
+        -1.000149001411,
+        0,
+        0,
+        0.94787853072,
+        0,
+        0,
+        0.1037959343276,
+        0,
+        0,
+        0,
+        0.2257363900596,
+        6.263831655798e-10,
+        0,
+        -0.4655576487495,
+        0.6732282687192,
+        0,
+        0.2398212600759,
+        -0.6732282677793
+      ],
+      "T": 18.36784310702,
+      "precess_rad": -3.736616229165,
+      "E": -0.6947424674255,
+      "L": 0.8574972839344,
+      "ret_err": 3.914389345367e-12,
+      "k1": 1.979176767932,
+      "k2": 0.4396289945131,
+      "k3": -1.723486750938,
+      "stab_margin": 0.02082323206829,
+      "thickness_3d": 0.1953772232155,
+      "survived_100T": 100,
+      "drift_100T": 0.002508060198606,
+      "rmin": 0.8440825963924,
+      "rmax": 2.320055173327,
+      "partner_swaps": 14,
+      "democratic": true,
+      "dH": 1.100248364638e-15,
+      "symp_err": 1.235815970564e-08,
+      "monodromy_method": "80bit_1pn_canonical",
+      "stable_3d": true,
+      "id": "1PN-008"
+    },
+    {
+      "physics": "1pn_adm",
+      "beta_inv_c2": 0.0015,
+      "beta_eff_v2c2": 0.0008908962533536,
+      "beta_max_v2c2": 0.002973585121357,
+      "dim": 3,
+      "subspace": "1pn_3d_delta14_stabilized",
+      "masses": [
+        1,
+        1,
+        0.5
+      ],
+      "z0_canonical": [
+        -1.000147531344,
+        0,
+        0,
+        0.9479455015682,
+        0,
+        0,
+        0.1036664028319,
+        0,
+        0,
+        0,
+        0.2331408779411,
+        8.386794920655e-10,
+        0,
+        -0.4565283984637,
+        0.678228268939,
+        0,
+        0.2233875223908,
+        -0.6782282676806
+      ],
+      "T": 18.36639115022,
+      "precess_rad": -3.750381239686,
+      "E": -0.6945695130868,
+      "L": 0.8608454202953,
+      "ret_err": 7.718018575189e-12,
+      "k1": 1.982572722958,
+      "k2": 0.1973682766362,
+      "k3": -1.605528813933,
+      "stab_margin": 0.01742727704224,
+      "thickness_3d": 0.2018069259752,
+      "survived_100T": 100,
+      "drift_100T": 0.002735832078159,
+      "rmin": 0.8442790987363,
+      "rmax": 2.318294418317,
+      "partner_swaps": 14,
+      "democratic": true,
+      "dH": 1.108921982018e-15,
+      "symp_err": 1.182791339177e-08,
+      "monodromy_method": "80bit_1pn_canonical",
+      "stable_3d": true,
       "id": "1PN-009"
     },
     {
@@ -11123,18 +11313,22 @@
       "precess_rad": 1.010114121105e-13,
       "E": -1.245804598742,
       "L": 0,
-      "ret_err": 1.363838240141e-12,
-      "k1": 0.6122125779512,
-      "k2": 0.245964686605,
-      "kz": 2.000000155459,
+      "ret_err": 2.148599062506e-11,
+      "k1": 0.6122172680141,
+      "k2": 0.2459609065961,
+      "kz": 2.000000155454,
       "stable_3d": false,
-      "stab_margin": 1.387787422049,
+      "stab_margin": 1.387782731986,
       "survived_100T": 100,
       "drift_100T": 0.1118952189807,
-      "rmin": 0.6976709508455,
-      "rmax": 2.001235135395,
-      "partner_swaps": 5,
+      "rmin": 0.697588287554,
+      "rmax": 2.001300726353,
+      "partner_swaps": 6,
       "democratic": true,
+      "dH": 1.930389442045e-14,
+      "symp_err": 3.706013725069e-09,
+      "monodromy_method": "80bit_1pn_canonical",
+      "vertical_status": "degenerate_L0",
       "id": "1PN-010"
     },
     {
@@ -11165,20 +11359,24 @@
       ],
       "T": 6.501089047506,
       "precess_rad": 3.798421013665e-14,
-      "E": -1.246735513451,
+      "E": -1.24673551345,
       "L": 0,
-      "ret_err": 1.366448482208e-12,
-      "k1": 0.6128198898233,
-      "k2": 0.2442452924913,
-      "kz": 2.000000155851,
+      "ret_err": 1.390449677793e-11,
+      "k1": 0.6128246344518,
+      "k2": 0.2442415872962,
+      "kz": 2.000000155845,
       "stable_3d": false,
-      "stab_margin": 1.387180110177,
+      "stab_margin": 1.387175365548,
       "survived_100T": 100,
       "drift_100T": 0.1119590158158,
-      "rmin": 0.6990095834254,
-      "rmax": 2.00000000013,
+      "rmin": 0.6990096674676,
+      "rmax": 2.000000000002,
       "partner_swaps": 5,
       "democratic": true,
+      "dH": 1.932373532021e-14,
+      "symp_err": 7.267703286407e-09,
+      "monodromy_method": "80bit_1pn_canonical",
+      "vertical_status": "degenerate_L0",
       "id": "1PN-011"
     },
     {
@@ -11209,20 +11407,24 @@
       ],
       "T": 24.52637398725,
       "precess_rad": -0.07415919560768,
-      "E": -0.6916736367499,
-      "L": -0.8502061751873,
-      "ret_err": 2.84907798459e-12,
-      "k1": -0.5523436931685,
-      "k2": -0.7056842475121,
-      "kz": -1.902983703839,
+      "E": -0.6916736367502,
+      "L": -0.8502061751872,
+      "ret_err": 3.645787401896e-11,
+      "k1": -0.5523435977799,
+      "k2": -0.7056843505208,
+      "kz": -1.90298370388,
       "stable_3d": true,
-      "stab_margin": 1.294315752488,
+      "stab_margin": 1.294315649479,
       "survived_100T": 100,
       "drift_100T": 0.1967200592878,
       "rmin": 0.9824374187566,
-      "rmax": 2.351499136879,
+      "rmax": 2.351498698569,
       "partner_swaps": 14,
       "democratic": true,
+      "dH": 2.013905535392e-16,
+      "symp_err": 7.539966468892e-09,
+      "monodromy_method": "80bit_1pn_canonical",
+      "vertical_status": "stable_3d",
       "id": "1PN-012"
     },
     {
@@ -11255,18 +11457,22 @@
       "precess_rad": 5.418114343087e-12,
       "E": -1.176184043493,
       "L": 0,
-      "ret_err": 1.819631250719e-12,
-      "k1": 1.027809755782,
-      "k2": 0.5000201031978,
-      "kz": 2.000000049742,
+      "ret_err": 1.824389017157e-11,
+      "k1": 1.027810577523,
+      "k2": 0.5000193078616,
+      "kz": 2.000000049758,
       "stable_3d": false,
-      "stab_margin": 0.9721902442184,
+      "stab_margin": 0.9721894224765,
       "survived_100T": 100,
       "drift_100T": 0.1472396149512,
-      "rmin": 0.5598094494261,
-      "rmax": 2.088777715023,
-      "partner_swaps": 5,
+      "rmin": 0.5598025493816,
+      "rmax": 2.088809104672,
+      "partner_swaps": 6,
       "democratic": true,
+      "dH": 1.978040127526e-14,
+      "symp_err": 4.891683391683e-09,
+      "monodromy_method": "80bit_1pn_canonical",
+      "vertical_status": "degenerate_L0",
       "id": "1PN-013"
     },
     {
@@ -11299,18 +11505,22 @@
       "precess_rad": 4.846848446862e-12,
       "E": -1.164926282629,
       "L": 0,
-      "ret_err": 1.795344940768e-12,
-      "k1": 1.195096199345,
-      "k2": -0.8618638740371,
-      "kz": 2.00000027662,
+      "ret_err": 1.982781659754e-11,
+      "k1": 1.195099855276,
+      "k2": -0.8618652868925,
+      "kz": 2.000000276629,
       "stable_3d": false,
-      "stab_margin": 0.8049038006554,
+      "stab_margin": 0.8049001447238,
       "survived_100T": 100,
       "drift_100T": 0.1763020428873,
-      "rmin": 0.58887377172,
-      "rmax": 2.078367155247,
-      "partner_swaps": 5,
+      "rmin": 0.5887490021257,
+      "rmax": 2.078480262507,
+      "partner_swaps": 6,
       "democratic": true,
+      "dH": 1.961614464613e-14,
+      "symp_err": 7.992692008241e-09,
+      "monodromy_method": "80bit_1pn_canonical",
+      "vertical_status": "degenerate_L0",
       "id": "1PN-014"
     },
     {
@@ -11343,18 +11553,22 @@
       "precess_rad": -0.1506925255645,
       "E": -0.6874338125418,
       "L": -0.8571812576381,
-      "ret_err": 2.820486934748e-12,
-      "k1": -0.985296769957,
-      "k2": -1.251303517156,
-      "kz": -1.888774959382,
+      "ret_err": 3.803238213951e-12,
+      "k1": -0.9852966915616,
+      "k2": -1.251303653129,
+      "kz": -1.88877495939,
       "stable_3d": true,
-      "stab_margin": 0.7486964828437,
+      "stab_margin": 0.7486963468711,
       "survived_100T": 100,
       "drift_100T": 0.2028930679532,
       "rmin": 0.9824374187566,
-      "rmax": 2.351445417559,
+      "rmax": 2.351445106465,
       "partner_swaps": 14,
       "democratic": true,
+      "dH": 2.404218317487e-16,
+      "symp_err": 1.419114022128e-08,
+      "monodromy_method": "80bit_1pn_canonical",
+      "vertical_status": "stable_3d",
       "id": "1PN-015"
     },
     {
@@ -11385,20 +11599,24 @@
       ],
       "T": 6.590561844724,
       "precess_rad": -2.839209720183e-13,
-      "E": -1.224665451766,
+      "E": -1.224665451767,
       "L": 0,
-      "ret_err": 1.534968273795e-12,
-      "k1": 1.137414575091,
-      "k2": -1.303342042557,
-      "kz": 2.000000872806,
+      "ret_err": 2.763192022659e-11,
+      "k1": 1.137425487675,
+      "k2": -1.303345005318,
+      "kz": 2.0000008728,
       "stable_3d": false,
-      "stab_margin": 0.6966579574432,
+      "stab_margin": 0.6966549946818,
       "survived_100T": 100,
       "drift_100T": 0.1656000768906,
-      "rmin": 0.703480817886,
-      "rmax": 2.000000000127,
-      "partner_swaps": 5,
+      "rmin": 0.7034809059383,
+      "rmax": 2.000000000001,
+      "partner_swaps": 6,
       "democratic": true,
+      "dH": 1.773407809491e-14,
+      "symp_err": 6.934734689268e-09,
+      "monodromy_method": "80bit_1pn_canonical",
+      "vertical_status": "degenerate_L0",
       "id": "1PN-016"
     },
     {
@@ -11431,18 +11649,22 @@
       "precess_rad": 4.374526070089e-13,
       "E": -1.267512208547,
       "L": 0,
-      "ret_err": 1.331000875277e-12,
-      "k1": 1.498653651894,
-      "k2": 0.02651586870111,
-      "kz": 2.000000008838,
+      "ret_err": 2.239021915064e-11,
+      "k1": 1.498653612982,
+      "k2": 0.02651580563402,
+      "kz": 2.000000008833,
       "stable_3d": false,
-      "stab_margin": 0.5013463481056,
+      "stab_margin": 0.501346387018,
       "survived_100T": 100,
       "drift_100T": 0.08495052493031,
-      "rmin": 0.6946931447082,
-      "rmax": 2.000000000134,
-      "partner_swaps": 5,
+      "rmin": 0.6946934380623,
+      "rmax": 2.000000000001,
+      "partner_swaps": 6,
       "democratic": true,
+      "dH": 2.099991187887e-14,
+      "symp_err": 3.334377971648e-09,
+      "monodromy_method": "80bit_1pn_canonical",
+      "vertical_status": "degenerate_L0",
       "id": "1PN-017"
     },
     {
@@ -11475,65 +11697,23 @@
       "precess_rad": 4.498361921509e-13,
       "E": -1.26605956431,
       "L": 0,
-      "ret_err": 1.324386194112e-12,
-      "k1": 1.499600894003,
-      "k2": 0.0261927443982,
-      "kz": 2.000000008802,
+      "ret_err": 2.530912035047e-11,
+      "k1": 1.499600906416,
+      "k2": 0.02619282569399,
+      "kz": 2.000000008797,
       "stable_3d": false,
-      "stab_margin": 0.5003991059968,
+      "stab_margin": 0.5003990935839,
       "survived_100T": 100,
       "drift_100T": 0.08493596123757,
-      "rmin": 0.6920069939503,
-      "rmax": 2.002432019446,
-      "partner_swaps": 5,
+      "rmin": 0.6919184762613,
+      "rmax": 2.002482823736,
+      "partner_swaps": 6,
       "democratic": true,
+      "dH": 2.09586037761e-14,
+      "symp_err": 4.584072677873e-09,
+      "monodromy_method": "80bit_1pn_canonical",
+      "vertical_status": "degenerate_L0",
       "id": "1PN-018"
-    },
-    {
-      "physics": "1pn_adm",
-      "beta_inv_c2": 0.01516316974371,
-      "beta_eff_v2c2": 0.00835415904736,
-      "beta_max_v2c2": 0.02574893181939,
-      "dim": 2,
-      "subspace": "1pn_2d_dem001_10fold",
-      "masses": [
-        1,
-        1,
-        0.5
-      ],
-      "z0_canonical": [
-        -1.001973444555,
-        0,
-        0.9921723616968,
-        0,
-        0.009734942940237,
-        0,
-        0,
-        0.08061586296235,
-        0,
-        -0.8343783752035,
-        0,
-        0.7537625122411
-      ],
-      "T": 256.7602340919,
-      "T_rpo": 25.67602340919,
-      "q_fold": 10,
-      "precess_rad": -0.628318530718,
-      "E": -0.660993590519,
-      "L": -0.9012842819255,
-      "ret_err": 5.613241346289e-10,
-      "k1": -1.534519665253,
-      "k2": -1.622895581991,
-      "kz": -1.785546558845,
-      "stable_3d": true,
-      "stab_margin": 0.3771044180094,
-      "survived_100T": 100,
-      "drift_100T": 0.2539714537638,
-      "rmin": 0.9824374187566,
-      "rmax": 2.350205052458,
-      "partner_swaps": 140,
-      "democratic": true,
-      "id": "1PN-019"
     },
     {
       "physics": "1pn_adm",
@@ -11565,21 +11745,31 @@
       "T_rpo": 24.91290461966,
       "q_fold": 25,
       "precess_rad": -0.2513274122872,
-      "E": -0.6818643242536,
-      "L": -0.8663911251019,
-      "ret_err": 8.393846535525e-10,
-      "k1": -1.485940178048,
-      "k2": -1.816962215295,
-      "kz": -1.869003456272,
+      "E": -0.6818643242538,
+      "L": -0.8663911251018,
+      "ret_err": 7.35332841093e-10,
+      "k1": 0.4297286520405,
+      "k2": -1.738545645262,
+      "kz": 1.894478122524,
       "stable_3d": true,
-      "stab_margin": 0.1830377847052,
+      "stab_margin": 0.2614543547375,
       "survived_100T": 100,
       "drift_100T": 0.2115313842659,
-      "rmin": 0.9824374187566,
-      "rmax": 2.351314120097,
+      "rmin": 0.9824374187565,
+      "rmax": 2.351314119982,
       "partner_swaps": 350,
       "democratic": true,
-      "id": "1PN-020"
+      "dH": 6.080259993407e-15,
+      "symp_err": 2.647977625325e-05,
+      "monodromy_method": "80bit_1pn_canonical",
+      "rpo_stab_margin": 0.1830376560522,
+      "rpo_k": [
+        -1.485940075325,
+        -1.816962343948,
+        -1.869003456324
+      ],
+      "vertical_status": "stable_3d",
+      "id": "1PN-019"
     },
     {
       "physics": "1pn_adm",
@@ -11611,542 +11801,82 @@
       "precess_rad": 2.50338347468e-12,
       "E": -1.201127093114,
       "L": 0,
-      "ret_err": 1.779593003455e-12,
-      "k1": 1.570120667199,
-      "k2": -1.964522549863,
-      "kz": 2.000003063989,
+      "ret_err": 1.310197748951e-11,
+      "k1": 1.570181029527,
+      "k2": -1.964528828555,
+      "kz": 2.000003063984,
       "stable_3d": false,
-      "stab_margin": 0.03547745013719,
+      "stab_margin": 0.03547117144475,
       "survived_100T": 100,
       "drift_100T": 0.3285444545982,
-      "rmin": 0.70811184653,
-      "rmax": 2.000000000126,
+      "rmin": 0.7081124965032,
+      "rmax": 2.000000000002,
       "partner_swaps": 5,
       "democratic": true,
+      "dH": 1.621218350539e-14,
+      "symp_err": 8.329954781505e-09,
+      "monodromy_method": "80bit_1pn_canonical",
+      "vertical_status": "degenerate_L0",
+      "id": "1PN-020"
+    },
+    {
+      "physics": "1pn_adm",
+      "beta_inv_c2": 0.01516316974371,
+      "beta_eff_v2c2": 0.00835415904736,
+      "beta_max_v2c2": 0.02574893181939,
+      "dim": 2,
+      "subspace": "1pn_2d_dem001_10fold",
+      "masses": [
+        1,
+        1,
+        0.5
+      ],
+      "z0_canonical": [
+        -1.001973444555,
+        0,
+        0.9921723616968,
+        0,
+        0.009734942940237,
+        0,
+        0,
+        0.08061586296235,
+        0,
+        -0.8343783752035,
+        0,
+        0.7537625122411
+      ],
+      "T": 256.7602340919,
+      "T_rpo": 25.67602340919,
+      "q_fold": 10,
+      "precess_rad": -0.628318530718,
+      "E": -0.6609935905194,
+      "L": -0.9012842819254,
+      "ret_err": 4.82788441837e-10,
+      "k1": 1.998282558503,
+      "k2": 1.55614648091,
+      "kz": -0.07811210754729,
+      "stable_3d": true,
+      "stab_margin": 0.001717441497056,
+      "survived_100T": 100,
+      "drift_100T": 0.2539714537638,
+      "rmin": 0.9824374187566,
+      "rmax": 2.350205033627,
+      "partner_swaps": 140,
+      "democratic": true,
+      "dH": 3.184898091785e-15,
+      "symp_err": 6.903991169177e-06,
+      "monodromy_method": "80bit_1pn_canonical",
+      "rpo_stab_margin": 0.3771042595046,
+      "rpo_k": [
+        -1.534519761664,
+        -1.622895740495,
+        -1.785546558946
+      ],
+      "vertical_status": "stable_3d",
       "id": "1PN-021"
     }
   ],
   "four_body": [
-    {
-      "n_bodies": 4,
-      "dim": 3,
-      "subspace": "4b_3d_dem001_r21_vz35",
-      "masses": [
-        1,
-        1,
-        0.5,
-        0.005
-      ],
-      "y0": [
-        -1,
-        0,
-        0,
-        1.009063153991,
-        0,
-        0,
-        -0.0739408221926,
-        0,
-        0,
-        5.581451421058,
-        0,
-        0,
-        0,
-        0.04930262376516,
-        0,
-        0,
-        -0.7613222289114,
-        -0.01228498898048,
-        0,
-        1.418272492261,
-        0.02106997796097,
-        0,
-        0.5766718031822,
-        0.35
-      ],
-      "T": 51.36155758632,
-      "precess_rad": 0.1049089331878,
-      "E": -0.7064214103366,
-      "L": 0.8538724221873,
-      "Lvec": [
-        0,
-        0.003407755487548,
-        -0.8538656220826
-      ],
-      "ret_err": 1.476100773942e-10,
-      "k_indices": [
-        1.998561364934,
-        1.976677991279,
-        -1.97327922381,
-        1.972355181821,
-        -0.7711572831387,
-        -0.06839113838864
-      ],
-      "max_eig_rad_err": 0.000718430707577,
-      "trivial_eig_err": 0.00151217241721,
-      "stab_margin": 0.001438635066088,
-      "survived_100T": 100,
-      "drift_100T": 1.119666937054,
-      "rmin": 0.9259493045934,
-      "rmax": 6.750870782226,
-      "thickness_3d": 0.2689681109554,
-      "partner_swaps": 0,
-      "id": "4B-001"
-    },
-    {
-      "n_bodies": 4,
-      "dim": 3,
-      "subspace": "4b_3d_double_binary_N8_i35",
-      "masses": [
-        1,
-        1,
-        1,
-        1
-      ],
-      "y0": [
-        -1,
-        0,
-        0,
-        -0.6789918501186,
-        0,
-        0,
-        0.6789918501283,
-        0,
-        0,
-        0.9999999999902,
-        0,
-        0,
-        0,
-        1.925582142188,
-        0,
-        0,
-        -0.5131814739038,
-        0.6350921734831,
-        0,
-        0.5131814739798,
-        -0.6350921734831,
-        0,
-        -1.925582142264,
-        0
-      ],
-      "T": 6.52216485745,
-      "precess_rad": 6.018347348087,
-      "E": -4.283384406646,
-      "L": 3.270052633589,
-      "Lvec": [
-        0,
-        0.8624448197444,
-        -3.154272207552
-      ],
-      "ret_err": 6.260445966761e-10,
-      "k_indices": [
-        1.999978503967,
-        1.989894985394,
-        1.920403701219,
-        1.814139165678,
-        1.788625589721,
-        1.67863219172
-      ],
-      "max_eig_rad_err": 2.542583598997e-06,
-      "trivial_eig_err": 0.000783414818271,
-      "stab_margin": 2.149603332002e-05,
-      "survived_100T": 100,
-      "drift_100T": 0.09406062577364,
-      "rmin": 0.3207259904865,
-      "rmax": 2.000000000341,
-      "thickness_3d": 0.06899061265482,
-      "partner_swaps": 16,
-      "id": "4B-002"
-    },
-    {
-      "n_bodies": 4,
-      "dim": 3,
-      "subspace": "4b_3d_dem001_r21_vz25",
-      "masses": [
-        1,
-        1,
-        0.5,
-        0.005
-      ],
-      "y0": [
-        -1,
-        0,
-        0,
-        1.008938970638,
-        0,
-        0,
-        -0.0738318277946,
-        0,
-        0,
-        5.595388651809,
-        0,
-        0,
-        0,
-        0.0492552488652,
-        0,
-        0,
-        -0.7615188095512,
-        -0.008871521329685,
-        0,
-        1.418263487096,
-        0.01524304265937,
-        0,
-        0.6263634276104,
-        0.25
-      ],
-      "T": 51.36544366696,
-      "precess_rad": 0.1130081073066,
-      "E": -0.7064306213626,
-      "L": 0.8524177342642,
-      "Lvec": [
-        0,
-        0.002519298633953,
-        -0.852414011395
-      ],
-      "ret_err": 1.480662379813e-10,
-      "k_indices": [
-        1.999991295796,
-        1.986944638758,
-        -1.970075313773,
-        1.958078891039,
-        -0.7598533856414,
-        -0.0788308481858
-      ],
-      "max_eig_rad_err": 2.740088072661e-06,
-      "trivial_eig_err": 0.002569311486562,
-      "stab_margin": 8.704203620535e-06,
-      "survived_100T": 100,
-      "drift_100T": 0.8286970039835,
-      "rmin": 0.9260260286037,
-      "rmax": 6.837236939543,
-      "thickness_3d": 0.1904261330833,
-      "partner_swaps": 0,
-      "id": "4B-003"
-    },
-    {
-      "n_bodies": 4,
-      "dim": 3,
-      "subspace": "4b_3d_double_binary_N7_i35",
-      "masses": [
-        1,
-        1,
-        1,
-        1
-      ],
-      "y0": [
-        -1,
-        0,
-        0,
-        -0.6564079092165,
-        0,
-        0,
-        0.6564079092168,
-        0,
-        0,
-        0.9999999999997,
-        0,
-        0,
-        0,
-        1.897232884753,
-        0,
-        0,
-        -0.4668232681885,
-        0.6209500643498,
-        0,
-        0.4668232681904,
-        -0.6209500643498,
-        0,
-        -1.897232884755,
-        0
-      ],
-      "T": 6.345743517591,
-      "precess_rad": 5.980054232934,
-      "E": -4.087013718054,
-      "L": 3.284387269598,
-      "Lvec": [
-        0,
-        0.8151930669356,
-        -3.181612798616
-      ],
-      "ret_err": 4.724651657198e-10,
-      "k_indices": [
-        1.999991555316,
-        1.986817653209,
-        1.900850594741,
-        1.689528544621,
-        1.644787838846,
-        1.635733739255
-      ],
-      "max_eig_rad_err": 1.419678244963e-06,
-      "trivial_eig_err": 0.0003858545315134,
-      "stab_margin": 8.444683822884e-06,
-      "survived_100T": 100,
-      "drift_100T": 0.08285178622397,
-      "rmin": 0.3432429055183,
-      "rmax": 2.000000000313,
-      "thickness_3d": 0.07261648847541,
-      "partner_swaps": 14,
-      "id": "4B-004"
-    },
-    {
-      "n_bodies": 4,
-      "dim": 3,
-      "subspace": "4b_3d_double_binary_N7_i36",
-      "masses": [
-        1,
-        1,
-        1,
-        1
-      ],
-      "y0": [
-        -1,
-        0,
-        0,
-        -0.656249052691,
-        0,
-        0,
-        0.6562490526914,
-        0,
-        0,
-        0.9999999999996,
-        0,
-        0,
-        0,
-        1.892433988117,
-        0,
-        0,
-        -0.4676172023514,
-        0.6337081375884,
-        0,
-        0.4676172023543,
-        -0.6337081375884,
-        0,
-        -1.892433988119,
-        0
-      ],
-      "T": 6.349384550974,
-      "precess_rad": 5.983595720317,
-      "E": -4.086061255685,
-      "L": 3.278384181323,
-      "Lvec": [
-        0,
-        0.8317407299503,
-        -3.171121284103
-      ],
-      "ret_err": 4.701790182691e-10,
-      "k_indices": [
-        1.999991556493,
-        1.986573276885,
-        1.904057035705,
-        1.715899694129,
-        1.669496855019,
-        1.607157846948
-      ],
-      "max_eig_rad_err": 2.571399520201e-06,
-      "trivial_eig_err": 0.0009851967557433,
-      "stab_margin": 8.443506734013e-06,
-      "survived_100T": 100,
-      "drift_100T": 0.08150488721159,
-      "rmin": 0.3433864878846,
-      "rmax": 2.000000000314,
-      "thickness_3d": 0.07402248264023,
-      "partner_swaps": 14,
-      "id": "4B-005"
-    },
-    {
-      "n_bodies": 4,
-      "dim": 3,
-      "subspace": "4b_3d_double_binary_N8_i33",
-      "masses": [
-        1,
-        1,
-        1,
-        1
-      ],
-      "y0": [
-        -1,
-        0,
-        0,
-        -0.6792431758241,
-        0,
-        0,
-        0.6792431758348,
-        0,
-        0,
-        0.9999999999893,
-        0,
-        0,
-        0,
-        1.934853487076,
-        0,
-        0,
-        -0.511394139193,
-        0.6099057367621,
-        0,
-        0.5113941392761,
-        -0.6099057367621,
-        0,
-        -1.934853487159,
-        0
-      ],
-      "T": 6.515659622768,
-      "precess_rad": 6.012243811561,
-      "E": -4.285212290651,
-      "L": 3.281314167307,
-      "Lvec": [
-        0,
-        0.8285486191898,
-        -3.174985015745
-      ],
-      "ret_err": 6.280865044673e-10,
-      "k_indices": [
-        1.999991712777,
-        1.990302238491,
-        1.915244093491,
-        1.777128148331,
-        1.75385151682,
-        1.729601320851
-      ],
-      "max_eig_rad_err": 3.775712031917e-06,
-      "trivial_eig_err": 0.0004835770701532,
-      "stab_margin": 8.287223198344e-06,
-      "survived_100T": 100,
-      "drift_100T": 0.09684842162445,
-      "rmin": 0.3204972759187,
-      "rmax": 2.000000000338,
-      "thickness_3d": 0.06641858303428,
-      "partner_swaps": 16,
-      "id": "4B-006"
-    },
-    {
-      "n_bodies": 4,
-      "dim": 3,
-      "subspace": "4b_3d_dem001_r21_vz30",
-      "masses": [
-        1,
-        1,
-        0.5,
-        0.005
-      ],
-      "y0": [
-        -1,
-        0,
-        0,
-        1.008994981786,
-        0,
-        0,
-        -0.07388062004233,
-        0,
-        0,
-        5.589065647113,
-        0,
-        0,
-        0,
-        0.04927633079476,
-        0,
-        0,
-        -0.761429859289,
-        -0.01059426618875,
-        0,
-        1.418266164295,
-        0.0181885323775,
-        0,
-        0.6040892693233,
-        0.3
-      ],
-      "T": 51.36372221784,
-      "precess_rad": 0.1093944064618,
-      "E": -0.7064264070342,
-      "L": 0.8530701541689,
-      "Lvec": [
-        0,
-        0.002977852974336,
-        -0.8530649566858
-      ],
-      "ret_err": 1.468144151129e-10,
-      "k_indices": [
-        1.99999554792,
-        1.981967766046,
-        -1.971527954418,
-        1.964970838501,
-        -0.7648929937211,
-        -0.0741902882819
-      ],
-      "max_eig_rad_err": 1.994587769838e-06,
-      "trivial_eig_err": 0.0006997258842716,
-      "stab_margin": 4.452079652051e-06,
-      "survived_100T": 100,
-      "drift_100T": 1.087102515588,
-      "rmin": 0.9259923233272,
-      "rmax": 6.798523489431,
-      "thickness_3d": 0.2294290423544,
-      "partner_swaps": 0,
-      "id": "4B-007"
-    },
-    {
-      "n_bodies": 4,
-      "dim": 3,
-      "subspace": "4b_3d_double_binary_N5_i40",
-      "masses": [
-        1,
-        1,
-        1,
-        1
-      ],
-      "y0": [
-        -1,
-        0,
-        0,
-        -0.598012355645,
-        0,
-        0,
-        0.5980123556489,
-        0,
-        0,
-        0.999999999996,
-        0,
-        0,
-        0,
-        1.851800038091,
-        0,
-        0,
-        -0.3732632487908,
-        0.572852826905,
-        0,
-        0.373263248812,
-        -0.572852826905,
-        0,
-        -1.851800038113,
-        0
-      ],
-      "T": 5.88311388814,
-      "precess_rad": 5.863548449156,
-      "E": -3.666286004874,
-      "L": 3.328448385288,
-      "Lvec": [
-        0,
-        0.6851461369129,
-        -3.257168006812
-      ],
-      "ret_err": 2.482200113891e-10,
-      "k_indices": [
-        1.999998099194,
-        1.976225273097,
-        1.886748346019,
-        1.510258870545,
-        0.8133830997912,
-        0.5520150846786
-      ],
-      "max_eig_rad_err": 1.149795277211e-06,
-      "trivial_eig_err": 0.001981483576043,
-      "stab_margin": 1.900806418043e-06,
-      "survived_100T": 100,
-      "drift_100T": 0.0637845191489,
-      "rmin": 0.4019876443471,
-      "rmax": 2.000000000248,
-      "thickness_3d": 0.07986556557608,
-      "partner_swaps": 10,
-      "id": "4B-008"
-    },
     {
       "n_bodies": 4,
       "dim": 2,
@@ -12179,23 +11909,29 @@
       "precess_rad": 0,
       "E": -0.6969786987771,
       "L": -0.8459537739368,
-      "ret_err": 7.979638087501e-11,
+      "ret_err": 8.456287675439e-11,
       "k_indices": [
-        1.992665856526,
-        1.859722475136,
-        -0.1335071528561,
-        -0.1027147293986
+        1.992665688156,
+        -1.916619965693,
+        1.878213792236,
+        1.859720725967,
+        -0.1335074342298,
+        -0.1027150734717
       ],
-      "max_eig_rad_err": 1.360844449128e-06,
-      "trivial_eig_err": 0.002814773494669,
-      "stab_margin": 0.007334143474422,
+      "max_eig_rad_err": 2.313654910019e-14,
+      "trivial_eig_err": 0.0001068795947268,
+      "stab_margin": 0.007334311844397,
       "survived_100T": 100,
       "drift_100T": 0.45843203551,
       "rmin": 0.9811110906775,
-      "rmax": 4.789117951096,
-      "thickness_3d": 7.10755504579e-09,
+      "rmax": 4.789109040246,
+      "thickness_3d": 0,
       "partner_swaps": 14,
-      "id": "4B-009"
+      "symp_err": 1.518785097687e-12,
+      "max_eig_mod": 1,
+      "stable_3d": true,
+      "monodromy_method": "80bit_24d_variational",
+      "id": "4B-001"
     },
     {
       "n_bodies": 4,
@@ -12229,23 +11965,29 @@
       "precess_rad": 0,
       "E": -0.6993756198771,
       "L": -0.8509003530242,
-      "ret_err": 1.192291345875e-10,
+      "ret_err": 1.259399183697e-10,
       "k_indices": [
-        1.995789399205,
-        1.860156357592,
-        -0.1456683533126,
-        -0.07100837014313
+        1.995789640816,
+        -1.917807237589,
+        1.876985970581,
+        1.860154080454,
+        -0.1456687465244,
+        -0.07100852596648
       ],
-      "max_eig_rad_err": 7.988600585485e-07,
-      "trivial_eig_err": 0.0028456333572,
-      "stab_margin": 0.004210600795475,
+      "max_eig_rad_err": 2.304048878771e-14,
+      "trivial_eig_err": 6.976919198169e-05,
+      "stab_margin": 0.004210359184293,
       "survived_100T": 100,
       "drift_100T": 0.450111467052,
       "rmin": 0.9784862171059,
-      "rmax": 4.772751114257,
+      "rmax": 4.772745184584,
       "thickness_3d": 0,
       "partner_swaps": 14,
-      "id": "4B-010"
+      "symp_err": 1.13886677866e-12,
+      "max_eig_mod": 1,
+      "stable_3d": true,
+      "monodromy_method": "80bit_24d_variational",
+      "id": "4B-002"
     },
     {
       "n_bodies": 4,
@@ -12279,23 +12021,29 @@
       "precess_rad": 0,
       "E": -0.7018162551402,
       "L": -0.8558066687351,
-      "ret_err": 6.156733652954e-13,
+      "ret_err": 3.466850191441e-11,
       "k_indices": [
-        1.998131674646,
-        1.860299936656,
-        -0.158384251447,
-        -0.03924565533658
+        1.998131326827,
+        -1.918984729461,
+        1.875725510857,
+        1.860298459662,
+        -0.1583843358457,
+        -0.03924549706913
       ],
-      "max_eig_rad_err": 9.69139184015e-07,
-      "trivial_eig_err": 0.00144150343737,
-      "stab_margin": 0.001868325354221,
+      "max_eig_rad_err": 2.299126600908e-14,
+      "trivial_eig_err": 9.174101141754e-05,
+      "stab_margin": 0.001868673173077,
       "survived_100T": 100,
       "drift_100T": 0.4432295893347,
-      "rmin": 0.9759289872489,
-      "rmax": 4.750385861919,
+      "rmin": 0.9759289872515,
+      "rmax": 4.750382310898,
       "thickness_3d": 0,
       "partner_swaps": 14,
-      "id": "4B-011"
+      "symp_err": 1.279865102788e-12,
+      "max_eig_mod": 1,
+      "stable_3d": true,
+      "monodromy_method": "80bit_24d_variational",
+      "id": "4B-003"
     }
   ]
 }

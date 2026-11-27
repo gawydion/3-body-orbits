@@ -11,20 +11,19 @@ BIN = os.path.join(ROOT, "bin", "render_gif")
 
 # Showcase list: (orbit_id, out_filename, frames, fps, T_ghost_override, T_anim_override, yaw0, yaw_span, pitch)
 SHOWCASE = [
-    # --- Track 1: Linearly Stable Free-Fall (Brake) Orbit ---
-    ("2D-DEM-014", "2d_brake_stable.gif", 100, 25, None, None, 0.0, 0.0, 0.0),
+    # --- Track 1: Linearly Stable Free-Fall (Brake) Orbit (cleanest rmin=0.00445 representative) ---
+    ("2D-DEM-015", "2d_brake_stable.gif", 100, 25, None, None, 0.0, 0.0, 0.0),
     # --- Track 2: Period-Doubled 3D BHH Vertical Bifurcation Family (3D-PD40/48) ---
     ("3D-012", "3d_vertical_pd_3fold.gif", 150, 25, None, None, 0.4, 2.0 * math.pi, 0.45),
-    # --- Track 3: 2D & 3D Rotating-Frame Choreographies ---
+    # --- Track 3: 2D & 3D Rotating-Frame Choreographies (CFM Gamma_z & Marchal P12 / Gamma_y) ---
     ("2D-DEM-001", "2d_choreo_5petal_5fold.gif", 130, 25, None, None, 0.0, 0.0, 0.0),
     ("2D-DEM-018", "2d_choreo_trefoil_3fold.gif", 120, 25, None, None, 0.0, 0.0, 0.0),
     ("3D-005", "3d_choreo_helical_11fold.gif", 160, 25, None, 62.1634, 0.3, 2.0 * math.pi, 0.42),
-    # --- Track 4: Post-Newtonian (1PN ADM) Relativistic Closures ---
-    ("1PN-019", "1pn_2d_dem001_10fold.gif", 150, 25, None, 128.3801, 0.0, 0.0, 0.0),
-    ("1PN-006", "1pn_3d_delta14_12fold.gif", 150, 25, None, 111.1074, 0.4, 2.0 * math.pi, 0.44),
-    # --- Track 5: 4-Body 3D Steady Extensions ---
-    ("4B-002", "4b_3d_double_binary.gif", 130, 25, 19.5665, 19.5665, 0.4, 2.0 * math.pi, 0.50),
-    ("4B-001", "4b_3d_hybrid_dem001.gif", 150, 25, None, None, 0.35, 2.0 * math.pi, 0.46),
+    # --- Track 4: Post-Newtonian (1PN ADM) Relativistic Closures (synchronized 80-bit T_inert IDs) ---
+    ("1PN-021", "1pn_2d_dem001_10fold.gif", 150, 25, None, 128.3801, 0.0, 0.0, 0.0),
+    ("1PN-001", "1pn_3d_delta14_12fold.gif", 150, 25, None, 111.1074, 0.4, 2.0 * math.pi, 0.44),
+    # --- Track 5: 4-Body Full-3D Linearly Stable Planar 3+1 Hybrid (24x24 80-bit verified) ---
+    ("4B-001", "4b_2d_hybrid_dem001.gif", 130, 25, None, None, 0.0, 0.0, 0.0),
     # --- Core 3D & 2D Showcase Families (synchronized 80-bit audited IDs) ---
     ("3D-002", "3d_delta14_5fold.gif", 150, 25, None, None, 0.4, 2.0 * math.pi, 0.42),
     ("3D-011", "3d_delta14_7fold.gif", 160, 25, None, None, 0.4, 2.0 * math.pi, 0.45),
