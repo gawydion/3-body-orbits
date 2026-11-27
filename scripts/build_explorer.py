@@ -91,7 +91,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
     <h1>3-Body &amp; 4-Body Steady Orbit Discovery Explorer</h1>
     <span id="hdrCounts" class="pill green"></span>
   </div>
-  <div class="muted mono" style="font-size:11px;">DOPRI5 · Exact Floquet / Francis QR · Newtonian + 1PN GR + 4-Body</div>
+  <div class="muted mono" style="font-size:11px;">80-Bit Variational Audited · DOPRI5 · Francis QR · Newtonian + 1PN GR + 4-Body</div>
 </header>
 
 <div class="layout">
@@ -100,7 +100,8 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
       <div class="tabs" id="filterTabs">
         <button class="tab active" data-f="all">All</button>
         <button class="tab" data-f="3d">3D Non-Planar</button>
-        <button class="tab" data-f="dem">2D Democratic</button>
+        <button class="tab" data-f="dem">2D Exchange</button>
+        <button class="tab" data-f="hie">2D BHH / Hie</button>
         <button class="tab" data-f="brake">Brake (v₀=0)</button>
         <button class="tab" data-f="choreo">Rot. Choreo</button>
         <button class="tab" data-f="1pn">1PN GR</button>
@@ -158,6 +159,8 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
       <div class="card-title">Orbit Telemetry</div>
       <div class="stat-grid mono">
         <span class="muted">Subspace</span><span id="stSub"></span>
+        <span class="muted">Class</span><span id="stClass"></span>
+        <span class="muted">S₃ Word</span><span id="stWord"></span>
         <span class="muted">Physics</span><span id="stPhys"></span>
         <span class="muted">Period T</span><span id="stT"></span>
         <span class="muted">Energy E</span><span id="stE"></span>
@@ -165,6 +168,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
         <span class="muted">Min Sep rₘᵢₙ</span><span id="stRmin"></span>
         <span class="muted">Partner Swaps</span><span id="stSwaps"></span>
         <span class="muted">Return Error</span><span id="stRet"></span>
+        <span class="muted">Symp Error</span><span id="stSymp"></span>
         <span class="muted">100T Drift</span><span id="stDrift" style="color:var(--green)"></span>
         <span class="muted">Stability Margin</span><span id="stMarg" style="color:var(--green);font-weight:700"></span>
         <span class="muted">Floquet k</span><span id="stK"></span>
@@ -397,7 +401,7 @@ function selectOrbit(o) {
   document.getElementById("badgeTitle").textContent = o.id;
   document.getElementById("badgeDim").textContent = o.dim === 3
     ? `${nb}B 3D (h=${(o.thickness_3d||0).toFixed(2)})`
-    : (o.democratic ? `${nb}B 2D Democratic (${o.partner_swaps} sw)` : `${nb}B 2D Hierarchical`);
+    : (o.non_hierarchical ? `${nb}B 2D Exchange (${o.word_compact || o.partner_swaps + " sw"})` : `${nb}B 2D ${o.dynamical_class || "Hierarchical"}`);
   const bp = document.getElementById("badgePhys");
   if (o._kind === "1pn") {
     bp.style.display = "inline-block";
@@ -417,6 +421,8 @@ function selectOrbit(o) {
   else { w4.style.display = "none"; }
 
   document.getElementById("stSub").textContent = o.subspace;
+  document.getElementById("stClass").textContent = o.dynamical_class || (o._kind === "1pn" ? "relativistic_1pn" : (o._kind === "4b" ? "four_body" : "—"));
+  document.getElementById("stWord").textContent = o.word_compact || "—";
   document.getElementById("stPhys").textContent = o._kind === "1pn" ? `1PN ADM (β=${o.beta_inv_c2.toFixed(4)})` : (nb === 4 ? "4-Body Newton" : "3-Body Newton");
   document.getElementById("stT").textContent = o.T.toFixed(4);
   document.getElementById("stE").textContent = o.E.toFixed(5);
@@ -424,6 +430,7 @@ function selectOrbit(o) {
   document.getElementById("stRmin").textContent = o.rmin.toFixed(4);
   document.getElementById("stSwaps").textContent = o.partner_swaps;
   document.getElementById("stRet").textContent = o.ret_err.toExponential(1);
+  document.getElementById("stSymp").textContent = o.symp_err !== undefined ? o.symp_err.toExponential(1) : "—";
   document.getElementById("stDrift").textContent = o.drift_100T.toFixed(5);
   document.getElementById("stMarg").textContent = o.stab_margin.toFixed(5);
   if (o._kind === "4b") {
@@ -433,9 +440,18 @@ function selectOrbit(o) {
     document.getElementById("stK").textContent = o.dim === 3
       ? `${o.k1.toFixed(2)}, ${o.k2.toFixed(2)}, ${o.k3.toFixed(2)}`
       : `${o.k1.toFixed(3)}, ${o.k2.toFixed(3)}`;
-    document.getElementById("stKz").textContent = o.dim === 3
-      ? "Full 3D Stable"
-      : (o.stable_3d ? `YES (${o.kz.toFixed(3)})` : (o.kz !== undefined ? `L=0 (${o.kz.toFixed(2)})` : "—"));
+    if (o.dim === 3) {
+      document.getElementById("stKz").textContent = "Full 3D Stable";
+    } else if (o.vertical_status === "degenerate_L0") {
+      document.getElementById("stKz").textContent = "L=0 degen (+2)";
+      document.getElementById("stKz").title = "Symplectic degeneracy for planar L=0 orbits (all 6 M_z eigenvalues = +1), not exponential instability";
+    } else if (o.stable_3d) {
+      document.getElementById("stKz").textContent = `YES (${o.kz.toFixed(3)})`;
+    } else if (o.kz !== undefined) {
+      document.getElementById("stKz").textContent = `NO (${o.kz.toFixed(3)})`;
+    } else {
+      document.getElementById("stKz").textContent = "—";
+    }
   }
 
   renderList();
@@ -445,7 +461,8 @@ function selectOrbit(o) {
 function applyFilter() {
   filtered = ORBITS.filter(o => {
     if (activeFilter === "3d") return o.dim === 3 && o._kind === "newt3";
-    if (activeFilter === "dem") return o.dim === 2 && o.democratic && o._kind === "newt3";
+    if (activeFilter === "dem") return o.dim === 2 && o.non_hierarchical && o._kind === "newt3";
+    if (activeFilter === "hie") return o.dim === 2 && !o.non_hierarchical && o._kind === "newt3";
     if (activeFilter === "brake") return o.subspace === "free_fall_brake";
     if (activeFilter === "choreo") return o.subspace.includes("choreo");
     if (activeFilter === "1pn") return o._kind === "1pn";

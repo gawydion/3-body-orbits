@@ -5,7 +5,8 @@ BIN := bin
 TARGETS := $(BIN)/campaign_2d $(BIN)/rpo_3d_fixedvz $(BIN)/trace_3d_family \
            $(BIN)/snap_3d_inertial $(BIN)/vertical_bifurcation $(BIN)/continuation \
            $(BIN)/render_gif $(BIN)/search_brake $(BIN)/branch_3d_vertical \
-           $(BIN)/search_choreo_rot $(BIN)/search_1pn $(BIN)/search_4body
+           $(BIN)/search_choreo_rot $(BIN)/search_1pn $(BIN)/search_4body \
+           $(BIN)/audit_catalog
 
 all: $(TARGETS)
 

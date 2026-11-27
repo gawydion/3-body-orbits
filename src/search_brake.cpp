@@ -299,47 +299,167 @@ struct StabilityInfo {
     double k1, k2;
     bool linearly_stable;
     double stab_margin;
+    double symp_err;
     int survived_100T;
     double drift_100T;
 };
 
+// 80-bit long double analytical variational equations for exact symplectic monodromy
+using ld = long double;
+using StateLD = std::array<ld, 12>;
+using MassesLD = std::array<ld, 3>;
+
+static inline void deriv2d_ld(const StateLD& s, const MassesLD& m, StateLD& ds, ld* rm = nullptr) {
+    for (int i = 0; i < 6; ++i) ds[i] = s[6 + i];
+    ld a[6] = {0}, r2m = 1e300L;
+    for (int i = 0; i < 3; ++i) for (int j = i + 1; j < 3; ++j) {
+        ld dx = s[2 * j] - s[2 * i], dy = s[2 * j + 1] - s[2 * i + 1];
+        ld r2 = dx * dx + dy * dy; if (r2 < r2m) r2m = r2;
+        ld ir = 1.0L / std::sqrt(r2), ir3 = ir * ir * ir;
+        a[2 * i] += m[j] * dx * ir3; a[2 * i + 1] += m[j] * dy * ir3;
+        a[2 * j] -= m[i] * dx * ir3; a[2 * j + 1] -= m[i] * dy * ir3;
+    }
+    for (int i = 0; i < 6; ++i) ds[6 + i] = a[i];
+    if (rm) *rm = std::sqrt(r2m);
+}
+
+static inline void accel_jac2d_ld(const StateLD& s, const MassesLD& m, ld H[6][6]) {
+    for (int i = 0; i < 6; ++i) for (int j = 0; j < 6; ++j) H[i][j] = 0;
+    for (int i = 0; i < 3; ++i) for (int j = i + 1; j < 3; ++j) {
+        ld d[2] = {s[2 * j] - s[2 * i], s[2 * j + 1] - s[2 * i + 1]};
+        ld r2 = d[0] * d[0] + d[1] * d[1], ir = 1.0L / std::sqrt(r2), ir3 = ir * ir * ir, ir5 = ir3 * ir * ir;
+        for (int p = 0; p < 2; ++p) for (int q = 0; q < 2; ++q) {
+            ld Tpq = ((p == q) ? ir3 : 0.0L) - 3.0L * d[p] * d[q] * ir5;
+            H[2 * i + p][2 * j + q] += m[j] * Tpq; H[2 * i + p][2 * i + q] -= m[j] * Tpq;
+            H[2 * j + p][2 * i + q] += m[i] * Tpq; H[2 * j + p][2 * j + q] -= m[i] * Tpq;
+        }
+    }
+}
+
+struct Var2D { StateLD y; ld M[12][12]; };
+
+static inline void deriv_var2d_ld(const Var2D& vs, const MassesLD& m, Var2D& dvs, ld* rm = nullptr) {
+    deriv2d_ld(vs.y, m, dvs.y, rm);
+    ld H[6][6]; accel_jac2d_ld(vs.y, m, H);
+    for (int c = 0; c < 12; ++c) {
+        for (int r = 0; r < 6; ++r) dvs.M[r][c] = vs.M[6 + r][c];
+        for (int r = 0; r < 6; ++r) {
+            ld s = 0; for (int k = 0; k < 6; ++k) s += H[r][k] * vs.M[k][c];
+            dvs.M[6 + r][c] = s;
+        }
+    }
+}
+
+static bool integrate_var2d_ld(const StateLD& y0, ld T, const MassesLD& m, ld Mout[12][12], ld tol = 1e-15L) {
+    static constexpr ld a21 = 1.0L / 5, a31 = 3.0L / 40, a32 = 9.0L / 40,
+        a41 = 44.0L / 45, a42 = -56.0L / 15, a43 = 32.0L / 9,
+        a51 = 19372.0L / 6561, a52 = -25360.0L / 2187, a53 = 64448.0L / 6561, a54 = -212.0L / 729,
+        a61 = 9017.0L / 3168, a62 = -355.0L / 33, a63 = 46732.0L / 5247, a64 = 49.0L / 176, a65 = -5103.0L / 18656,
+        b1 = 35.0L / 384, b3 = 500.0L / 1113, b4 = 125.0L / 192, b5 = -2187.0L / 6784, b6 = 11.0L / 84,
+        e1 = 71.0L / 57600, e3 = -71.0L / 16695, e4 = 71.0L / 1920, e5 = -17253.0L / 339200, e6 = 22.0L / 525, e7 = -1.0L / 40;
+    Var2D vs{}; vs.y = y0;
+    for (int i = 0; i < 12; ++i) for (int j = 0; j < 12; ++j) vs.M[i][j] = (i == j ? 1.0L : 0.0L);
+    auto axpy = [](const Var2D& a, Var2D& out, ld h, int nk, const Var2D* ks[], const ld cs[]) {
+        for (int i = 0; i < 12; ++i) { ld s = 0; for (int k = 0; k < nk; ++k) s += cs[k] * ks[k]->y[i]; out.y[i] = a.y[i] + h * s; }
+        for (int r = 0; r < 12; ++r) for (int c = 0; c < 12; ++c) { ld s = 0; for (int k = 0; k < nk; ++k) s += cs[k] * ks[k]->M[r][c]; out.M[r][c] = a.M[r][c] + h * s; }
+    };
+    Var2D k1, k2, k3, k4, k5, k6, k7, yt, yn;
+    ld t = 0, h = std::min(1e-4L, T * 0.01L); int steps = 0;
+    while (t < T - 1e-17L && steps < 2500000) {
+        if (t + h > T) h = T - t;
+        bool ok = false;
+        for (int att = 0; att < 30; ++att) {
+            ld rm = 1e300L; deriv_var2d_ld(vs, m, k1, &rm); if (rm < 1e-7L) return false;
+            {const Var2D* ks[1] = {&k1}; ld cs[1] = {a21}; axpy(vs, yt, h, 1, ks, cs);} deriv_var2d_ld(yt, m, k2);
+            {const Var2D* ks[2] = {&k1, &k2}; ld cs[2] = {a31, a32}; axpy(vs, yt, h, 2, ks, cs);} deriv_var2d_ld(yt, m, k3);
+            {const Var2D* ks[3] = {&k1, &k2, &k3}; ld cs[3] = {a41, a42, a43}; axpy(vs, yt, h, 3, ks, cs);} deriv_var2d_ld(yt, m, k4);
+            {const Var2D* ks[4] = {&k1, &k2, &k3, &k4}; ld cs[4] = {a51, a52, a53, a54}; axpy(vs, yt, h, 4, ks, cs);} deriv_var2d_ld(yt, m, k5);
+            {const Var2D* ks[5] = {&k1, &k2, &k3, &k4, &k5}; ld cs[5] = {a61, a62, a63, a64, a65}; axpy(vs, yt, h, 5, ks, cs);} deriv_var2d_ld(yt, m, k6);
+            {const Var2D* ks[5] = {&k1, &k3, &k4, &k5, &k6}; ld cs[5] = {b1, b3, b4, b5, b6}; axpy(vs, yn, h, 5, ks, cs);}
+            deriv_var2d_ld(yn, m, k7, &rm); if (rm < 1e-7L) return false;
+            ld err = 0;
+            for (int i = 0; i < 12; ++i) {
+                ld ei = h * (e1 * k1.y[i] + e3 * k3.y[i] + e4 * k4.y[i] + e5 * k5.y[i] + e6 * k6.y[i] + e7 * k7.y[i]);
+                ld sc = tol * (1.0L + std::max(std::abs(vs.y[i]), std::abs(yn.y[i])));
+                ld r = ei / sc; err += r * r;
+            }
+            for (int r = 0; r < 12; ++r) for (int c = 0; c < 12; ++c) {
+                ld ei = h * (e1 * k1.M[r][c] + e3 * k3.M[r][c] + e4 * k4.M[r][c] + e5 * k5.M[r][c] + e6 * k6.M[r][c] + e7 * k7.M[r][c]);
+                ld sc = tol * (1.0L + std::max(std::abs(vs.M[r][c]), std::abs(yn.M[r][c])));
+                ld rr = ei / sc; err += rr * rr;
+            }
+            err = std::sqrt(err / 156.0L);
+            if (err <= 1.0L) {
+                vs = yn; t += h;
+                h = std::min(h * ((err == 0) ? 5.0L : std::min(5.0L, std::max(0.2L, 0.9L * std::pow(err, -0.2L)))), 0.03L);
+                ok = true; break;
+            }
+            h *= std::max(0.1L, 0.9L * std::pow(err, -0.25L));
+            if (h < 1e-16L) return false;
+        }
+        if (!ok) return false; ++steps;
+    }
+    for (int i = 0; i < 12; ++i) for (int j = 0; j < 12; ++j) Mout[i][j] = vs.M[i][j];
+    return t >= T - 1e-14L;
+}
+
+static ld symp_err_12(const ld M[12][12], const MassesLD& m) {
+    ld sc[12] = {1, 1, 1, 1, 1, 1, m[0], m[0], m[1], m[1], m[2], m[2]};
+    ld symp = 0;
+    for (int i = 0; i < 12; ++i) for (int j = 0; j < 12; ++j) {
+        ld s = 0;
+        for (int k = 0; k < 6; ++k)
+            s += (sc[k] * M[k][i] / sc[i]) * (sc[k + 6] * M[k + 6][j] / sc[j])
+               - (sc[k + 6] * M[k + 6][i] / sc[i]) * (sc[k] * M[k][j] / sc[j]);
+        symp = std::max(symp, std::abs(s - ((j == i + 6) ? 1.0L : ((i == j + 6) ? -1.0L : 0.0L))));
+    }
+    return symp;
+}
+
 static StabilityInfo analyze_stability(const State& y0, double T, const Masses& m) {
-    double M[12][12];
-    const double eps = 1e-7;
     StabilityInfo info{};
     info.stab_margin = -999.0;
-    for (int col = 0; col < 12; ++col) {
-        State yp = y0, ym = y0;
-        yp[col] += eps; ym[col] -= eps;
-        if (!integrate_to(yp, T, m, 1e-13, 400000, nullptr, 1e-6) ||
-            !integrate_to(ym, T, m, 1e-13, 400000, nullptr, 1e-6)) {
-            return info;
+    info.symp_err = 999.0;
+    StateLD y0l;
+    for (int i = 0; i < 12; ++i) y0l[i] = (ld)y0[i];
+    MassesLD ml = {(ld)m[0], (ld)m[1], (ld)m[2]};
+    ld M[12][12];
+    if (!integrate_var2d_ld(y0l, (ld)T, ml, M, 1e-15L)) return info;
+    ld symp = symp_err_12(M, ml);
+    if (symp > 1e-7L) {
+        ld M2[12][12];
+        if (integrate_var2d_ld(y0l, (ld)T, ml, M2, 1e-16L)) {
+            ld s2 = symp_err_12(M2, ml);
+            if (s2 < symp) {
+                symp = s2;
+                for (int i = 0; i < 12; ++i) for (int j = 0; j < 12; ++j) M[i][j] = M2[i][j];
+            }
         }
-        for (int row = 0; row < 12; ++row)
-            M[row][col] = (yp[row] - ym[row]) / (2.0 * eps);
     }
-    double tr1 = 0.0, tr2 = 0.0;
+    info.symp_err = (double)symp;
+
+    ld tr1 = 0.0L, tr2 = 0.0L;
     for (int i = 0; i < 12; ++i) tr1 += M[i][i];
     for (int i = 0; i < 12; ++i)
         for (int j = 0; j < 12; ++j)
             tr2 += M[i][j] * M[j][i];
 
-    double s = tr1 - 8.0;
-    double p = 0.5 * (s * s - (tr2 - 4.0));
-    double disc = s * s - 4.0 * p;
+    ld s = tr1 - 8.0L;
+    ld p = 0.5L * (s * s - (tr2 - 4.0L));
+    ld disc = s * s - 4.0L * p;
 
-    if (disc >= -1e-4) {
-        double sd = std::sqrt(std::max(0.0, disc));
+    if (disc >= -1e-10L) {
+        ld sd = std::sqrt(std::max(0.0L, disc));
         info.real_k = true;
-        info.k1 = 0.5 * (s + sd);
-        info.k2 = 0.5 * (s - sd);
+        info.k1 = (double)(0.5L * (s + sd));
+        info.k2 = (double)(0.5L * (s - sd));
         double mk = std::max(std::abs(info.k1), std::abs(info.k2));
         info.stab_margin = 2.0 - mk;
-        info.linearly_stable = (mk < 2.0 - 1e-4);
+        info.linearly_stable = (mk < 2.0 - 1e-4) && (symp < 1e-6L);
     } else {
         info.real_k = false;
-        info.k1 = 0.5 * s;
-        info.k2 = 0.5 * std::sqrt(-disc);
+        info.k1 = (double)(0.5L * s);
+        info.k2 = (double)(0.5L * std::sqrt(-disc));
         info.linearly_stable = false;
         info.stab_margin = -10.0;
     }
@@ -380,6 +500,7 @@ static void emit_json(const Masses& m, double x3, double y3, const State& y0, do
        << ",\"E\":" << E
        << ",\"L\":" << L
        << ",\"ret_err\":" << ret_err
+       << ",\"symp_err\":" << st.symp_err
        << ",\"k1\":" << st.k1 << ",\"k2\":" << st.k2
        << ",\"stab_margin\":" << st.stab_margin
        << ",\"survived_100T\":" << st.survived_100T
@@ -488,11 +609,11 @@ static void run_scan(const Masses& m, int nx, int ny, double Thmax,
 
                 double T = 2.0 * Th;
                 State y0 = make_brake(x3, y3, m);
-                // Check if sub-multiple is already periodic
-                for (int div : {2, 3}) {
+                // Check if a proper divisor T/div is already periodic (primitive period)
+                for (int div = 12; div >= 2; --div) {
                     State yt = y0;
                     if (integrate_to(yt, T / div, m, 1e-12, 180000, nullptr, 1e-5) &&
-                        state_dist(yt, y0) < 1e-5) {
+                        state_dist(yt, y0) < 1e-4) {
                         Th /= div;
                         T = 2.0 * Th;
                         refine_brake(x3, y3, Th, m, verr);
@@ -571,7 +692,8 @@ static void run_continue(Masses m, double x3, double y3, double Th, int mass_idx
         } else {
             std::cout << cm[mass_idx] << " " << x3 << " " << y3 << " " << T << " "
                       << st.k1 << " " << st.k2 << " " << (st.linearly_stable ? 1 : 0) << " "
-                      << st.stab_margin << " " << tp.rmin << " " << tp.partner_swaps << "\n" << std::flush;
+                      << st.stab_margin << " " << tp.rmin << " " << tp.partner_swaps << " "
+                      << st.symp_err << "\n" << std::flush;
         }
     }
 }
