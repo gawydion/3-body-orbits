@@ -100,12 +100,17 @@ To distinguish classical rediscoveries from genuinely new numerical contribution
 
 ---
 
-## 3. Non-Hierarchical Mass-Stabilized `AAAbbb` Shuttle-Exchange Family
+## 3. Confirmed New Family: Non-Hierarchical Mass-Stabilized `AAAbbb` Shuttle-Exchange
 
-Among all 64 primitive `perp_L_nonzero` orbits in the catalog, 58 are $q$-fold inertial closures of the 1975–1976 BHH retrograde family (`A^q`), 2 are BHH satellites, 2 are 1:1 planetary co-orbitals, and **2 form a genuinely non-hierarchical, all-distinct-mass, full-3D-stable shuttle-exchange family** with exact $S_3$ free-group word **`AAAbbb`** (previously misreported as topologically impossible `AABaaB` because the old RK4 classifier started on the syzygy equator $n_z(0) = 0$):
-- **`2D-DEM-002`** ($m = [1, 0.9, 0.8]$, $T = 15.4951$, $q_{\text{RPO}} = 1$, $r_{\min} = 0.1894$): planar margin **`1.2061`** (**431× Figure-8**), full-3D vertically stable (**$k_z = -0.257$**), `symp_err = 5.8e-11`.
-- **`2D-DEM-019`** ($m = [1, 0.8, 0.6]$, $T = 19.0549$, $q_{\text{RPO}} = 1$, $r_{\min} = 0.1970$): planar margin **`0.1598`**, full-3D vertically stable (**$k_z = +0.120$**), `symp_err = 3.6e-11`.
-- Physically, the heaviest body $m_1$ shuttles back and forth between three close windings around $m_2$ (`AAA`) and three opposite-chirality windings around $m_3$ (`bbb`), with $r_{\max}/r_{\min} \in [7.5, 13.3]$ on both exchange pairs.
+> **Full Confirmation Dossier:** See [`AAAbbb_CONFIRMATION.md`](AAAbbb_CONFIRMATION.md), 34-digit submission bundle [`data/aaabbb/`](data/aaabbb/), and independent 128-bit (`__float128`) symplectic GL16 verifier [`src/confirm_aaabbb.cpp`](src/confirm_aaabbb.cpp).
+
+Among all 64 primitive `perp_L_nonzero` orbits in the catalog, 58 are $q$-fold inertial closures of the 1975–1976 BHH retrograde family (`A^q`), 2 are BHH satellites, 2 are 1:1 planetary co-orbitals, and **2 anchor a confirmed new, genuinely non-hierarchical, all-distinct-mass, full-3D-stable shuttle-exchange family** with exact $S_3$ free-group word **`AAAbbb`** (previously misreported as topologically impossible `AABaaB` because the old RK4 classifier started on the syzygy equator $n_z(0) = 0$):
+
+- **Flagship Confirmed Showcase — `2D-DEM-002` (`AAAbbb-DEM002`, $m = [1, 0.9, 0.8]$, $q_{\text{RPO}} = 1$):** $T = 15.49514152882967630717557496239618$, $T^* = 21.801275$, $\Lambda = 1.804271$, $r_{\min} = 0.18932$, full-3D linear stability margin **`1.206050`** (**431× Figure-8**, $k_1 = +0.79395$, $k_2 = +0.21888$, $k_z = -0.25682$), verified in **128-bit GL16** to `ret_err = 1.29e-31`, `symp_err = 7.36e-29`, GL16 step-halving (`h` vs `h/2`) state discrepancy `4.73e-31` and Floquet discrepancy `9.02e-28`, and surviving **`10,000 / 10,000`** full-3D periods under both $\delta = 10^{-5}$ and $\delta = 10^{-4}$ 3D velocity kicks.
+- **High Mass-Asymmetry Member — `2D-DEM-019` (`AAAbbb-DEM019`, $m = [1, 0.8, 0.6]$, $q_{\text{RPO}} = 1$):** $T = 19.054860$, $r_{\min} = 0.19703$, full-3D margin **`0.159787`** ($k_z = +0.12022$), 128-bit `ret_err = 4.13e-31`, `symp_err = 9.60e-29`, surviving `10,000 / 10,000` full-3D periods at $\delta = 10^{-5}$.
+- **Physical Geometry & Restricted Origin:** Inertial pairwise windings are $(w_{12}, w_{13}, w_{23}) = (-5, -5, -2)$, meaning in the co-rotating frame of the $m_2$–$m_3$ binary, the heaviest body $m_1$ makes **3 prograde loops around $m_2$ (`AAA`) and 3 around $m_3$ (`bbb`)**. Continuing $m = [\varepsilon, 1, 1] \to [0, 1, 1]$ lands smoothly on an exact 2:1 resonant orbit of the equal-mass Elliptic Restricted 3-Body Problem ($e = 0.092555$, violently Krein-unstable $|\lambda| \approx 35.2$) connected at $e \to 0$ to a doubly-symmetric 3+3 exchange orbit of the Copenhagen CR3BP ($C_J = 3.696245$, $a_{\text{Hénon}} = +168.90$, $|\lambda| \approx 337.8$); downward along $m = [1, \mu, \mu]$ the branch folds smoothly at $\mu_{\min} \approx 0.45746$.
+- **Dual Stabilization Mechanisms:** Hyperbolically unstable at equal masses $[1, 1, 1]$ ($\alpha = 0$, $k_1 = +3.569$, disintegrates in 10 periods), `AAAbbb` is stabilized to full-3D linear stability either (1) by lowering the companion mean mass $(m_2 + m_3)/2 < m_1$, opening a broad 2D mass-space stability island peaking at margin **`1.596310`** ($[1, 0.94, 0.71]$; isosceles symmetry peak `1.090913` at $[1, 0.89, 0.89]$; widest separation $r_{\min} = 0.24291$ at $[1, 0.70, 0.70]$; plus narrow stable peninsulas extending through the two-equal-mass point $[1, 1, 0.88]$, margin `0.4267`, out to $[1, 1.06, 0.88]$), or (2) via rotating-frame precession at equal masses $[1, 1, 1]$ ($\alpha/\pi \in [0.061, 0.096]$), yielding full-3D-stable equal-mass inertial rosettes `(AAAbbb)^q` for $q \in \{11..16\}$ (peaking at $q = 13$, exact $13T$ margin **`0.572160`**).
+- **Archive Novelty Check:** Verified absent from the live `threebodyorbits.com` Atlas (3,942 orbits) and `/hunt/garden` (82,032 loops), Li & Liao (2017, 2018, 2020, 2021 — where 2021 is strictly Moth I `ABAbaBABab` with $\Lambda \le 0.058$), Janković & Dmitrašinović (2016), Šuvakov & Dmitrašinović (2013, 2014), Sheen (2016), Broucke (1975 A/R), Broucke & Boggs (1975 Atlas S-series, incl. `S4`/`S122` = `AAA`), and Simó (2001). See [`AAAbbb_CONFIRMATION.md`](AAAbbb_CONFIRMATION.md) for the complete audit table and 34-digit coordinates.
 
 ---
 
@@ -255,8 +260,10 @@ Audited in **80-bit `long double` exact $24 \times 24$ analytical variational mo
 
 ## 9. Key References
 
+- Broucke, R. & Boggs, D. (1975). *Periodic orbits in the planar general three-body problem.* Celestial Mechanics 11, 13–38.
 - Broucke, R. (1975). *On relative periodic solutions of the planar general three-body problem.* Celestial Mechanics 12, 439–462.
-- Hadjidemetriou, J. D. (1975). *The continuation of periodic orbits from the restricted to the general three-body problem.* Celestial Mechanics 12, 155–174.
+- Hadjidemetriou, J. D. (1975). *The continuation of periodic orbits from the restricted to the general three-body problem* & *The stability of periodic orbits in the three-body problem.* Celestial Mechanics 12, 155–174; 255–276.
+- Hadjidemetriou, J. D. & Christides, T. (1975). *Families of periodic orbits in the planar three-body problem.* Celestial Mechanics 12, 175–187.
 - Hénon, M. (1976, 1977). *A family of periodic solutions of the planar three-body problem, and their stability.* Celestial Mechanics 13, 267–285; 15, 243–261.
 - Ichtiaroglou, S. & Michalodimitrakis, M. (1980). *Three-body problem: The existence of families of three-dimensional periodic orbits which bifurcate from planar periodic orbits.* Astronomy & Astrophysics 81, 30–32.
 - Moore, C. (1993). *Braids in classical dynamics.* Phys. Rev. Lett. 70, 3675–3679.
@@ -272,4 +279,6 @@ Audited in **80-bit `long double` exact $24 \times 24$ analytical variational mo
 - Li, X. & Liao, S. (2017). *More than six hundred new families of Newtonian periodic planar collisionless three-body orbits.* Sci. China Phys. Mech. Astron. 60, 129511.
 - Li, X., Jing, Y. & Liao, S. (2018). *Over a thousand new periodic orbits of a planar three-body system with unequal masses.* PASJ 70, 64.
 - Li, X. & Liao, S. (2019). *Collisionless periodic orbits in the free-fall three-body problem.* New Astronomy 70, 22–26.
+- Li, X. & Liao, S. (2020). *Collisionless periodic orbits in the unequal-mass Broucke–Hadjidemetriou–Hénon family.* `arXiv:2008.13550`.
+- Li, X., Li, X. & Liao, S. (2021). *One family of 13315 stable periodic orbits of non-hierarchical unequal-mass triple systems.* Sci. China Phys. Mech. Astron. 64, 219511 (`arXiv:2007.10184`).
 - Li, X. & Liao, S. (2025). *Three-dimensional periodic orbits of the three-body problem bifurcating from planar retrograde families.*
