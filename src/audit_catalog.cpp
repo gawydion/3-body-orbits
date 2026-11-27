@@ -5,6 +5,7 @@
 #include <complex>
 #include <cstdio>
 #include <cstdlib>
+#include <functional>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
@@ -13,7 +14,8 @@
 #include <vector>
 
 // Production 80-bit (long double) analytical variational monodromy, RPO/cover,
-// and Montgomery S3 shape-sphere topology auditor for Newtonian 3-body orbits.
+// and Montgomery S3 shape-sphere topology auditor for Newtonian 3-body,
+// Post-Newtonian (1PN ADM) 3-body, and Newtonian 4-body orbits.
 //
 // Modes:
 //   audit_catalog [--threads N]
@@ -23,6 +25,13 @@
 //     Reads lines: id m3 vx vy T
 //     Exploits half-period spatial involution P(theta) * y(T/2) = y(0) (P^2 = I)
 //     at tol = 1e-17L so M(T) = (P * M(T/2))^2 and k_j = h_j^2 - 2.
+//   audit_catalog --four-body [--threads N]
+//     Reads lines: id dim m0 m1 m2 m3 T precess_rad y0[0..23]
+//     Full 24x24 80-bit analytical variational monodromy, canonical symplecticity,
+//     Francis QR, and exact trace-invariant k6 (immune to Jordan-block splitting).
+//   audit_catalog --1pn [--threads N]
+//     Reads lines: id dim beta m0 m1 m2 T T_rpo q_fold precess_rad z0[0..17]
+//     80-bit canonical 1PN ADM audit at true T_inert (theta=0 for q_fold>0) + 1-RPO.
 
 using ld = long double;
 using cplx = std::complex<ld>;
@@ -1185,56 +1194,150 @@ static std::string audit_one(const AuditJob& jb) {
         }
     }
 
-    // Dense 2400-step adaptive geometry, swaps, syzygies, and 3D thickness
-    const int NS = 2400;
-    ld dt = T / NS;
-    State3D yc = y0;
+    // Adaptive per-step geometry, exact close-encounter rmin, swaps, syzygies, and 3D thickness
     ld rmin_pair[3] = {1e300L, 1e300L, 1e300L};
     ld rmax_pair[3] = {0, 0, 0};
     ld Rmin_body[3] = {1e300L, 1e300L, 1e300L};
     ld Rmax_body[3] = {0, 0, 0};
-    int closest_counts[3] = {0, 0, 0};
+    ld closest_time[3] = {0, 0, 0};
     int prev_cl = -1, exact_swaps = 0, syzygies = 0;
+    std::string syzygy_seq;
     ld prev_area = 0;
+    bool has_prev_area = false;
     ld C[3][3] = {{0}};
-    int cov_cnt = 0;
+    ld cov_time = 0.0L;
 
-    for (int k = 0; k <= NS; ++k) {
-        auto dist3 = [&](int a, int b) {
-            ld dx = yc[3*b]-yc[3*a], dy = yc[3*b+1]-yc[3*a+1], dz = yc[3*b+2]-yc[3*a+2];
-            return std::sqrt(dx*dx + dy*dy + dz*dz);
-        };
-        ld r[3] = {dist3(0, 1), dist3(0, 2), dist3(1, 2)};
+    auto dist3_of = [](const State3D& s, int a, int b) -> ld {
+        ld dx = s[3*b]-s[3*a], dy = s[3*b+1]-s[3*a+1], dz = s[3*b+2]-s[3*a+2];
+        return std::sqrt(dx*dx + dy*dy + dz*dz);
+    };
+    auto rdot_of = [](const State3D& s, int a, int b) -> ld {
+        ld dx = s[3*b]-s[3*a], dy = s[3*b+1]-s[3*a+1], dz = s[3*b+2]-s[3*a+2];
+        ld dvx = s[9+3*b]-s[9+3*a], dvy = s[9+3*b+1]-s[9+3*a+1], dvz = s[9+3*b+2]-s[9+3*a+2];
+        return dx*dvx + dy*dvy + dz*dvz;
+    };
+    auto area2d_of = [](const State3D& s) -> ld {
+        return (s[3] - s[0]) * (s[7] - s[1]) - (s[4] - s[1]) * (s[6] - s[0]);
+    };
+    auto mid_body_2d = [&](const State3D& s) -> int {
+        ld d01 = dist3_of(s, 0, 1), d02 = dist3_of(s, 0, 2), d12 = dist3_of(s, 1, 2);
+        if (d12 >= d01 && d12 >= d02) return 1;
+        if (d02 >= d01 && d02 >= d12) return 2;
+        return 3;
+    };
+
+    State3D yc = y0;
+    ld tg = 0.0L;
+    ld h_max_g = std::min(0.01L, T / 2400.0L);
+    ld hg = std::min(1e-4L, h_max_g);
+    ld rmin_dummy = 1e300L;
+
+    auto sample_point = [&](const State3D& s, ld dt_w) {
+        ld r[3] = {dist3_of(s, 0, 1), dist3_of(s, 0, 2), dist3_of(s, 1, 2)};
         for (int p = 0; p < 3; ++p) {
             rmin_pair[p] = std::min(rmin_pair[p], r[p]);
             rmax_pair[p] = std::max(rmax_pair[p], r[p]);
         }
         for (int b = 0; b < 3; ++b) {
-            ld qv[3] = {yc[3*b], yc[3*b+1], yc[3*b+2]};
+            ld qv[3] = {s[3*b], s[3*b+1], s[3*b+2]};
             ld Rb = std::sqrt(qv[0]*qv[0] + qv[1]*qv[1] + qv[2]*qv[2]);
             Rmin_body[b] = std::min(Rmin_body[b], Rb);
             Rmax_body[b] = std::max(Rmax_body[b], Rb);
-            if (dim == 3 && k < NS) {
-                for (int r_ = 0; r_ < 3; ++r_) for (int c_ = 0; c_ < 3; ++c_) C[r_][c_] += qv[r_] * qv[c_];
-                cov_cnt++;
+            if (dim == 3 && dt_w > 0.0L) {
+                for (int r_ = 0; r_ < 3; ++r_)
+                    for (int c_ = 0; c_ < 3; ++c_)
+                        C[r_][c_] += dt_w * qv[r_] * qv[c_];
             }
         }
+        if (dim == 3 && dt_w > 0.0L) cov_time += 3.0L * dt_w;
         int cl = (r[0] <= r[1] && r[0] <= r[2]) ? 0 : ((r[1] <= r[2]) ? 1 : 2);
-        if (k < NS) closest_counts[cl]++;
+        if (dt_w > 0.0L) closest_time[cl] += dt_w;
         if (prev_cl != -1 && cl != prev_cl) exact_swaps++;
         prev_cl = cl;
+    };
+
+    sample_point(yc, 0.0L);
+    if (dim == 2) {
+        ld a0 = area2d_of(yc);
+        if (std::abs(a0) > 1e-14L) { prev_area = a0; has_prev_area = true; }
+    }
+    const int pairs_ab[3][2] = {{0, 1}, {0, 2}, {1, 2}};
+    for (int step = 0; tg < T - 1e-16L && step < 3000000; ++step) {
+        State3D yprev = yc;
+        ld tprev = tg;
+        if (hg > h_max_g) hg = h_max_g;
+        if (!dopri5_step_state(yc, tg, hg, T, m, 1e-13L, rmin_dummy)) break;
+        if (hg > h_max_g) hg = h_max_g;
+        ld dt_step = tg - tprev;
+        sample_point(yc, dt_step);
+
+        // Refine exact continuous local minimum of r_ab(t) whenever rdot changes sign - -> +
+        for (int p = 0; p < 3; ++p) {
+            int a = pairs_ab[p][0], b = pairs_ab[p][1];
+            ld d0 = rdot_of(yprev, a, b), d1 = rdot_of(yc, a, b);
+            if (d0 < 0.0L && d1 > 0.0L) {
+                ld lo = 0.0L, hi = dt_step;
+                for (int bi = 0; bi < 14; ++bi) {
+                    ld mid = 0.5L * (lo + hi);
+                    State3D ym = yprev;
+                    integrate_state(ym, mid, m, 1e-13L);
+                    ld rm = dist3_of(ym, a, b);
+                    if (rm < rmin_pair[p]) rmin_pair[p] = rm;
+                    if (rdot_of(ym, a, b) < 0.0L) lo = mid; else hi = mid;
+                }
+            }
+        }
 
         if (dim == 2) {
-            ld area = (yc[3] - yc[0]) * (yc[7] - yc[1]) - (yc[4] - yc[1]) * (yc[6] - yc[0]);
-            if (k > 0 && ((prev_area > 0 && area < 0) || (prev_area < 0 && area > 0))) syzygies++;
-            if (area != 0.0L) prev_area = area;
+            ld area = area2d_of(yc);
+            if (std::abs(area) > 1e-14L) {
+                if (has_prev_area && ((prev_area > 0 && area < 0) || (prev_area < 0 && area > 0))) {
+                    ld a_lo = area2d_of(yprev), a_hi = area;
+                    State3D ysyz = yc;
+                    if (dt_step > 1e-5L && a_lo * a_hi < 0.0L) {
+                        ld lo = 0.0L, hi = dt_step;
+                        for (int bi = 0; bi < 12; ++bi) {
+                            ld mid = 0.5L * (lo + hi);
+                            State3D ym = yprev;
+                            integrate_state(ym, mid, m, 1e-13L);
+                            ld am = area2d_of(ym);
+                            ysyz = ym;
+                            if ((a_lo > 0 && am > 0) || (a_lo < 0 && am < 0)) { lo = mid; a_lo = am; }
+                            else { hi = mid; a_hi = am; }
+                        }
+                    } else {
+                        ld frac = std::abs(prev_area) / (std::abs(prev_area) + std::abs(area));
+                        for (int k = 0; k < 18; ++k) ysyz[k] = yprev[k] + frac * (yc[k] - yprev[k]);
+                    }
+                    syzygies++;
+                    syzygy_seq.push_back(char('0' + mid_body_2d(ysyz)));
+                }
+                prev_area = area;
+                has_prev_area = true;
+            }
         }
-        if (k < NS) integrate_state(yc, dt, m, 1e-13L);
+    }
+
+    int closest_counts[3] = {0, 0, 0};
+    ld tot_ct = closest_time[0] + closest_time[1] + closest_time[2];
+    if (tot_ct > 0.0L) {
+        closest_counts[0] = (int)std::llround(2400.0L * closest_time[0] / tot_ct);
+        closest_counts[1] = (int)std::llround(2400.0L * closest_time[1] / tot_ct);
+        closest_counts[2] = std::max(0, 2400 - closest_counts[0] - closest_counts[1]);
+    }
+
+    std::string syzygy_half_seq;
+    if (dim == 2 && jb.subspace == "free_fall_brake" && syzygy_seq.size() >= 2 && syzygy_seq.size() % 2 == 0) {
+        size_t half = syzygy_seq.size() / 2;
+        for (size_t i = 0; i < half; ++i) {
+            if (i > 0) syzygy_half_seq.push_back('-');
+            syzygy_half_seq.push_back(syzygy_seq[i]);
+        }
     }
 
     ld thickness_3d = 0.0L;
-    if (dim == 3 && cov_cnt > 0) {
-        for (int r_ = 0; r_ < 3; ++r_) for (int c_ = 0; c_ < 3; ++c_) C[r_][c_] /= cov_cnt;
+    if (dim == 3 && cov_time > 0.0L) {
+        for (int r_ = 0; r_ < 3; ++r_) for (int c_ = 0; c_ < 3; ++c_) C[r_][c_] /= cov_time;
         thickness_3d = std::sqrt(min_eig_sym_3x3(C));
     }
 
@@ -1315,6 +1418,8 @@ static std::string audit_one(const AuditJob& jb) {
        << ",\"closest_counts\":[" << closest_counts[0] << "," << closest_counts[1] << "," << closest_counts[2] << "]"
        << ",\"exact_swaps\":" << exact_swaps
        << ",\"syzygies\":" << syzygies
+       << ",\"syzygy_seq\":\"" << syzygy_seq << "\""
+       << ",\"syzygy_half_seq\":\"" << syzygy_half_seq << "\""
        << ",\"thickness_3d\":" << (double)thickness_3d
        << ",\"word_red\":\"" << w_red << "\""
        << ",\"word_can\":\"" << w_can << "\""
@@ -1325,15 +1430,611 @@ static std::string audit_one(const AuditJob& jb) {
     return os.str();
 }
 
+// =========================================================================
+// Mode 3: 80-bit Analytical Variational 24x24 4-Body Auditor (--four-body)
+// =========================================================================
+namespace audit4b {
+using State = std::array<ld, 24>;
+using Masses4 = std::array<ld, 4>;
+using VarState4 = std::array<ld, 24 + 24 * 24>;
+
+static void deriv_state(const State& s, const Masses4& m, State& ds) {
+    for (int i = 0; i < 12; ++i) ds[i] = s[12 + i];
+    for (int i = 12; i < 24; ++i) ds[i] = 0.0L;
+    for (int i = 0; i < 4; ++i) {
+        for (int j = i + 1; j < 4; ++j) {
+            ld dx = s[3 * j] - s[3 * i], dy = s[3 * j + 1] - s[3 * i + 1], dz = s[3 * j + 2] - s[3 * i + 2];
+            ld r2 = dx * dx + dy * dy + dz * dz;
+            ld ir = 1.0L / std::sqrt(r2), ir3 = ir * ir * ir;
+            ds[12 + 3 * i]     += m[j] * dx * ir3;
+            ds[12 + 3 * i + 1] += m[j] * dy * ir3;
+            ds[12 + 3 * i + 2] += m[j] * dz * ir3;
+            ds[12 + 3 * j]     -= m[i] * dx * ir3;
+            ds[12 + 3 * j + 1] -= m[i] * dy * ir3;
+            ds[12 + 3 * j + 2] -= m[i] * dz * ir3;
+        }
+    }
+}
+
+static void deriv_and_jac(const State& s, const Masses4& m, State& ds, ld J[24][24]) {
+    for (int i = 0; i < 12; ++i) ds[i] = s[12 + i];
+    for (int i = 12; i < 24; ++i) ds[i] = 0.0L;
+    for (int r = 0; r < 24; ++r)
+        for (int c = 0; c < 24; ++c) J[r][c] = 0.0L;
+    for (int i = 0; i < 12; ++i) J[i][12 + i] = 1.0L;
+    for (int i = 0; i < 4; ++i) {
+        for (int j = i + 1; j < 4; ++j) {
+            ld dx = s[3 * j] - s[3 * i], dy = s[3 * j + 1] - s[3 * i + 1], dz = s[3 * j + 2] - s[3 * i + 2];
+            ld r2 = dx * dx + dy * dy + dz * dz;
+            ld ir = 1.0L / std::sqrt(r2), ir3 = ir * ir * ir, ir5 = ir3 * ir * ir;
+            ld d[3] = {dx, dy, dz};
+            for (int a = 0; a < 3; ++a) {
+                ds[12 + 3 * i + a] += m[j] * d[a] * ir3;
+                ds[12 + 3 * j + a] -= m[i] * d[a] * ir3;
+            }
+            for (int a = 0; a < 3; ++a) {
+                for (int b = 0; b < 3; ++b) {
+                    ld T = ((a == b) ? ir3 : 0.0L) - 3.0L * d[a] * d[b] * ir5;
+                    J[12 + 3 * i + a][3 * j + b] += m[j] * T;
+                    J[12 + 3 * i + a][3 * i + b] -= m[j] * T;
+                    J[12 + 3 * j + a][3 * i + b] += m[i] * T;
+                    J[12 + 3 * j + a][3 * j + b] -= m[i] * T;
+                }
+            }
+        }
+    }
+}
+
+static void deriv_var(const VarState4& z, const Masses4& m, VarState4& dz) {
+    State s, ds;
+    for (int i = 0; i < 24; ++i) s[i] = z[i];
+    ld J[24][24];
+    deriv_and_jac(s, m, ds, J);
+    for (int i = 0; i < 24; ++i) dz[i] = ds[i];
+    for (int c = 0; c < 24; ++c) {
+        for (int r = 0; r < 24; ++r) {
+            ld sum = 0.0L;
+            if (r < 12) sum = z[24 + (12 + r) * 24 + c];
+            else for (int k = 0; k < 12; ++k) sum += J[r][k] * z[24 + k * 24 + c];
+            dz[24 + r * 24 + c] = sum;
+        }
+    }
+}
+
+static bool integrate_var(VarState4& y, ld T, const Masses4& m, ld tol = 1e-16L) {
+    constexpr ld a21 = 1.0L / 5, a31 = 3.0L / 40, a32 = 9.0L / 40,
+        a41 = 44.0L / 45, a42 = -56.0L / 15, a43 = 32.0L / 9,
+        a51 = 19372.0L / 6561, a52 = -25360.0L / 2187, a53 = 64448.0L / 6561, a54 = -212.0L / 729,
+        a61 = 9017.0L / 3168, a62 = -355.0L / 33, a63 = 46732.0L / 5247, a64 = 49.0L / 176, a65 = -5103.0L / 18656,
+        b1 = 35.0L / 384, b3 = 500.0L / 1113, b4 = 125.0L / 192, b5 = -2187.0L / 6784, b6 = 11.0L / 84,
+        e1 = 71.0L / 57600, e3 = -71.0L / 16695, e4 = 71.0L / 1920, e5 = -17253.0L / 339200, e6 = 22.0L / 525, e7 = -1.0L / 40;
+    constexpr int D = 600;
+    ld t = 0.0L, h = std::min(1e-3L, T * 0.01L);
+    VarState4 k1, k2, k3, k4, k5, k6, k7, yt, yn;
+    for (int steps = 0; t < T - 1e-17L && steps < 800000; ++steps) {
+        if (t + h > T) h = T - t;
+        deriv_var(y, m, k1);
+        for (int i = 0; i < D; ++i) yt[i] = y[i] + h * a21 * k1[i]; deriv_var(yt, m, k2);
+        for (int i = 0; i < D; ++i) yt[i] = y[i] + h * (a31 * k1[i] + a32 * k2[i]); deriv_var(yt, m, k3);
+        for (int i = 0; i < D; ++i) yt[i] = y[i] + h * (a41 * k1[i] + a42 * k2[i] + a43 * k3[i]); deriv_var(yt, m, k4);
+        for (int i = 0; i < D; ++i) yt[i] = y[i] + h * (a51 * k1[i] + a52 * k2[i] + a53 * k3[i] + a54 * k4[i]); deriv_var(yt, m, k5);
+        for (int i = 0; i < D; ++i) yt[i] = y[i] + h * (a61 * k1[i] + a62 * k2[i] + a63 * k3[i] + a64 * k4[i] + a65 * k5[i]); deriv_var(yt, m, k6);
+        for (int i = 0; i < D; ++i) yn[i] = y[i] + h * (b1 * k1[i] + b3 * k3[i] + b4 * k4[i] + b5 * k5[i] + b6 * k6[i]); deriv_var(yn, m, k7);
+        ld err = 0.0L;
+        for (int i = 0; i < 24; ++i) {
+            ld ei = h * (e1 * k1[i] + e3 * k3[i] + e4 * k4[i] + e5 * k5[i] + e6 * k6[i] + e7 * k7[i]);
+            ld sc = tol * (1.0L + std::max(std::abs(y[i]), std::abs(yn[i])));
+            err += (ei / sc) * (ei / sc);
+        }
+        err = std::sqrt(err / 24.0L);
+        if (err <= 1.0L) {
+            y = yn; t += h;
+            h = std::min(h * (err == 0 ? 5.0L : std::min(5.0L, std::max(0.2L, 0.9L * std::pow(err, -0.2L)))), 0.04L);
+        } else {
+            h *= std::max(0.1L, 0.9L * std::pow(err, -0.25L));
+            if (h < 1e-16L) return false;
+        }
+    }
+    return t >= T - 1e-14L;
+}
+
+static void measure_geom_adaptive(const State& y0, ld T, const Masses4& m, ld& rmin_out, ld& rmax_out, ld& thick_out, int& swaps_out) {
+    constexpr ld a21 = 1.0L / 5, a31 = 3.0L / 40, a32 = 9.0L / 40,
+        a41 = 44.0L / 45, a42 = -56.0L / 15, a43 = 32.0L / 9,
+        a51 = 19372.0L / 6561, a52 = -25360.0L / 2187, a53 = 64448.0L / 6561, a54 = -212.0L / 729,
+        a61 = 9017.0L / 3168, a62 = -355.0L / 33, a63 = 46732.0L / 5247, a64 = 49.0L / 176, a65 = -5103.0L / 18656,
+        b1 = 35.0L / 384, b3 = 500.0L / 1113, b4 = 125.0L / 192, b5 = -2187.0L / 6784, b6 = 11.0L / 84,
+        e1 = 71.0L / 57600, e3 = -71.0L / 16695, e4 = 71.0L / 1920, e5 = -17253.0L / 339200, e6 = 22.0L / 525, e7 = -1.0L / 40;
+    State y = y0, k1, k2, k3, k4, k5, k6, k7, yt, yn;
+    ld t = 0.0L, hmax = std::min(0.02L, T / 1000.0L), h = std::min(1e-3L, hmax), tol = 1e-13L;
+    ld rmin = 1e300L, rmax = 0.0L, C[3][3] = {{0}}, ctime = 0.0L;
+    int prev_cl = -1, swaps = 0;
+    auto sample = [&](const State& s, ld dtw) {
+        ld best_r = 1e300L; int cl = -1, pid = 0;
+        for (int i = 0; i < 4; ++i)
+            for (int j = i + 1; j < 4; ++j, ++pid) {
+                ld dx = s[3*j]-s[3*i], dy = s[3*j+1]-s[3*i+1], dz = s[3*j+2]-s[3*i+2];
+                ld r = std::sqrt(dx*dx + dy*dy + dz*dz);
+                if (r < rmin) rmin = r;
+                if (r > rmax) rmax = r;
+                if (r < best_r) { best_r = r; cl = pid; }
+            }
+        if (prev_cl != -1 && cl != prev_cl) swaps++;
+        prev_cl = cl;
+        if (dtw > 0.0L) {
+            for (int b = 0; b < 4; ++b) {
+                ld qv[3] = {s[3*b], s[3*b+1], s[3*b+2]};
+                for (int r = 0; r < 3; ++r) for (int c = 0; c < 3; ++c) C[r][c] += dtw * qv[r] * qv[c];
+            }
+            ctime += 4.0L * dtw;
+        }
+    };
+    sample(y, 0.0L);
+    for (int step = 0; t < T - 1e-15L && step < 1000000; ++step) {
+        if (h > hmax) h = hmax;
+        if (t + h > T) h = T - t;
+        deriv_state(y, m, k1);
+        for (int i = 0; i < 24; ++i) yt[i] = y[i] + h * a21 * k1[i]; deriv_state(yt, m, k2);
+        for (int i = 0; i < 24; ++i) yt[i] = y[i] + h * (a31 * k1[i] + a32 * k2[i]); deriv_state(yt, m, k3);
+        for (int i = 0; i < 24; ++i) yt[i] = y[i] + h * (a41 * k1[i] + a42 * k2[i] + a43 * k3[i]); deriv_state(yt, m, k4);
+        for (int i = 0; i < 24; ++i) yt[i] = y[i] + h * (a51 * k1[i] + a52 * k2[i] + a53 * k3[i] + a54 * k4[i]); deriv_state(yt, m, k5);
+        for (int i = 0; i < 24; ++i) yt[i] = y[i] + h * (a61 * k1[i] + a62 * k2[i] + a63 * k3[i] + a64 * k4[i] + a65 * k5[i]); deriv_state(yt, m, k6);
+        for (int i = 0; i < 24; ++i) yn[i] = y[i] + h * (b1 * k1[i] + b3 * k3[i] + b4 * k4[i] + b5 * k5[i] + b6 * k6[i]); deriv_state(yn, m, k7);
+        ld err = 0.0L;
+        for (int i = 0; i < 24; ++i) {
+            ld ei = h * (e1 * k1[i] + e3 * k3[i] + e4 * k4[i] + e5 * k5[i] + e6 * k6[i] + e7 * k7[i]);
+            ld sc = tol * (1.0L + std::max(std::abs(y[i]), std::abs(yn[i])));
+            err += (ei / sc) * (ei / sc);
+        }
+        err = std::sqrt(err / 24.0L);
+        if (err <= 1.0L) {
+            y = yn; t += h;
+            sample(y, h);
+            h = std::min(h * (err == 0 ? 5.0L : std::min(5.0L, std::max(0.2L, 0.9L * std::pow(err, -0.2L)))), hmax);
+        } else {
+            h *= std::max(0.1L, 0.9L * std::pow(err, -0.25L));
+            if (h < 1e-16L) break;
+        }
+    }
+    if (ctime > 0.0L) for (int r = 0; r < 3; ++r) for (int c = 0; c < 3; ++c) C[r][c] /= ctime;
+    rmin_out = rmin; rmax_out = rmax; thick_out = std::sqrt(min_eig_sym_3x3(C)); swaps_out = swaps;
+}
+
+static void rot_mat3(const ld u[3], ld ang, ld R[3][3]) {
+    ld c = std::cos(ang), s = std::sin(ang), omc = 1.0L - c;
+    R[0][0] = c + u[0] * u[0] * omc; R[0][1] = u[0] * u[1] * omc - u[2] * s; R[0][2] = u[0] * u[2] * omc + u[1] * s;
+    R[1][0] = u[1] * u[0] * omc + u[2] * s; R[1][1] = c + u[1] * u[1] * omc; R[1][2] = u[1] * u[2] * omc - u[0] * s;
+    R[2][0] = u[2] * u[0] * omc - u[1] * s; R[2][1] = u[2] * u[1] * omc + u[0] * s; R[2][2] = c + u[2] * u[2] * omc;
+}
+
+static int run(int nthreads) {
+    struct Job4 { std::string id; int dim; Masses4 m; ld T, prec; State y0; };
+    std::vector<Job4> jobs;
+    Job4 jb;
+    while (std::cin >> jb.id >> jb.dim >> jb.m[0] >> jb.m[1] >> jb.m[2] >> jb.m[3] >> jb.T >> jb.prec) {
+        for (int i = 0; i < 24; ++i) std::cin >> jb.y0[i];
+        jobs.push_back(jb);
+    }
+    std::vector<std::string> outs(jobs.size());
+    std::atomic<size_t> next_idx{0};
+    std::vector<std::thread> ths;
+    for (int tid = 0; tid < nthreads; ++tid) {
+        ths.emplace_back([&]() {
+            while (true) {
+                size_t idx = next_idx.fetch_add(1);
+                if (idx >= jobs.size()) break;
+                const auto& j = jobs[idx];
+                ld L[3] = {0, 0, 0};
+                for (int b = 0; b < 4; ++b) {
+                    L[0] += j.m[b] * (j.y0[3*b+1]*j.y0[12+3*b+2] - j.y0[3*b+2]*j.y0[12+3*b+1]);
+                    L[1] += j.m[b] * (j.y0[3*b+2]*j.y0[12+3*b+0] - j.y0[3*b+0]*j.y0[12+3*b+2]);
+                    L[2] += j.m[b] * (j.y0[3*b+0]*j.y0[12+3*b+1] - j.y0[3*b+1]*j.y0[12+3*b+0]);
+                }
+                ld Lm = std::sqrt(L[0]*L[0] + L[1]*L[1] + L[2]*L[2]);
+                ld u[3] = {0, 0, 1};
+                if (Lm > 1e-12L) { u[0] = L[0]/Lm; u[1] = L[1]/Lm; u[2] = L[2]/Lm; }
+
+                VarState4 z{};
+                for (int i = 0; i < 24; ++i) z[i] = j.y0[i];
+                for (int i = 0; i < 24; ++i) z[24 + i * 24 + i] = 1.0L;
+                bool ok = integrate_var(z, j.T, j.m, 1e-16L);
+                if (!ok) {
+                    outs[idx] = "{\"id\":\"" + j.id + "\",\"ok_var\":false}";
+                    continue;
+                }
+                ld R[3][3]; rot_mat3(u, -j.prec, R);
+                ld ret2 = 0.0L;
+                for (int blk = 0; blk < 8; ++blk) {
+                    ld v[3] = {z[3*blk], z[3*blk+1], z[3*blk+2]};
+                    for (int a = 0; a < 3; ++a) {
+                        ld rv = R[a][0]*v[0] + R[a][1]*v[1] + R[a][2]*v[2];
+                        ret2 += (rv - j.y0[3*blk+a]) * (rv - j.y0[3*blk+a]);
+                    }
+                }
+                std::vector<std::vector<ld>> M(24, std::vector<ld>(24, 0.0L));
+                for (int c = 0; c < 24; ++c)
+                    for (int blk = 0; blk < 8; ++blk) {
+                        ld v[3] = {z[24 + (3*blk)*24 + c], z[24 + (3*blk+1)*24 + c], z[24 + (3*blk+2)*24 + c]};
+                        for (int a = 0; a < 3; ++a) M[3*blk+a][c] = R[a][0]*v[0] + R[a][1]*v[1] + R[a][2]*v[2];
+                    }
+                ld symp = 0.0L;
+                for (int i = 0; i < 24; ++i)
+                    for (int j2 = 0; j2 < 24; ++j2) {
+                        ld s = 0.0L;
+                        ld sci = (i >= 12) ? (1.0L / j.m[(i - 12) / 3]) : 1.0L;
+                        ld scj = (j2 >= 12) ? (1.0L / j.m[(j2 - 12) / 3]) : 1.0L;
+                        for (int k = 0; k < 12; ++k) {
+                            ld mk = j.m[k / 3];
+                            s += (M[k][i] * sci) * (mk * M[k + 12][j2] * scj) - (mk * M[k + 12][i] * sci) * (M[k][j2] * scj);
+                        }
+                        ld tgt = (j2 == i + 12) ? 1.0L : ((i == j2 + 12) ? -1.0L : 0.0L);
+                        symp = std::max(symp, std::abs(s - tgt));
+                    }
+                ld trM = 0.0L; for (int i = 0; i < 24; ++i) trM += M[i][i];
+                ld tr_nontriv = trM - (6.0L + 6.0L * std::cos(j.prec));
+                auto eigs = eigenvalues_qr(M);
+
+                std::vector<cplx> expected;
+                for (int i = 0; i < 6; ++i) expected.emplace_back(1.0L, 0.0L);
+                cplx rp(std::cos(j.prec), std::sin(j.prec)), rm(std::cos(j.prec), -std::sin(j.prec));
+                for (int i = 0; i < 3; ++i) { expected.push_back(rp); expected.push_back(rm); }
+                std::vector<bool> used(24, false);
+                ld triv_err = 0.0L;
+                for (auto& tgt : expected) {
+                    int bi = -1; ld bd = 1e30L;
+                    for (int i = 0; i < 24; ++i) if (!used[i]) { ld d = std::abs(eigs[i] - tgt); if (d < bd) { bd = d; bi = i; } }
+                    used[bi] = true; triv_err = std::max(triv_err, bd);
+                }
+                std::vector<cplx> rem;
+                for (int i = 0; i < 24; ++i) if (!used[i]) rem.push_back(eigs[i]);
+                ld max_mod = 0.0L, max_rad_err = 0.0L;
+                for (auto& zc : rem) {
+                    ld az = std::abs(zc);
+                    max_mod = std::max(max_mod, az);
+                    max_rad_err = std::max(max_rad_err, std::abs(az - 1.0L));
+                }
+                ld sum_ell = 0.0L; int n_ell = 0;
+                for (auto& zc : rem) if (std::abs(zc.imag()) > 1e-2L) { sum_ell += zc.real(); n_ell++; }
+                ld k_trace_last = (n_ell == 10) ? (tr_nontriv - sum_ell) : 0.0L;
+                bool has_hyperbolic = (n_ell == 10 && k_trace_last > 2.0L) || (max_mod > 1.0L + 1e-5L);
+
+                std::vector<ld> ks;
+                std::vector<bool> pused(rem.size(), false);
+                for (size_t i = 0; i < rem.size(); ++i) {
+                    if (pused[i]) continue;
+                    pused[i] = true;
+                    int mate = -1; ld bd = 1e30L;
+                    for (size_t k = i + 1; k < rem.size(); ++k) {
+                        if (pused[k]) continue;
+                        ld d = std::min(std::abs(rem[k] - std::conj(rem[i])), std::abs(rem[k] * rem[i] - cplx(1.0L, 0.0L)));
+                        if (d < bd) { bd = d; mate = (int)k; }
+                    }
+                    if (mate >= 0) { pused[mate] = true; ks.push_back((rem[i] + rem[mate]).real()); }
+                }
+                if (n_ell == 10) {
+                    auto it = std::max_element(ks.begin(), ks.end());
+                    if (it != ks.end()) *it = k_trace_last;
+                }
+                std::sort(ks.begin(), ks.end(), [](ld a, ld b) { return std::abs(a) > std::abs(b); });
+                ld exact_margin = ks.empty() ? -10.0L : (2.0L - std::abs(ks[0]));
+                bool stable_3d = !has_hyperbolic && symp < 1e-6L && max_rad_err < 1e-4L && exact_margin > 1e-4L && ks.size() == 6;
+
+                ld rmin = 0, rmax = 0, thick = 0; int swaps = 0;
+                measure_geom_adaptive(j.y0, j.T, j.m, rmin, rmax, thick, swaps);
+
+                std::ostringstream os;
+                os << std::setprecision(13)
+                   << "{\"id\":\"" << j.id << "\",\"ok_var\":true,\"dim\":" << j.dim
+                   << ",\"ret_err_ld\":" << (double)std::sqrt(ret2)
+                   << ",\"symp_err\":" << (double)symp
+                   << ",\"triv_err\":" << (double)triv_err
+                   << ",\"max_eig_mod\":" << (double)max_mod
+                   << ",\"max_eig_rad_err\":" << (double)max_rad_err
+                   << ",\"n_ell_eigs\":" << n_ell
+                   << ",\"k_trace_last\":" << (double)k_trace_last
+                   << ",\"k_trace_minus_2\":" << (double)(k_trace_last - 2.0L)
+                   << ",\"exact_margin\":" << (double)exact_margin
+                   << ",\"hyperbolic\":" << (has_hyperbolic ? "true" : "false")
+                   << ",\"stable_3d\":" << (stable_3d ? "true" : "false")
+                   << ",\"rmin\":" << (double)rmin
+                   << ",\"rmax\":" << (double)rmax
+                   << ",\"thickness_3d\":" << (double)thick
+                   << ",\"exact_swaps\":" << swaps
+                   << ",\"k_indices\":[";
+                for (size_t i = 0; i < ks.size(); ++i) os << (double)ks[i] << (i + 1 < ks.size() ? "," : "");
+                os << "]}";
+                outs[idx] = os.str();
+            }
+        });
+    }
+    for (auto& th : ths) th.join();
+    for (const auto& s : outs) std::cout << s << "\n";
+    return 0;
+}
+} // namespace audit4b
+
+// =========================================================================
+// Mode 4: 80-bit Canonical 1PN ADM Auditor (--1pn)
+// =========================================================================
+namespace audit1pn {
+using State1 = std::array<ld, 18>;
+
+static ld hamiltonian_1pn(const State1& s, const Masses& m, ld beta) {
+    ld H0 = 0.0L, H1 = 0.0L, phi[3] = {0, 0, 0};
+    for (int a = 0; a < 3; ++a) {
+        ld px = s[9 + 3*a], py = s[10 + 3*a], pz = s[11 + 3*a];
+        ld p2 = px*px + py*py + pz*pz;
+        H0 += 0.5L * p2 / m[a];
+        H1 -= (p2 * p2) / (8.0L * m[a] * m[a] * m[a]);
+    }
+    for (int a = 0; a < 3; ++a) {
+        for (int b = a + 1; b < 3; ++b) {
+            ld dx = s[3*a]-s[3*b], dy = s[3*a+1]-s[3*b+1], dz = s[3*a+2]-s[3*b+2];
+            ld r = std::sqrt(dx*dx + dy*dy + dz*dz), ir = 1.0L / r;
+            H0 -= m[a] * m[b] * ir;
+            phi[a] += m[b] * ir; phi[b] += m[a] * ir;
+            if (beta != 0.0L) {
+                ld pax = s[9+3*a], pay = s[10+3*a], paz = s[11+3*a];
+                ld pbx = s[9+3*b], pby = s[10+3*b], pbz = s[11+3*b];
+                ld pa2 = pax*pax+pay*pay+paz*paz, pb2 = pbx*pbx+pby*pby+pbz*pbz;
+                ld papb = pax*pbx+pay*pby+paz*pbz;
+                ld nx = dx*ir, ny = dy*ir, nz = dz*ir;
+                ld na = nx*pax+ny*pay+nz*paz, nb = nx*pbx+ny*pby+nz*pbz;
+                ld C = 3.0L * ((m[b]/m[a])*pa2 + (m[a]/m[b])*pb2) - 7.0L * papb;
+                H1 += -0.5L * ir * (C - na*nb);
+            }
+        }
+    }
+    if (beta != 0.0L) for (int a = 0; a < 3; ++a) H1 += 0.5L * m[a] * phi[a] * phi[a];
+    return H0 + beta * H1;
+}
+
+static void deriv_1pn(const State1& s, const Masses& m, ld beta, State1& ds) {
+    ld dr[9] = {0}, dp[9] = {0}, phi[3] = {0};
+    ld dx_ab[3][3], dy_ab[3][3], dz_ab[3][3], ir3_ab[3][3];
+    for (int a = 0; a < 3; ++a) {
+        ld px = s[9+3*a], py = s[10+3*a], pz = s[11+3*a];
+        ld p2 = px*px+py*py+pz*pz, inv_m = 1.0L / m[a];
+        ld fac = inv_m - beta * (0.5L * p2 * inv_m * inv_m * inv_m);
+        dr[3*a] = fac*px; dr[3*a+1] = fac*py; dr[3*a+2] = fac*pz;
+    }
+    for (int a = 0; a < 3; ++a) {
+        for (int b = a + 1; b < 3; ++b) {
+            ld dx = s[3*a]-s[3*b], dy = s[3*a+1]-s[3*b+1], dz = s[3*a+2]-s[3*b+2];
+            ld r2 = dx*dx+dy*dy+dz*dz, ir = 1.0L/std::sqrt(r2), ir2 = ir*ir, ir3 = ir2*ir;
+            dx_ab[a][b]=dx; dy_ab[a][b]=dy; dz_ab[a][b]=dz; ir3_ab[a][b]=ir3;
+            ld mm = m[a]*m[b];
+            ld fx0 = -mm*dx*ir3, fy0 = -mm*dy*ir3, fz0 = -mm*dz*ir3;
+            dp[3*a]+=fx0; dp[3*a+1]+=fy0; dp[3*a+2]+=fz0;
+            dp[3*b]-=fx0; dp[3*b+1]-=fy0; dp[3*b+2]-=fz0;
+            phi[a] += m[b]*ir; phi[b] += m[a]*ir;
+            if (beta != 0.0L) {
+                ld pax=s[9+3*a], pay=s[10+3*a], paz=s[11+3*a];
+                ld pbx=s[9+3*b], pby=s[10+3*b], pbz=s[11+3*b];
+                ld pa2=pax*pax+pay*pay+paz*paz, pb2=pbx*pbx+pby*pby+pbz*pbz;
+                ld papb=pax*pbx+pay*pby+paz*pbz;
+                ld nx=dx*ir, ny=dy*ir, nz=dz*ir;
+                ld na=nx*pax+ny*pay+nz*paz, nb=nx*pbx+ny*pby+nz*pbz;
+                ld c_ab = 0.5L*beta*ir, mba = m[b]/m[a], mab = m[a]/m[b];
+                dr[3*a]   += c_ab*(-6.0L*mba*pax + 7.0L*pbx + nb*nx);
+                dr[3*a+1] += c_ab*(-6.0L*mba*pay + 7.0L*pby + nb*ny);
+                dr[3*a+2] += c_ab*(-6.0L*mba*paz + 7.0L*pbz + nb*nz);
+                dr[3*b]   += c_ab*(-6.0L*mab*pbx + 7.0L*pax + na*nx);
+                dr[3*b+1] += c_ab*(-6.0L*mab*pby + 7.0L*pay + na*ny);
+                dr[3*b+2] += c_ab*(-6.0L*mab*pbz + 7.0L*paz + na*nz);
+                ld C = 3.0L*(mba*pa2 + mab*pb2) - 7.0L*papb;
+                ld coef_n = C - 3.0L*na*nb, f_scale = -0.5L*beta*ir2;
+                ld fx1 = f_scale*(coef_n*nx + nb*pax + na*pbx);
+                ld fy1 = f_scale*(coef_n*ny + nb*pay + na*pby);
+                ld fz1 = f_scale*(coef_n*nz + nb*paz + na*pbz);
+                dp[3*a]+=fx1; dp[3*a+1]+=fy1; dp[3*a+2]+=fz1;
+                dp[3*b]-=fx1; dp[3*b+1]-=fy1; dp[3*b+2]-=fz1;
+            }
+        }
+    }
+    if (beta != 0.0L) {
+        for (int a = 0; a < 3; ++a)
+            for (int b = a + 1; b < 3; ++b) {
+                ld f = beta * m[a] * m[b] * (phi[a] + phi[b]) * ir3_ab[a][b];
+                dp[3*a]+=f*dx_ab[a][b]; dp[3*a+1]+=f*dy_ab[a][b]; dp[3*a+2]+=f*dz_ab[a][b];
+                dp[3*b]-=f*dx_ab[a][b]; dp[3*b+1]-=f*dy_ab[a][b]; dp[3*b+2]-=f*dz_ab[a][b];
+            }
+    }
+    for (int i = 0; i < 9; ++i) { ds[i] = dr[i]; ds[9+i] = dp[i]; }
+}
+
+static bool integrate_1pn(State1& y, ld T, const Masses& m, ld beta, ld tol = 1e-15L, ld hmax = 0.04L,
+                          std::function<void(const State1&, ld)> on_step = nullptr) {
+    constexpr ld a21 = 1.0L / 5, a31 = 3.0L / 40, a32 = 9.0L / 40,
+        a41 = 44.0L / 45, a42 = -56.0L / 15, a43 = 32.0L / 9,
+        a51 = 19372.0L / 6561, a52 = -25360.0L / 2187, a53 = 64448.0L / 6561, a54 = -212.0L / 729,
+        a61 = 9017.0L / 3168, a62 = -355.0L / 33, a63 = 46732.0L / 5247, a64 = 49.0L / 176, a65 = -5103.0L / 18656,
+        b1 = 35.0L / 384, b3 = 500.0L / 1113, b4 = 125.0L / 192, b5 = -2187.0L / 6784, b6 = 11.0L / 84,
+        e1 = 71.0L / 57600, e3 = -71.0L / 16695, e4 = 71.0L / 1920, e5 = -17253.0L / 339200, e6 = 22.0L / 525, e7 = -1.0L / 40;
+    ld t = 0.0L, h = std::min(1e-3L, std::min(hmax, T * 0.01L));
+    State1 k1, k2, k3, k4, k5, k6, k7, yt, yn;
+    if (on_step) on_step(y, 0.0L);
+    for (int step = 0; t < T - 1e-17L && step < 4000000; ++step) {
+        if (h > hmax) h = hmax;
+        if (t + h > T) h = T - t;
+        deriv_1pn(y, m, beta, k1);
+        for (int i = 0; i < 18; ++i) yt[i] = y[i] + h * a21 * k1[i]; deriv_1pn(yt, m, beta, k2);
+        for (int i = 0; i < 18; ++i) yt[i] = y[i] + h * (a31 * k1[i] + a32 * k2[i]); deriv_1pn(yt, m, beta, k3);
+        for (int i = 0; i < 18; ++i) yt[i] = y[i] + h * (a41 * k1[i] + a42 * k2[i] + a43 * k3[i]); deriv_1pn(yt, m, beta, k4);
+        for (int i = 0; i < 18; ++i) yt[i] = y[i] + h * (a51 * k1[i] + a52 * k2[i] + a53 * k3[i] + a54 * k4[i]); deriv_1pn(yt, m, beta, k5);
+        for (int i = 0; i < 18; ++i) yt[i] = y[i] + h * (a61 * k1[i] + a62 * k2[i] + a63 * k3[i] + a64 * k4[i] + a65 * k5[i]); deriv_1pn(yt, m, beta, k6);
+        for (int i = 0; i < 18; ++i) yn[i] = y[i] + h * (b1 * k1[i] + b3 * k3[i] + b4 * k4[i] + b5 * k5[i] + b6 * k6[i]); deriv_1pn(yn, m, beta, k7);
+        ld err = 0.0L;
+        for (int i = 0; i < 18; ++i) {
+            ld ei = h * (e1 * k1[i] + e3 * k3[i] + e4 * k4[i] + e5 * k5[i] + e6 * k6[i] + e7 * k7[i]);
+            ld sc = tol * (1.0L + std::max(std::abs(y[i]), std::abs(yn[i])));
+            err += (ei / sc) * (ei / sc);
+        }
+        err = std::sqrt(err / 18.0L);
+        if (err <= 1.0L) {
+            y = yn; t += h;
+            if (on_step) on_step(y, h);
+            h = std::min(h * (err == 0 ? 5.0L : std::min(5.0L, std::max(0.2L, 0.9L * std::pow(err, -0.2L)))), hmax);
+        } else {
+            h *= std::max(0.1L, 0.9L * std::pow(err, -0.25L));
+            if (h < 1e-16L) return false;
+        }
+    }
+    return t >= T - 1e-13L;
+}
+
+static void audit_period(const State1& y0, ld T, ld theta, const ld u[3], const Masses& m, ld beta, int dim,
+                         ld& ret, ld& dH, ld& symp, bool& real_k, ld& k1, ld& k2, ld& k3, ld& margin) {
+    const ld itol = 1e-15L;
+    State1 yT = y0;
+    integrate_1pn(yT, T, m, beta, itol);
+    dH = std::abs(hamiltonian_1pn(yT, m, beta) - hamiltonian_1pn(y0, m, beta));
+    State1 yTc = (std::abs(theta) > 1e-14L) ? rotate_state(yT, u, -theta) : yT;
+    ld r2 = 0; for (int i = 0; i < 18; ++i) r2 += (yTc[i] - y0[i]) * (yTc[i] - y0[i]);
+    ret = std::sqrt(r2);
+
+    const ld eps = 1e-8L;
+    std::vector<std::vector<ld>> M(18, std::vector<ld>(18, 0.0L));
+    for (int col = 0; col < 18; ++col) {
+        State1 yp = y0, ym = y0; yp[col] += eps; ym[col] -= eps;
+        integrate_1pn(yp, T, m, beta, itol);
+        integrate_1pn(ym, T, m, beta, itol);
+        if (std::abs(theta) > 1e-14L) { yp = rotate_state(yp, u, -theta); ym = rotate_state(ym, u, -theta); }
+        for (int r = 0; r < 18; ++r) M[r][col] = (yp[r] - ym[r]) / (2.0L * eps);
+    }
+    symp = 0.0L;
+    for (int i = 0; i < 18; ++i)
+        for (int j = 0; j < 18; ++j) {
+            ld s = 0;
+            for (int k = 0; k < 9; ++k) s += M[k][i] * M[k + 9][j] - M[k + 9][i] * M[k][j];
+            ld tgt = (j == i + 9) ? 1.0L : ((i == j + 9) ? -1.0L : 0.0L);
+            symp = std::max(symp, std::abs(s - tgt));
+        }
+    if (dim == 2) {
+        const int pidx[12] = {0,1,3,4,6,7, 9,10,12,13,15,16};
+        const int zidx[6] = {2,5,8, 11,14,17};
+        std::vector<std::vector<ld>> Mp(12, std::vector<ld>(12));
+        for (int r = 0; r < 12; ++r) for (int c = 0; c < 12; ++c) Mp[r][c] = M[pidx[r]][pidx[c]];
+        broucke_2d_from_matrix(Mp, theta, real_k, k1, k2, margin);
+        ld trz = 0; for (int i = 0; i < 6; ++i) trz += M[zidx[i]][zidx[i]];
+        k3 = trz - (2.0L + 2.0L * std::cos(theta));
+    } else {
+        broucke_3d_from_matrix(M, theta, real_k, k1, k2, k3, margin);
+    }
+}
+
+static int run(int nthreads) {
+    struct Job1 { std::string id; int dim, q_fold; ld beta, T, T_rpo, prec; Masses m; State1 y0; };
+    std::vector<Job1> jobs;
+    Job1 jb;
+    while (std::cin >> jb.id >> jb.dim >> jb.beta >> jb.m[0] >> jb.m[1] >> jb.m[2]
+                    >> jb.T >> jb.T_rpo >> jb.q_fold >> jb.prec) {
+        for (int i = 0; i < 18; ++i) std::cin >> jb.y0[i];
+        jobs.push_back(jb);
+    }
+    std::vector<std::string> outs(jobs.size());
+    std::atomic<size_t> next_idx{0};
+    std::vector<std::thread> ths;
+    for (int tid = 0; tid < nthreads; ++tid) {
+        ths.emplace_back([&]() {
+            while (true) {
+                size_t idx = next_idx.fetch_add(1);
+                if (idx >= jobs.size()) break;
+                const auto& j = jobs[idx];
+                ld L[3] = {0, 0, 0};
+                for (int b = 0; b < 3; ++b) {
+                    L[0] += j.y0[3*b+1]*j.y0[11+3*b] - j.y0[3*b+2]*j.y0[10+3*b];
+                    L[1] += j.y0[3*b+2]*j.y0[9+3*b]  - j.y0[3*b+0]*j.y0[11+3*b];
+                    L[2] += j.y0[3*b+0]*j.y0[10+3*b] - j.y0[3*b+1]*j.y0[9+3*b];
+                }
+                ld Lm = std::sqrt(L[0]*L[0] + L[1]*L[1] + L[2]*L[2]);
+                ld u[3] = {0, 0, 1};
+                if (j.dim == 3 && Lm > 1e-12L) { u[0] = L[0]/Lm; u[1] = L[1]/Lm; u[2] = L[2]/Lm; }
+
+                bool is_closure = (j.q_fold > 0);
+                ld T_eval = j.T, theta_eval = is_closure ? 0.0L : j.prec;
+                ld ret, dH, symp, k1, k2, k3, margin; bool real_k;
+                audit_period(j.y0, T_eval, theta_eval, u, j.m, j.beta, j.dim, ret, dH, symp, real_k, k1, k2, k3, margin);
+
+                // Adaptive per-step geometry over T_eval
+                ld rmin = 1e300L, rmax = 0.0L, C[3][3] = {{0}}, ctime = 0.0L;
+                int prev_cl = -1, swaps = 0;
+                State1 yg = j.y0;
+                integrate_1pn(yg, T_eval, j.m, j.beta, 1e-13L, std::min(0.02L, T_eval / 1200.0L),
+                    [&](const State1& s, ld dtw) {
+                        ld r01 = std::sqrt((s[3]-s[0])*(s[3]-s[0])+(s[4]-s[1])*(s[4]-s[1])+(s[5]-s[2])*(s[5]-s[2]));
+                        ld r02 = std::sqrt((s[6]-s[0])*(s[6]-s[0])+(s[7]-s[1])*(s[7]-s[1])+(s[8]-s[2])*(s[8]-s[2]));
+                        ld r12 = std::sqrt((s[6]-s[3])*(s[6]-s[3])+(s[7]-s[4])*(s[7]-s[4])+(s[8]-s[5])*(s[8]-s[5]));
+                        rmin = std::min({rmin, r01, r02, r12});
+                        rmax = std::max({rmax, r01, r02, r12});
+                        int cl = (r01 <= r02 && r01 <= r12) ? 0 : ((r02 <= r12) ? 1 : 2);
+                        if (prev_cl != -1 && cl != prev_cl) swaps++;
+                        prev_cl = cl;
+                        if (j.dim == 3 && dtw > 0.0L) {
+                            for (int b = 0; b < 3; ++b) {
+                                ld qv[3] = {s[3*b], s[3*b+1], s[3*b+2]};
+                                for (int r = 0; r < 3; ++r) for (int c = 0; c < 3; ++c) C[r][c] += dtw * qv[r] * qv[c];
+                            }
+                            ctime += 3.0L * dtw;
+                        }
+                    });
+                ld thick = 0.0L;
+                if (j.dim == 3 && ctime > 0.0L) {
+                    for (int r = 0; r < 3; ++r) for (int c = 0; c < 3; ++c) C[r][c] /= ctime;
+                    thick = std::sqrt(min_eig_sym_3x3(C));
+                }
+                bool stable_3d = (j.dim == 3)
+                    ? (real_k && margin > 1e-4L)
+                    : (real_k && margin > 1e-4L && Lm > 1e-7L && std::abs(k3) < 2.0L - 1e-4L);
+
+                std::ostringstream os;
+                os << std::setprecision(13)
+                   << "{\"id\":\"" << j.id << "\",\"dim\":" << j.dim << ",\"q_fold\":" << j.q_fold
+                   << ",\"T_eval\":" << (double)T_eval
+                   << ",\"E\":" << (double)hamiltonian_1pn(j.y0, j.m, j.beta)
+                   << ",\"L\":" << (double)(j.dim == 2 ? L[2] : Lm)
+                   << ",\"Lmag\":" << (double)Lm
+                   << ",\"ret_err_ld\":" << (double)ret
+                   << ",\"dH\":" << (double)dH
+                   << ",\"symp_err\":" << (double)symp
+                   << ",\"real_k\":" << (real_k ? "true" : "false")
+                   << ",\"k1\":" << (double)k1 << ",\"k2\":" << (double)k2 << ",\"k3\":" << (double)k3
+                   << ",\"margin\":" << (double)margin
+                   << ",\"stable_3d\":" << (stable_3d ? "true" : "false")
+                   << ",\"rmin\":" << (double)rmin << ",\"rmax\":" << (double)rmax
+                   << ",\"thickness_3d\":" << (double)thick << ",\"exact_swaps\":" << swaps;
+                if (is_closure) {
+                    ld ret_r, dH_r, symp_r, k1_r, k2_r, k3_r, mrg_r; bool rk_r;
+                    audit_period(j.y0, j.T_rpo, j.prec, u, j.m, j.beta, j.dim, ret_r, dH_r, symp_r, rk_r, k1_r, k2_r, k3_r, mrg_r);
+                    os << ",\"rpo_k1\":" << (double)k1_r << ",\"rpo_k2\":" << (double)k2_r
+                       << ",\"rpo_k3\":" << (double)k3_r << ",\"rpo_margin\":" << (double)mrg_r;
+                }
+                os << "}";
+                outs[idx] = os.str();
+            }
+        });
+    }
+    for (auto& th : ths) th.join();
+    for (const auto& s : outs) std::cout << s << "\n";
+    return 0;
+}
+} // namespace audit1pn
+
 int main(int argc, char** argv) {
     bool collinear_ultra = false;
+    bool four_body_mode = false;
+    bool onepn_mode = false;
     int nthreads = std::max(1u, std::thread::hardware_concurrency());
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
         if (arg == "--collinear-ultra") collinear_ultra = true;
+        else if (arg == "--four-body") four_body_mode = true;
+        else if (arg == "--1pn") onepn_mode = true;
         else if (arg == "--threads" && i + 1 < argc) nthreads = std::max(1, std::atoi(argv[++i]));
     }
     if (collinear_ultra) return run_collinear_ultra(nthreads);
+    if (four_body_mode) return audit4b::run(nthreads);
+    if (onepn_mode) return audit1pn::run(nthreads);
 
     std::vector<AuditJob> jobs;
     std::string line;

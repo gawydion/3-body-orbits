@@ -590,6 +590,7 @@ struct Stab1PN {
     double k1, k2, k3; // for 2D, k3 = kz
     double margin_2d, margin_3d;
     double max_rad_err;
+    double symp_err;
     int surv100;
     double drift100;
 };
@@ -646,27 +647,41 @@ static bool extract_spectrum_1pn(const std::vector<std::vector<double>>& M, doub
 
 static Stab1PN analyze_stab_1pn(const State1PN& y0, double T, const double u[3], double two_alpha,
                                 const Masses& m, double beta, int dim, bool run_100T = true) {
-    Stab1PN st{}; st.margin_2d = -1; st.margin_3d = -1; st.max_rad_err = 999.0;
+    Stab1PN st{}; st.margin_2d = -1; st.margin_3d = -1; st.max_rad_err = 999.0; st.symp_err = 999.0;
     const double eps = 1e-7;
+    const int max_steps = 3000000;
+    auto check_symp = [](const std::vector<std::vector<double>>& M) -> double {
+        int N = (int)M.size(), half = N / 2;
+        double err = 0.0;
+        for (int i = 0; i < N; ++i)
+            for (int j = 0; j < N; ++j) {
+                double s = 0.0;
+                for (int k = 0; k < half; ++k) s += M[k][i] * M[k + half][j] - M[k + half][i] * M[k][j];
+                double tgt = (j == i + half) ? 1.0 : ((i == j + half) ? -1.0 : 0.0);
+                err = std::max(err, std::abs(s - tgt));
+            }
+        return err;
+    };
     if (dim == 2) {
         const int xyidx[12] = {0,1, 3,4, 6,7, 9,10, 12,13, 15,16};
         std::vector<std::vector<double>> M(12, std::vector<double>(12, 0.0));
         for (int c = 0; c < 12; ++c) {
             int col = xyidx[c];
             State1PN yp = y0, ym = y0; yp[col]+=eps; ym[col]-=eps;
-            if (!integrate_1pn(yp, T, m, beta, 1e-13, 500000) ||
-                !integrate_1pn(ym, T, m, beta, 1e-13, 500000)) return st;
+            if (!integrate_1pn(yp, T, m, beta, 1e-13, max_steps) ||
+                !integrate_1pn(ym, T, m, beta, 1e-13, max_steps)) return st;
             if (std::abs(two_alpha) > 1e-14) {
                 yp = rotate_state(yp, u, -two_alpha);
                 ym = rotate_state(ym, u, -two_alpha);
             }
             for (int r = 0; r < 12; ++r) M[r][c] = (yp[xyidx[r]] - ym[xyidx[r]]) / (2.0 * eps);
         }
+        st.symp_err = check_symp(M);
         std::vector<double> ks;
         if (extract_spectrum_1pn(M, two_alpha, 2, ks, st.max_rad_err) && ks.size() >= 2) {
             st.k1 = ks[0]; st.k2 = ks[1];
             double mk = std::max(std::abs(st.k1), std::abs(st.k2));
-            if (st.max_rad_err < 2e-3 && mk < 2.0 - 1e-4) {
+            if (st.symp_err < 1e-4 && st.max_rad_err < 2e-3 && mk < 2.0 - 1e-4) {
                 st.stable_2d = true;
                 st.margin_2d = 2.0 - mk;
             } else {
@@ -679,8 +694,8 @@ static Stab1PN analyze_stab_1pn(const State1PN& y0, double T, const double u[3],
         for (int k=0;k<6;++k) {
             int col = zidx[k];
             State1PN yp = y0, ym = y0; yp[col]+=eps; ym[col]-=eps;
-            integrate_1pn(yp, T, m, beta, 1e-13, 500000);
-            integrate_1pn(ym, T, m, beta, 1e-13, 500000);
+            integrate_1pn(yp, T, m, beta, 1e-13, max_steps);
+            integrate_1pn(ym, T, m, beta, 1e-13, max_steps);
             trz += (yp[col] - ym[col]) / (2.0 * eps);
         }
         st.k3 = trz - (2.0 + 2.0 * std::cos(two_alpha));
@@ -694,7 +709,7 @@ static Stab1PN analyze_stab_1pn(const State1PN& y0, double T, const double u[3],
             yp[10] += kick; yp[13] -= kick;
             double md = 0; int surv = 0;
             for (int k=0;k<100;++k) {
-                if (!integrate_1pn(yp, T, m, beta, 1e-11, 400000)) break;
+                if (!integrate_1pn(yp, T, m, beta, 1e-11, max_steps)) break;
                 State1PN yr = (std::abs(two_alpha) > 1e-14) ? rotate_state(yp, u, -two_alpha*(k+1)) : yp;
                 double d = state_dist(yr, y0);
                 if (d > md) md = d; if (d > 5.0) break;
@@ -706,17 +721,20 @@ static Stab1PN analyze_stab_1pn(const State1PN& y0, double T, const double u[3],
         std::vector<std::vector<double>> M(18, std::vector<double>(18, 0.0));
         for (int col=0;col<18;++col) {
             State1PN yp = y0, ym = y0; yp[col]+=eps; ym[col]-=eps;
-            if (!integrate_1pn(yp, T, m, beta, 1e-13, 600000) ||
-                !integrate_1pn(ym, T, m, beta, 1e-13, 600000)) return st;
-            yp = rotate_state(yp, u, -two_alpha);
-            ym = rotate_state(ym, u, -two_alpha);
+            if (!integrate_1pn(yp, T, m, beta, 1e-13, max_steps) ||
+                !integrate_1pn(ym, T, m, beta, 1e-13, max_steps)) return st;
+            if (std::abs(two_alpha) > 1e-14) {
+                yp = rotate_state(yp, u, -two_alpha);
+                ym = rotate_state(ym, u, -two_alpha);
+            }
             for (int r=0;r<18;++r) M[r][col] = (yp[r]-ym[r])/(2.0*eps);
         }
+        st.symp_err = check_symp(M);
         std::vector<double> ks;
         if (extract_spectrum_1pn(M, two_alpha, 3, ks, st.max_rad_err) && ks.size() >= 3) {
             st.k1 = ks[0]; st.k2 = ks[1]; st.k3 = ks[2];
             double mk = std::max({std::abs(st.k1), std::abs(st.k2), std::abs(st.k3)});
-            if (st.max_rad_err < 2e-3 && mk < 2.0 - 1e-4) {
+            if (st.symp_err < 1e-4 && st.max_rad_err < 2e-3 && mk < 2.0 - 1e-4) {
                 st.stable_3d = true; st.stable_2d = true;
                 st.margin_3d = 2.0 - mk; st.margin_2d = st.margin_3d;
             } else {
@@ -731,8 +749,8 @@ static Stab1PN analyze_stab_1pn(const State1PN& y0, double T, const double u[3],
             yp[9]+=kick; yp[12]-=kick; yp[10]+=kick; yp[13]-=kick; yp[11]+=kick; yp[14]-=kick;
             double md = 0; int surv = 0;
             for (int k=0;k<100;++k) {
-                if (!integrate_1pn(yp, T, m, beta, 1e-11, 500000)) break;
-                State1PN yr = rotate_state(yp, u, -two_alpha*(k+1));
+                if (!integrate_1pn(yp, T, m, beta, 1e-11, max_steps)) break;
+                State1PN yr = (std::abs(two_alpha) > 1e-14) ? rotate_state(yp, u, -two_alpha*(k+1)) : yp;
                 double d = state_dist(yr, y0);
                 if (d > md) md = d; if (d > 5.0) break;
                 surv = k + 1;
@@ -1013,6 +1031,7 @@ static void emit_1pn_json(int dim, const std::string& label, const Masses& m, do
     os << ",\"precess_rad\":" << two_alpha << ",\"E\":" << E
        << ",\"L\":" << (dim == 2 ? Lv[2] : Lmag)
        << ",\"ret_err\":" << ret_err
+       << ",\"symp_err\":" << st.symp_err
        << ",\"k1\":" << st.k1 << ",\"k2\":" << st.k2;
     if (dim == 3) {
         os << ",\"k3\":" << st.k3 << ",\"stab_margin\":" << st.margin_3d
@@ -1093,12 +1112,13 @@ int main(int argc, char** argv) {
         State1PN s0 = make_col_1pn(p[0], p[1], p[4], p[5], m3), yq = s0;
         integrate_1pn(yq, T_inert, m, beta, 1e-13, 2500000);
         double ret_inert = state_dist(yq, s0);
-        auto gm = measure_geom(s0, T_rpo, m, beta); gm.swaps *= q_fold;
-        auto st = analyze_stab_1pn(s0, T_rpo, uz, target_2a, m, beta, 2, true);
+        auto gm = measure_geom(s0, T_inert, m, beta);
+        auto st = analyze_stab_1pn(s0, T_inert, uz, 0.0, m, beta, 2, true);
         std::cerr << std::setprecision(13) << "# SNAPPED 1PN COL " << label
                   << " beta=" << beta << " beff=" << beta*gm.v2_rms
                   << " 2a=" << num << "*2pi/" << den << " T_rpo=" << T_rpo << " T_inert=" << T_inert
-                  << " ret_inert=" << ret_inert << " k=(" << st.k1 << "," << st.k2 << ") kz=" << st.k3
+                  << " ret_inert=" << ret_inert << " symp=" << st.symp_err
+                  << " k=(" << st.k1 << "," << st.k2 << ") kz=" << st.k3
                   << " marg=" << st.margin_2d << " surv=" << st.surv100 << "\n";
         if (st.stable_2d && st.surv100 >= 100 && ret_inert < 1e-7) {
             emit_1pn_json(2, label, m, beta, s0, T_inert, target_2a, ret_inert, st, gm, q_fold, T_rpo);
@@ -1155,12 +1175,13 @@ int main(int argc, char** argv) {
         double T_rpo = 2.0 * p[2], T_inert = q_fold * T_rpo, two_a = 2.0 * target_a;
         State1PN yq = s0; integrate_1pn(yq, T_inert, m, beta, 1e-13, 2500000);
         double ret_inert = state_dist(yq, s0);
-        auto gm = measure_geom(s0, T_rpo, m, beta); gm.swaps *= q_fold;
-        auto st = analyze_stab_1pn(s0, T_rpo, uz, two_a, m, beta, 2, true);
+        auto gm = measure_geom(s0, T_inert, m, beta);
+        auto st = analyze_stab_1pn(s0, T_inert, uz, 0.0, m, beta, 2, true);
         std::cerr << std::setprecision(13) << "# SNAPPED 1PN 2D " << label
                   << " beta=" << beta << " beff=" << beta*gm.v2_rms
                   << " 2a=" << num << "*2pi/" << den << " T_rpo=" << T_rpo << " T_inert=" << T_inert
-                  << " ret_inert=" << ret_inert << " k=(" << st.k1 << "," << st.k2 << ") kz=" << st.k3
+                  << " ret_inert=" << ret_inert << " symp=" << st.symp_err
+                  << " k=(" << st.k1 << "," << st.k2 << ") kz=" << st.k3
                   << " marg=" << st.margin_2d << " surv=" << st.surv100 << "\n";
         if (st.stable_2d && st.surv100 >= 100 && ret_inert < 1e-7) {
             emit_1pn_json(2, label, m, beta, s0, T_inert, two_a, ret_inert, st, gm, q_fold, T_rpo);
@@ -1225,12 +1246,12 @@ int main(int argc, char** argv) {
         double u[3] = {Lv[0]/Lm, Lv[1]/Lm, Lv[2]/Lm};
         State1PN yq = s0; integrate_1pn(yq, T_inert, m, beta, 1e-13, 2500000);
         double ret_inert = state_dist(yq, s0);
-        auto gm = measure_geom(s0, T_rpo, m, beta); gm.swaps *= q_fold;
-        auto st = analyze_stab_1pn(s0, T_rpo, u, two_a, m, beta, 3, true);
+        auto gm = measure_geom(s0, T_inert, m, beta);
+        auto st = analyze_stab_1pn(s0, T_inert, u, 0.0, m, beta, 3, true);
         std::cerr << std::setprecision(13) << "# SNAPPED 1PN 3D " << label
                   << " beta=" << beta << " beff=" << beta*gm.v2_rms
                   << " 2a=" << num << "*2pi/" << den << " T_rpo=" << T_rpo << " T_inert=" << T_inert
-                  << " ret_inert=" << ret_inert << " thick=" << gm.thick
+                  << " ret_inert=" << ret_inert << " symp=" << st.symp_err << " thick=" << gm.thick
                   << " k=(" << st.k1 << "," << st.k2 << "," << st.k3
                   << ") marg=" << st.margin_3d << " surv=" << st.surv100 << "\n";
         if (st.stable_3d && st.surv100 >= 100 && gm.thick >= 0.05 && ret_inert < 1e-7) {
